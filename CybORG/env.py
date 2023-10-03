@@ -148,6 +148,7 @@ class CybORG(CybORGLogger):
             action = {}
         else:
             action = {agent: action}
+        print('action is:',action)
         self.environment_controller.step(action, skip_valid_action_check)
         self.environment_controller.send_messages(messages)
         if agent is None:

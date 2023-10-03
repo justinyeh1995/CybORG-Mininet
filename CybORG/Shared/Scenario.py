@@ -48,6 +48,7 @@ class ScenarioSession(CybORGLogger):
 
     @classmethod
     def load(cls, session_info: dict):
+        #print('--> in Scenario session loader')
         return cls(username=session_info.get("username"),
                    session_type=session_info.get("type"),
                    hostname=session_info.get("hostname"),
@@ -122,13 +123,16 @@ class ScenarioAgent(CybORGLogger):
     def get_action_classes(actions):
         action_classes = []
         action_module = sys.modules['CybORG.Simulator.Actions']
-        print('--action modules:',action_module)
+        #print('--action modules:',action_module)
         for action in actions:
+            #print('action is:',action)
             action_classes.append(getattr(action_module, action))
+        #print('-->action classes are:',action_classes)
         return action_classes
 
     @classmethod
     def load(cls, agent_name: str, agent_info: dict):
+        #print('--> in ScenarioAgent loader')
         return cls(agent_name=agent_name,
                    team=agent_info.get('team'),
                    actions=cls.get_action_classes(agent_info.get("actions", [])),
@@ -265,6 +269,8 @@ class Scenario(CybORGLogger):
 
     @classmethod
     def load(cls, scenario_dict: dict):
+        agents={name: ScenarioAgent.load(name, info) for name, info in scenario_dict['Agents'].items()}
+        #print(agents)
         return cls(agents={name: ScenarioAgent.load(name, info) for name, info in scenario_dict['Agents'].items()},
                    team_calcs=scenario_dict['team_calcs'],
                    team_agents=scenario_dict['team_agents'],

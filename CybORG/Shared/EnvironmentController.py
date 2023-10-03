@@ -141,9 +141,11 @@ class EnvironmentController(CybORGLogger):
         -------
         None
         """
+        print('In shared EnvironmentController script')
         self.step_count += 1
         if actions is None:
             actions = {}
+        print('Agent interface:',self.agent_interfaces)
         # fill in missing actions based on default agents and check validity of actions
         for agent_name, agent_object in self.agent_interfaces.items():
             agent_object.messages = []
@@ -153,6 +155,7 @@ class EnvironmentController(CybORGLogger):
                 actions[agent_name] = self.replace_action_if_invalid(actions[agent_name], agent_object)
 
         self.action = actions
+        print('action is:',actions)
         actions = self.sort_action_order(actions)
 
         # clear old observations
@@ -216,6 +219,7 @@ class EnvironmentController(CybORGLogger):
 
     def execute_action(self, action: Action) -> Observation:
         """Execute an action in the environment"""
+        print('In env controller execute')
         raise NotImplementedError
 
     def determine_done(self) -> bool:

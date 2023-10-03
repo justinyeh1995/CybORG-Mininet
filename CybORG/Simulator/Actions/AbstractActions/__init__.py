@@ -8,3 +8,4 @@ from .Restore import Restore
 from .Misinform import Misinform
 from .PrivilegeEscalate import PrivilegeEscalate
 from .Impact import Impact
+from .Isolate import Isolate

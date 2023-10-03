@@ -46,8 +46,9 @@ class FileReaderScenarioGenerator(ScenarioGenerator):
         scenario_dict['team_agents'] = {agent_name: [agent_name] for agent_name, agent_data in scenario_dict['Agents'].items()}
         for agent_name in scenario_dict["Agents"].keys():
             scenario_dict["Agents"][agent_name]["team"] = agent_name
+        #print(scenario_dict)
         scenario = Scenario.load(scenario_dict)
-
+        #print('scenario is:',scenario)
         # add in subnet routers as hosts
         for subnet in scenario.subnets.keys():
             scenario.hosts[subnet+'_router'] = ScenarioHost(subnet+'_router', system_info={'OSType': 'linux',
@@ -72,7 +73,7 @@ class FileReaderScenarioGenerator(ScenarioGenerator):
 
     def create_scenario(self, np_random) -> Scenario:
         #pprint(self.scenario)
-        pprint(dir(self.scenario))
+        #pprint(dir(self.scenario))
         scenario = copy.deepcopy(self.scenario)
         
         count = 0

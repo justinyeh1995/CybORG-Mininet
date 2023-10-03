@@ -43,6 +43,7 @@ class SimulationController(EnvironmentController):
         -------
         None
         """
+        print('In SimulationController script')
         super(SimulationController, self).step(actions, skip_valid_action_check)
         for host in self.state.hosts.values():
             host.update(self.state)
@@ -56,6 +57,8 @@ class SimulationController(EnvironmentController):
         self.state.set_np_random(np_random)
 
     def execute_action(self, action: Action) -> Observation:
+        print('In simcontroller execute action')
+        print('action is:',action)
         return action.execute(self.state)
 
     def restore(self, file: str):
