@@ -4,6 +4,10 @@ Agents:
       - User
     INT:
       Hosts:
+        Defender:
+          Interfaces: All
+          System info: All
+          User info: All
         User0:
           Interfaces: All
           System info: All
@@ -24,11 +28,12 @@ Agents:
           Interfaces: All
           System info: All
           User info: All 
-        adversary: Red
+    adversary: Red
     actions:
       - Sleep
       - Analyse
       - Remove 
+      - Isolate
     agent_type: SleepAgent
     reward_calculator_type: HybridAvailabilityConfidentiality
     starting_sessions:
@@ -67,7 +72,7 @@ Agents:
           - ProcessCreation
         hostname: Defender
         name: VeloServer
-        num_children_sessions: 5
+        num_children_sessions: 6
         type: VelociraptorServer
         username: ubuntu
     wrappers: [ ]
@@ -93,6 +98,9 @@ Agents:
       username: SYSTEM
     wrappers: []
 Hosts:
+  Defender:
+    AWS_Info: []
+    image: Velociraptor_Server
   User0:
     AWS_Info: []
     image: windows_user_host1
@@ -145,6 +153,7 @@ Subnets:
     - User2
     - User3
     - User4
+    - Defender
     NACLs:
       all:
         in: all

@@ -2,7 +2,7 @@
 ## Additionally, we waive copyright and related rights in the utilized code worldwide through the CC0 1.0 Universal public domain dedication.
 
 import gym
-
+from pprint import pprint
 
 from CybORG.Shared import Scenario, CybORGLogger
 from CybORG.Simulator.Actions import Action
@@ -103,8 +103,9 @@ class EnvironmentController(CybORGLogger):
             self.np_random = np_random
         scenario = self.scenario_generator.create_scenario(self.np_random)
         self._create_environment(scenario)
-
+        #print('Scenario is:',scenario)
         self.agent_interfaces = self._create_agents(scenario, self.agents)
+        print('Agent Interfaces are:',self.agent_interfaces)
         self.team = scenario.team_agents
         self.team_assignment = {agent_name: team_name for team_name, agent_names in scenario.team_agents.items() for agent_name in agent_names}
         self.max_bandwidth = scenario.max_bandwidth

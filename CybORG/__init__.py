@@ -4,6 +4,7 @@ import inspect
 from CybORG.env import CybORG
 
 path = str(inspect.getfile(CybORG))
+print('path is:',path)
 path = path[:-7] + '/version.txt'
 with open(path) as f:
     CYBORG_VERSION = f.read()[:-1]

@@ -11,7 +11,7 @@ from CybORG.Shared.EnvironmentController import EnvironmentController
 from CybORG.Shared.Scenarios.ScenarioGenerator import ScenarioGenerator
 from CybORG.Simulator.Actions import DiscoverNetworkServices, DiscoverRemoteSystems, ExploitRemoteService, \
     InvalidAction, \
-    Sleep, PrivilegeEscalate, Impact, Remove, Restore, SeizeControl, RetakeControl, RemoveOtherSessions, FloodBandwidth
+    Sleep, PrivilegeEscalate, Impact, Remove, Restore, SeizeControl, RetakeControl, RemoveOtherSessions, Isolate,FloodBandwidth
 from CybORG.Simulator.Actions.ConcreteActions.ActivateTrojan import ActivateTrojan
 from CybORG.Simulator.Actions.ConcreteActions.ControlTraffic import BlockTraffic, AllowTraffic
 from CybORG.Simulator.Actions.ConcreteActions.ExploitActions.ExploitAction import ExploitAction
@@ -70,6 +70,7 @@ class CybORG(CybORGLogger):
             If None agents will be loaded from description in scenario file (default=None).
         """
         self.env = environment
+        print('env is:',self.env)
         assert issubclass(type(scenario_generator), ScenarioGenerator), f'Scenario generator object of type {type(scenario_generator)} must be a subclass of ScenarioGenerator'
         self.scenario_generator = scenario_generator
         self._log_info(f"Using scenario generator {str(scenario_generator)}")

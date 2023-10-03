@@ -2,7 +2,7 @@
 import itertools
 import sys
 from typing import List
-
+from pprint import pprint
 import numpy as np
 
 from CybORG.Agents import BaseAgent, SleepAgent
@@ -122,6 +122,7 @@ class ScenarioAgent(CybORGLogger):
     def get_action_classes(actions):
         action_classes = []
         action_module = sys.modules['CybORG.Simulator.Actions']
+        print('--action modules:',action_module)
         for action in actions:
             action_classes.append(getattr(action_module, action))
         return action_classes

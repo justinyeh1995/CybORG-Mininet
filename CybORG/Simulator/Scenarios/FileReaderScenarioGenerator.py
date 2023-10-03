@@ -5,7 +5,7 @@ from ipaddress import IPv4Network
 from math import log2
 
 import yaml
-
+from pprint import pprint
 
 from CybORG.Shared import Scenario
 from CybORG.Simulator.Actions import Monitor
@@ -71,8 +71,10 @@ class FileReaderScenarioGenerator(ScenarioGenerator):
         self.scenario = scenario
 
     def create_scenario(self, np_random) -> Scenario:
+        #pprint(self.scenario)
+        pprint(dir(self.scenario))
         scenario = copy.deepcopy(self.scenario)
-
+        
         count = 0
         # randomly generate subnets cidrs for all subnets in scenario and IP addresses for all hosts in those subnets and create Subnet objects
         # using fixed size subnets (VLSM maybe viable alternative if required)
