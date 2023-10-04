@@ -58,7 +58,7 @@ class SimulationController(EnvironmentController):
 
     def execute_action(self, action: Action) -> Observation:
         print('In simcontroller execute action')
-        print('action is:',action)
+        print('action is:',action, 'its type is:', type(action))
         return action.execute(self.state)
 
     def restore(self, file: str):

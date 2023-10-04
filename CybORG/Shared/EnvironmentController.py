@@ -163,15 +163,18 @@ class EnvironmentController(CybORGLogger):
 
         # execute actions in order of priority
         for agent_name, agent_action in actions.items():
+            print('--> in actions')
             self.observation[agent_name] = self._filter_obs(self.execute_action(agent_action), agent_name)
 
         # execute additional default end turn actions
         for agent_name, agent_action in self.end_turn_actions.items():
             if self.is_active(agent_name):
+                print('--> in end turn actions')
                 self.observation[agent_name] = self._filter_obs(self.execute_action(agent_action[0](**agent_action[1])), agent_name).combine_obs(self.get_last_observation(agent_name))
 
         for agent_name, observation in self.observation.items():
             if self.scenario_generator.update_each_step or len(self.get_action_space(agent_name)['session']) == 0:
+                print('--> in observations')
                 self.agent_interfaces[agent_name].update(observation)
 
         # calculate done signal
