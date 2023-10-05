@@ -66,6 +66,7 @@ Agents:
       - Remove
       - Misinform
       - Restore
+      - Isolate
     agent_type: SleepAgent
     reward_calculator_type: HybridAvailabilityConfidentiality
     starting_sessions:
