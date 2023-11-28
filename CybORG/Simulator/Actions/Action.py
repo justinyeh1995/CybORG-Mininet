@@ -13,7 +13,7 @@ lo = IPv4Address('127.0.0.1')
 
 class Action(CybORGLogger):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.name = self.__class__.__name__
         self.priority = 99
 
