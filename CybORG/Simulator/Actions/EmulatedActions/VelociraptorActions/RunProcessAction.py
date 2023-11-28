@@ -7,12 +7,13 @@ from .VelociraptorAction import VelociraptorAction
 
 class RunProcessAction(VelociraptorAction):
 
+    artifact_name = "Linux.Sys.BashShell"
+
     def __init__(self, credentials_file, hostname, command):
 
         super().__init__(credentials_file=credentials_file)
 
         self.hostname = hostname
-        self.artifact_name = "Linux.Sys.BashShell"
         self.environment_dict = {"Command": f"{command}"}
 
     def execute(self, state: State) -> Observation:
