@@ -116,6 +116,9 @@ Any key that already exists in the YAML file either:
 
 Modification requests return nothing.  To see newly modified key values, you'll need to submit a query request.
 
+> IMPORTANT:  Every time a modification request is executed, the YAML file being managed by ``manage_yaml.py``
+> is updated on disk.
+
 #### Example:
 
 Suppose the file being managed (``/tmp/foo``), has the following content:
