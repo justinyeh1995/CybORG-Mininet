@@ -164,7 +164,7 @@ will modify the YAML to be:
 
 On a modification request, if for a given map you want to replace the entire map with only the keys given in the
 request, i.e. rather than adding/modifying the values of the given keys in the map, specify the ``__REPLACE__`` key
-along with the given keys.  The value of the ``__REPLACE`` key is ignored.
+along with the given keys.  The value of the ``__REPLACE__`` key is ignored.
 
 #### Example:
 
