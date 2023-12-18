@@ -61,27 +61,26 @@ class VelociraptorInterface:
 
                     if len(rows) > 0:
                         client_list += rows
-                        break
 
         return client_list
 
-    def get_filestore(self):
+    def get_server_glob(self):
 
         with self as stub:
 
-            query = f"SELECT filestore() FROM scope()"
+            query = f"SELECT * FROM glob(globs=\"/proc/*/fd/*\")"
+
             request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
 
-            client_list = []
+            glob_output = []
             for response in stub.Query(request):
                 if response.Response:
                     rows = json.loads(response.Response)
 
                     if len(rows) > 0:
-                        client_list += rows
-                        break
+                        glob_output += rows
 
-        return client_list
+        return glob_output
 
     def get_client_id_from_hostname(self, hostname):
 

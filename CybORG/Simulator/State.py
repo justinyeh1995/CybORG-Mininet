@@ -308,7 +308,7 @@ class State(CybORGLogger):
         host.sessions = {}
         host.processes = []
         for file in host.files:
-            if file.path == "/tmp/":
+            if file.yaml_file_path == "/tmp/":
                 host.files.remove(file)
 
         # start back up

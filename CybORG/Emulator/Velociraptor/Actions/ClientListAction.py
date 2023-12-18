@@ -1,5 +1,7 @@
+from typing import Union
+
 from CybORG.Simulator.State import State
-from .ClientListObservation import ClientListObservation
+from CybORG.Emulator.Velociraptor.Observations.ClientListObservation import ClientListObservation
 from .VelociraptorAction import VelociraptorAction
 
 
@@ -9,7 +11,7 @@ class ClientListAction(VelociraptorAction):
 
         super().__init__(credentials_file)
 
-    def execute(self, state: State):
+    def execute(self, state: Union[State, None]) -> ClientListObservation:
 
         velociraptor_interface = self.get_velociraptor_interface()
 

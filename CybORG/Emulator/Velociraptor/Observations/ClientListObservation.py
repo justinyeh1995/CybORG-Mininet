@@ -1,5 +1,5 @@
 from CybORG.Shared import Observation
-from .DictToAttributes import DictToAttributes
+from CybORG.Emulator.Velociraptor.Actions.DictToAttributes import DictToAttributes
 
 
 class AgentInformation(DictToAttributes):
@@ -35,3 +35,6 @@ class ClientListObservation(Observation):
         self.client_list = []
         for client_dict in client_list:
             self.client_list.append(Client(client_dict))
+
+    def get_client_list(self):
+        return self.client_list

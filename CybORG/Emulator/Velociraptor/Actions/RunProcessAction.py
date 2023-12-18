@@ -1,7 +1,9 @@
+from typing import Union
+
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 
-from .ProcessObservation import ProcessObservation
+from CybORG.Emulator.Velociraptor.Observations.ProcessObservation import ProcessObservation
 from .VelociraptorAction import VelociraptorAction
 
 
@@ -12,11 +14,10 @@ class RunProcessAction(VelociraptorAction):
     def __init__(self, credentials_file, hostname, command):
 
         super().__init__(credentials_file=credentials_file)
-
         self.hostname = hostname
         self.environment_dict = {"Command": f"{command}"}
 
-    def execute(self, state: State) -> Observation:
+    def execute(self, state: Union[State, None]) -> Observation:
 
         velociraptor_interface = self.get_velociraptor_interface()
 

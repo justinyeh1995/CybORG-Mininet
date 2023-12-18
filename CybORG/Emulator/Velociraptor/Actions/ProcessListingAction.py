@@ -1,4 +1,6 @@
-from .ProcessListingObservation import ProcessListingObservation
+from typing import Union
+
+from CybORG.Emulator.Velociraptor.Observations.ProcessListingObservation import ProcessListingObservation
 from .VelociraptorAction import VelociraptorAction
 from CybORG.Simulator.State import State
 
@@ -12,7 +14,7 @@ class ProcessListingAction(VelociraptorAction):
 
         self.hostname = hostname
 
-    def execute(self, state: State) -> ProcessListingObservation:
+    def execute(self, state: Union[State, None]) -> ProcessListingObservation:
 
         velociraptor_interface = self.get_velociraptor_interface()
 

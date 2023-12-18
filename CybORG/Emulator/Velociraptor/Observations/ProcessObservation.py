@@ -1,5 +1,5 @@
 from CybORG.Shared import Observation
-from .DictToAttributes import DictToAttributes
+from CybORG.Emulator.Velociraptor.Actions.DictToAttributes import DictToAttributes
 
 
 class ProcessObservation(Observation, DictToAttributes):
