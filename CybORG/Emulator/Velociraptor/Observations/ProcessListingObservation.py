@@ -15,6 +15,8 @@ class ProcessListingObservation(Observation):
 
         super().__init__(success=success)
 
+        self.artifact_info = process_list
+
         if process_list is None:
             process_list = []
 

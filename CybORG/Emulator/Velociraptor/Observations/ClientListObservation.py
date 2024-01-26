@@ -32,6 +32,8 @@ class ClientListObservation(Observation):
 
         super().__init__(success=success)
 
+        self.artifact_info = client_list
+
         self.client_list = []
         for client_dict in client_list:
             self.client_list.append(Client(client_dict))

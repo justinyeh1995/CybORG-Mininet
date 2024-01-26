@@ -7,6 +7,8 @@ class HostProcessListingObservation(Observation):
 
         super().__init__(success=success)
 
+        self.artifact_info = hostname_process_list_dict
+
         if hostname_process_list_dict is None:
             hostname_process_list_dict = {}
 
