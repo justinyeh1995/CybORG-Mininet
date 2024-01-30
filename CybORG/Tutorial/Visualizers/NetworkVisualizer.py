@@ -143,7 +143,7 @@ class NetworkVisualizer:
                                     <br>Red Agent Name: {red_agent_name}\
                                     <br>Episode: {episode+1}\
                                     <br>Display <b>{agent}</b> Agent\
-                                    <br>Step {step+1} ',
+                                    <br><b>Step {step+1}</b>',
                             title_x=0.0,  # Centers the title
                             title_y=0.85,
                             titlefont_size=12,
