@@ -10,6 +10,12 @@ from pprint import pprint
 from enum import Enum
 from CybORG.Agents.Wrappers.TrueTableWrapper import true_obs_to_table
 
+class RewardTracker:
+    def __init__(self):
+        self.rewards = None
+    def __repr__(self):
+        return str({agent: dict(rewards) for agent, rewards in self.rewards.items()})
+    
 class GameStateManager:
     def __init__(self):
         self.blue_agent = None
@@ -20,6 +26,7 @@ class GameStateManager:
         self.host_map = None
         self.true_state = None
         self.true_table = None
+        self.accumulated_rewards = collections.defaultdict(lambda: collections.defaultdict(float))
         self.game_states = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
         
         self.compromised_hosts = set(['User0'])
@@ -102,6 +109,19 @@ class GameStateManager:
         else:
             border = dict(width=0, color='white')
         return border
+
+    def _get_last_reward(self, agent_type):
+        return self.cyborg.get_rewards()[agent_type]
+
+    def _update_rewards(self, agent_type, reward):
+        for metric, value in reward.items():
+            self.accumulated_rewards[agent_type][metric] += value
+
+    def _get_agent_rewards(self, agent_type):
+        return {metric: value for metric, value in self.accumulated_rewards[agent_type].items()}
+
+    def get_rewards(self):
+        return {agent: dict(rewards) for agent, rewards in self.accumulated_rewards.items()}
         
     def _parse_action(self, cyborg, action_str, agent, host_map, ip_map):
         action_type = action_str.split(" ")[0]
@@ -111,7 +131,6 @@ class GameStateManager:
             n = len(action_str_split)
             target_host = action_str_split[-1] if n > 1 else target_host
             # Update target host if it's an IP address to get the hostname
-            print(target_host)
             target_host = ip_map.get(target_host, target_host) if target_host in ip_map else target_host
         return target_host, action_type
 
@@ -202,7 +221,12 @@ class GameStateManager:
 
         compromised_hosts = self.compromised_hosts.copy()
 
-        self.true_table = self._get_true_state_table()
+        reward = self._get_last_reward(host_type)
+
+        self._update_rewards(host_type, reward)
+
+        accu_reward = self._get_agent_rewards(host_type)
+        # print(self.accumulated_rewards)
         
         action_snapshot = {
             # Populate with necessary state information
@@ -211,11 +235,10 @@ class GameStateManager:
             'node_borders': node_borders.copy(),
             'compromised_hosts': compromised_hosts.copy(),
             'host_info': host_info.copy(),
-            # 'exploited_hosts': exploited_hosts.copy(),
-            # 'escalated_hosts': escalated_hosts.copy(),
             'action_info': action_info.copy(),
-            # 'ip_map': self.ip_map.copy(),
             'host_map': self.host_map.copy(),
+            'reward': reward,
+            'accumulate_reward': accu_reward,
         }
 
         return action_snapshot
