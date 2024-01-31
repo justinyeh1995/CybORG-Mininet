@@ -1,5 +1,6 @@
 import subprocess
 import yaml
+import collections
 from ipaddress import IPv4Address, IPv4Network
 
 class MininetAdapter:
@@ -7,12 +8,23 @@ class MininetAdapter:
         self.cyborg = None
         self.ip_map = None
         self.cidr_map = None
+        self.cyborg_to_mininet_name_map = None
 
     def set_environment(self, cyborg):
         self.cyborg = cyborg
         self.ip_map = self.cyborg.get_ip_map()
         self.cidr_map = self.cyborg.get_cidr_map()
         self.edge_view = self.cyborg.environment_controller.state.link_diagram.edges
+        self.cyborg_to_mininet_name_map = self._set_name_map()
+
+    def _set_name_map(self):
+        cyborg_to_mininet_name_map = collections.defaultdict(str)
+        cnt = 1
+        for lan_name, network in self.cidr_map.items():
+                cyborg_to_mininet_name_map[lan_name] = f'lan{cnt}'
+                cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt}'
+                cnt += 1
+        return cyborg_to_mininet_name_map
 
     def _create_yaml(self):
         try:
@@ -27,14 +39,14 @@ class MininetAdapter:
             # Assume the router names are suffixed with '_router'
             for name, ip in self.ip_map.items():
                 if name.endswith('_router'):
-                    topology_data['topo']['routers'].append({'router': name, 'ip': str(ip)})
+                    topology_data['topo']['routers'].append({'router': self.cyborg_to_mininet_name_map[name], 'ip': str(ip)})
             
             # Create LANs based on the networks
             for lan_name, network in self.cidr_map.items():
                 hosts = [name for name, ip in self.ip_map.items() if ip in network and not name.endswith('_router')]
                 topology_data['topo']['lans'].append({
-                    'name': lan_name,
-                    'router': f'{lan_name}_router',
+                    'name': self.cyborg_to_mininet_name_map[lan_name],
+                    'router': self.cyborg_to_mininet_name_map[f'{lan_name}_router'],
                     'subnet': str(network),
                     'hosts': len(hosts)
                 })
@@ -51,8 +63,8 @@ class MininetAdapter:
                 # Assuming you have a function or a way to get the subnet for a given link
                 subnet = str(IPv4Network(f'10.{50*(i+1)}.1.0/28'))  # Placeholder, replace with your subnet logic
                 topology_data['topo']['links'].append({
-                    'ep1-router': ep1,
-                    'ep2-router': ep2,
+                    'ep1-router': self.cyborg_to_mininet_name_map[ep1],
+                    'ep2-router': self.cyborg_to_mininet_name_map[ep2],
                     'subnet': subnet
                 })
                 
@@ -71,10 +83,10 @@ class MininetAdapter:
 
     def create_mininet_topo(self):
         try:
-            # self._create_yaml()
+            self._create_yaml()
             # Run the custom_topo.py script with the generated YAML file
             result = subprocess.run(
-                ["sudo","python3", "../mininet-files/custom_net.py", "-y", "network_topology.yaml"],
+                ["sudo","python3", "mininet-files/custom_net.py", "-y", "network_topology.yaml"],
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -98,4 +110,5 @@ class MininetAdapter:
                 stderr=subprocess.PIPE,
                 text=True
             )
+        print("Cleaned up the topology") 
         
