@@ -167,7 +167,11 @@ class NetworkVisualizer:
                     <br>💎Accumulated {agent} Reward: {accumulate_reward}",
             showarrow=False,
             visible=True,  # Initially not visible
-            align="left"  # Ensure text is aligned for both agents
+            align="left",  # Ensure text is aligned for both agents
+            font=dict(
+                size=10,
+                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+            )
         ))
         
         # Prepare and plot the figure
