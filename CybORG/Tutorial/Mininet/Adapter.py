@@ -1,4 +1,5 @@
 import subprocess
+import pexpect
 import yaml
 import collections
 from ipaddress import IPv4Address, IPv4Network
@@ -9,6 +10,7 @@ class MininetAdapter:
         self.ip_map = None
         self.cidr_map = None
         self.cyborg_to_mininet_name_map = None
+        self.mininet_process = None
 
     def set_environment(self, cyborg):
         self.cyborg = cyborg
@@ -82,33 +84,102 @@ class MininetAdapter:
             print(e)
 
     def create_mininet_topo(self):
+        # try:
+        #     self._create_yaml()
+        #     # Run the custom_topo.py script with the generated YAML file
+        #     self.mininet_process = subprocess.Popen(
+        #         ["sudo", "python3", "mininet-files/custom_net.py", "-y", "network_topology.yaml"],
+        #         stdout=subprocess.PIPE,
+        #         stderr=subprocess.PIPE,
+        #         text=True
+        #     )
+            
+        #     # Capture the output of the subprocess
+        #     stdout, stderr = self.subprocess.communicate()
+
+        #     # Check if the process completed successfully
+        #     if self.subprocess.returncode == 0:
+        #         print("Mininet Topology Created Successfully:")
+        #         print(stdout)
+        #     else:
+        #         print("An error occurred while creating Mininet topology:")
+        #         print(stderr)
+
+        # except Exception as e:
+        #     # Handle other exceptions
+        #     print("An error occurred:", e)
         try:
             self._create_yaml()
-            # Run the custom_topo.py script with the generated YAML file
-            result = subprocess.run(
-                ["sudo","python3", "mininet-files/custom_net.py", "-y", "network_topology.yaml"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            
-            # Output the result of the subprocess
+            # Start the Mininet topology creation process with pexpect
+            self.mininet_process = pexpect.spawn("sudo python3 mininet-files/custom_net.py -y network_topology.yaml")
+
+            # Set a timeout for responses (adjust as needed)
+            self.mininet_process.timeout = 300
+
+            # Wait for the process to complete or for an expected output
+            # You can adjust this depending on the expected output of your script
+            self.mininet_process.expect("mininet>")
+
+            # Print the output
             print("Mininet Topology Created Successfully:")
-            print(result.stdout)
-            
-        except subprocess.CalledProcessError as e:
-            # Handle errors in the subprocess
+            print(self.mininet_process.before.decode())  # Decoding may be necessary
+
+        except Exception as e:
+            # Handle exceptions
             print("An error occurred while creating Mininet topology:")
-            print(e.stderr)
-            
+            print(str(e))
+
+        finally:
+            # Ensure the process is terminated
+            if self.mininet_process is not None:
+                self.mininet_process.terminate()
+
+    def send_mininet_command(self, command):
+        if hasattr(self, 'mininet_process') and self.mininet_process and self.mininet_process.isalive():
+            # Send the command to Mininet
+            self.mininet_process.sendline(command)
+
+            # Wait for the command to be processed and output to be generated
+            # The specific pattern to expect might vary based on your command and Mininet's output
+            self.mininet_process.expect('mininet>')
+
+            # Retrieve and print the output of the command
+            output = self.mininet_process.before.decode()
+            print(output)
+
+        else:
+            print("Mininet process is not running. Please start the topology first.")
+
+    
     def reset(self):
-        result = subprocess.run(
-                ["sudo", "mn", "-c"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-        print("Cleaned up the topology") 
+        # First, ensure that the existing Mininet subprocess is terminated
+        # if hasattr(self, 'subprocess') and self.mininet_process.poll() is None:
+        #     self.mininet_process.terminate()
+        #     try:
+        #         self.mininet_process.communicate(timeout=10)  # Wait for the process to terminate
+        #     except subprocess.TimeoutExpired:
+        #         self.mininet_process.kill()  # Forcefully kill if it doesn't terminate in time
+        #         self.mininet_process.communicate()
+        # First, check if a Mininet process is running and terminate it
+        try:
+            # First, check if a Mininet process is running and terminate it
+            if hasattr(self, 'mininet_process') and self.mininet_process and self.mininet_process.isalive():
+                self.mininet_process.terminate()
+                self.mininet_process.expect(pexpect.EOF)  # Wait for termination
+                print("Terminated the ongoing Mininet topology.")
+
+            # Now, run the Mininet cleanup command
+            cleanup_process = pexpect.spawn("sudo mn -c")
+            cleanup_process.timeout = 60
+            cleanup_process.expect(pexpect.EOF)  # Wait for the end of the process
+            print("Cleaned up the topology successfully")
+            print(cleanup_process.before.decode())
+
+        except Exception as e:
+            print("An error occurred while cleaning up the topology:")
+            print(str(e))
+
+        finally:
+            if cleanup_process is not None and cleanup_process.isalive():
+                cleanup_process.terminate()
         
