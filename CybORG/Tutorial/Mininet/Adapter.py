@@ -105,10 +105,6 @@ class MininetAdapter:
             print("An error occurred while creating Mininet topology:")
             print(str(e))
 
-        finally:
-            # Ensure the process is terminated
-            if self.mininet_process is not None:
-                self.mininet_process.terminate()
 
     def send_mininet_command(self, command):
         if self.mininet_process and self.mininet_process.isalive():
