@@ -84,30 +84,6 @@ class MininetAdapter:
             print(e)
 
     def create_mininet_topo(self):
-        # try:
-        #     self._create_yaml()
-        #     # Run the custom_topo.py script with the generated YAML file
-        #     self.mininet_process = subprocess.Popen(
-        #         ["sudo", "python3", "mininet-files/custom_net.py", "-y", "network_topology.yaml"],
-        #         stdout=subprocess.PIPE,
-        #         stderr=subprocess.PIPE,
-        #         text=True
-        #     )
-            
-        #     # Capture the output of the subprocess
-        #     stdout, stderr = self.subprocess.communicate()
-
-        #     # Check if the process completed successfully
-        #     if self.subprocess.returncode == 0:
-        #         print("Mininet Topology Created Successfully:")
-        #         print(stdout)
-        #     else:
-        #         print("An error occurred while creating Mininet topology:")
-        #         print(stderr)
-
-        # except Exception as e:
-        #     # Handle other exceptions
-        #     print("An error occurred:", e)
         try:
             self._create_yaml()
             # Start the Mininet topology creation process with pexpect
@@ -135,7 +111,7 @@ class MininetAdapter:
                 self.mininet_process.terminate()
 
     def send_mininet_command(self, command):
-        if hasattr(self, 'mininet_process') and self.mininet_process and self.mininet_process.isalive():
+        if self.mininet_process and self.mininet_process.isalive():
             # Send the command to Mininet
             self.mininet_process.sendline(command)
 
@@ -153,17 +129,9 @@ class MininetAdapter:
     
     def reset(self):
         # First, ensure that the existing Mininet subprocess is terminated
-        # if hasattr(self, 'subprocess') and self.mininet_process.poll() is None:
-        #     self.mininet_process.terminate()
-        #     try:
-        #         self.mininet_process.communicate(timeout=10)  # Wait for the process to terminate
-        #     except subprocess.TimeoutExpired:
-        #         self.mininet_process.kill()  # Forcefully kill if it doesn't terminate in time
-        #         self.mininet_process.communicate()
-        # First, check if a Mininet process is running and terminate it
         try:
             # First, check if a Mininet process is running and terminate it
-            if hasattr(self, 'mininet_process') and self.mininet_process and self.mininet_process.isalive():
+            if self.mininet_process and self.mininet_process.isalive():
                 self.mininet_process.terminate()
                 self.mininet_process.expect(pexpect.EOF)  # Wait for termination
                 print("Terminated the ongoing Mininet topology.")
