@@ -3,7 +3,7 @@ from CybORG.Shared import Observation
 
 class HostProcessListingObservation(Observation):
 
-    def __init__(self, hostname_process_list_dict=None, success:bool=None):
+    def __init__(self, hostname_process_list_dict=None, success: bool = None):
 
         super().__init__(success=success)
 

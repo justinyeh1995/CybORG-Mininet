@@ -1,9 +1,9 @@
-#import json
+# import json
 
 from CybORG.Emulator.Velociraptor.Actions.ProcessListingAction import ProcessListingAction
 from CybORG.Emulator.Velociraptor.Actions.KillProcessAction import KillProcessAction
 from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
-#from CybORG.Emulator.Velociraptor.Actions.VelociraptorInterace import VelociraptorInterface
+# from CybORG.Emulator.Velociraptor.Actions.VelociraptorInterface import VelociraptorInterface
 
 credentials_file = "prog_client.yaml"
 

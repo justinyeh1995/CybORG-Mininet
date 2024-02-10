@@ -1,6 +1,6 @@
 from typing import Union
 
-from CybORG.Emulator.Velociraptor.Observations.ProcessListingObservation import ProcessListingObservation
+from ..Observations.ProcessListingObservation import ProcessListingObservation
 from .VelociraptorAction import VelociraptorAction
 from CybORG.Simulator.State import State
 
