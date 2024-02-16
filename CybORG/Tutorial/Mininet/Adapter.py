@@ -3,7 +3,7 @@ import pexpect
 import yaml
 import collections
 from ipaddress import IPv4Address, IPv4Network
-from utils import *
+from Mininet.utils.util import _parse_action
 
 class MininetAdapter:
     def __init__(self):
@@ -16,6 +16,7 @@ class MininetAdapter:
         self.edge_view = None
         self.routers = None
 
+    
     def set_environment(self, cyborg):
         self.cyborg = cyborg
         self.ip_map = self.cyborg.get_ip_map()
@@ -26,6 +27,7 @@ class MininetAdapter:
         self.ip2host_map = dict(map(lambda item: (str(item[0]), item[1]), self.cyborg.environment_controller.state.ip_addresses.items()))
         self.host2ip_map = {host: str(ip) for ip, host in self.ip_map.items()}
 
+    
     def _set_name_map(self):
         cyborg_to_mininet_name_map = collections.defaultdict(str)
         cnt = 1
@@ -35,6 +37,7 @@ class MininetAdapter:
                 cnt += 1
         return cyborg_to_mininet_name_map
 
+    
     def _get_routers_info(self):
         routers_info = []
         # Assume the router names are suffixed with '_router'
@@ -43,6 +46,7 @@ class MininetAdapter:
                 routers_info.append({'router': self.cyborg_to_mininet_name_map[name], 'ip': str(ip)})
         return routers_info
 
+    
     def _get_lans_info(self):
         lans_info = []
         # Create LANs based on the networks
@@ -56,11 +60,13 @@ class MininetAdapter:
             })
         return lans_info
 
+    
     def _get_router2router_links(self):
         # Filter only for router-to-router links
         router_links = [edge for edge in self.edge_view if all(node in self.routers for node in edge)]
         return router_links
-        
+
+    
     def _get_links_info(self):
         router_links = self._get_router2router_links()
         links_info = []
@@ -74,7 +80,8 @@ class MininetAdapter:
                 'subnet': subnet
             })
         return links_info
-            
+
+    
     def _create_yaml(self):
         try:
             # Initialize topology data
@@ -107,6 +114,7 @@ class MininetAdapter:
             print("An error occurred while creating the YAML file:")
             print(e)
 
+    
     def create_mininet_topo(self):
         try:
             self._create_yaml()
@@ -129,19 +137,25 @@ class MininetAdapter:
             print("An error occurred while creating Mininet topology:")
             print(str(e))
 
+    
     def _parse_last_action(self, agent_type):
         action_str = self.cyborg.get_last_action(type).__str__()
-        target_host, action_type = _parse_action(cyborg, action_str, agent_type, self.host2ip_map, self.ip2host_map)
+        target_host, action_type = _parse_action(self.cyborg, action_str, agent_type, self.host2ip_map, self.ip2host_map)
         return self.cyborg_to_mininet_name_map[target_host], action_type        
+
     
     def send_mininet_command(self, agent_type):
         if self.mininet_process and self.mininet_process.isalive():
             # translate the last action of an agent to Linux command?
             target_host, action_type = self._parse_last_action(agent_type)
-            command = build_command(action_type, target_host) # hey this should actually be host_agent_at ??? confused
+            # command = build_command(action_type, target_host) # hey this should actually be host_agent_at ??? confused
             
             # Send the command to Mininet
-            self.mininet_process.sendline(command)
+            # self.mininet_process.sendline(command)
+            # self.mininet_process.sendline('lan1h1 ping -c 4 lan1h2')
+            self.mininet_process.sendline('lan1h1 ls -a')
+
+
 
             # Wait for the command to be processed and output to be generated
             # The specific pattern to expect might vary based on your command and Mininet's output
@@ -149,7 +163,6 @@ class MininetAdapter:
 
             # Retrieve and print the output of the command
             output = self.mininet_process.before.decode()
-            print(output)
             return output
 
         else:
@@ -159,8 +172,11 @@ class MininetAdapter:
     
     def perform_emulation(self):
         for type in ['Blue', 'Red']:
+            print(type)
             output = self.send_mininet_command(type)
+            print(output)
             # do something?
+    
     
     def reset(self):
         # First, ensure that the existing Mininet subprocess is terminated
@@ -185,7 +201,8 @@ class MininetAdapter:
         finally:
             if cleanup_process is not None and cleanup_process.isalive():
                 cleanup_process.terminate()
-                
+
+
 if __name__ == "__main__":
     print("Hello Mininet!")
     
