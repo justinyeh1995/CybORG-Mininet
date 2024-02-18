@@ -1,13 +1,20 @@
-def transform_discover_remote_systems(subnet):
+def translate_discover_remote_systems(subnet):
     pass
 
-def transform_discover_network_services(subnet):
+def translate_discover_network_services(subnet):
     pass
 
-def transform_exploit_network_services(ip_address, port):
+def translate_exploit_network_services(ip_address, port):
     pass
 
-def _parse_action(cyborg, action_str, agent, host_map, ip_map):
+def translate_restore(ip_address):
+    pass
+
+def translate_remove(ip_address, port):
+    pass
+    
+
+def parse_action(cyborg, action_str, agent, host_map, ip_map):
     action_type = action_str.split(" ")[0]
     target_host = ""
     if cyborg.get_observation(agent)['success'].__str__() == 'TRUE':
