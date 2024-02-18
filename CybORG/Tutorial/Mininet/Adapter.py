@@ -2,19 +2,32 @@ import subprocess
 import pexpect
 import yaml
 import collections
+import re
 from ipaddress import IPv4Address, IPv4Network
-from Mininet.utils.util import _parse_action
+from Mininet.utils.util import parse_action, \
+                            translate_discover_remote_systems, \
+                            translate_discover_network_services, \
+                            translate_exploit_network_services, \
+                            translate_restore, translate_remove \
+                            
+                            
+from Mininet.mininet_utils.custom_utils import IP_components
 
 class MininetAdapter:
     def __init__(self):
         self.cyborg = None
         self.ip_map = None
         self.cidr_map = None
-        self.host_map = None
         self.cyborg_to_mininet_name_map = None
+        self.cyborg_to_mininet_ip_map = None
+        self.cyborg_to_mininet_host_map = None
+        self.ip2host_map = None
+        self.host2ip_map = None
+        self.mininet_host_ip_mapping = None
         self.mininet_process = None
         self.edge_view = None
         self.routers = None
+        self.topology_data = None
 
     
     def set_environment(self, cyborg):
@@ -85,7 +98,7 @@ class MininetAdapter:
     def _create_yaml(self):
         try:
             # Initialize topology data
-            topology_data = {
+            self.topology_data = {
                 'topo': {
                     'routers': [],
                     'lans': [],
@@ -93,16 +106,16 @@ class MininetAdapter:
                 }
             }        
             # Structure the 'Routers' information
-            topology_data['topo']['routers'] = self._get_routers_info()
+            self.topology_data['topo']['routers'] = self._get_routers_info()
 
             # Structure the 'LANs' information
-            topology_data['topo']['lans'] = self._get_lans_info()
+            self.topology_data['topo']['lans'] = self._get_lans_info()
 
             # Structure the 'Links' information
-            topology_data['topo']['links'] = self._get_links_info()
+            self.topology_data['topo']['links'] = self._get_links_info()
                 
             # Convert the data structure to YAML format
-            yaml_content = yaml.dump(topology_data, default_flow_style=False, sort_keys=False)
+            yaml_content = yaml.dump(self.topology_data, default_flow_style=False, sort_keys=False)
             
             # Write the YAML content to a file
             with open('network_topology.yaml', 'w') as file:
@@ -119,7 +132,7 @@ class MininetAdapter:
         try:
             self._create_yaml()
             # Start the Mininet topology creation process with pexpect
-            self.mininet_process = pexpect.spawn("sudo python3 mininet-files/custom_net.py -y network_topology.yaml")
+            self.mininet_process = pexpect.spawn("sudo python3 Mininet/mininet_utils/custom_net.py -y network_topology.yaml")
 
             # Set a timeout for responses (adjust as needed)
             self.mininet_process.timeout = 300
@@ -130,7 +143,27 @@ class MininetAdapter:
 
             # Print the output
             print("Mininet Topology Created Successfully:")
-            print(self.mininet_process.before.decode())  # Decoding may be necessary
+            output = self.mininet_process.before.decode()  # Decoding may be necessary
+            print(output)
+
+            # Define a regex pattern to extract hostnames and IP addresses
+            pattern1 = re.compile(r'(Router):\s+(?P<host>\S+)\s+with IP:\s+(?P<ip>\S+)')
+            pattern2 = re.compile(r'(Host)\s+(?P<host>\S+)\s+with IP:\s+(?P<ip>\S+)')
+
+            
+            # Find all matches in the decoded output
+            matches1 = pattern1.finditer(output)
+            matches2 = pattern2.finditer(output)
+
+            matches = []
+            matches.extend(matches1)
+            matches.extend(matches2)
+            
+            # Create a dictionary to map host names to their IP addresses
+            self.mininet_host_ip_mapping = {match.group('host'): match.group('ip') for match in matches}
+
+            print(self.mininet_host_ip_mapping)
+
 
         except Exception as e:
             # Handle exceptions
@@ -140,15 +173,44 @@ class MininetAdapter:
     
     def _parse_last_action(self, agent_type):
         action_str = self.cyborg.get_last_action(type).__str__()
-        target_host, action_type = _parse_action(self.cyborg, action_str, agent_type, self.host2ip_map, self.ip2host_map)
+        target_host, action_type = parse_action(self.cyborg, action_str, agent_type, self.host2ip_map, self.ip2host_map)
         return self.cyborg_to_mininet_name_map[target_host], action_type        
 
+    
+    def _lookup_mininet_ip(self, target_host):
+        ip = self.host2ip_map[target_host]
+        mininet_ip = self.cyborg_to_mininet_ip_map[ip]
+        return mininet_ip
+
+    
+    def _lookup_mininet_host(self, target_host):
+        pass
+
+    
+    def build_cmd(self, agent_type, action_type, target_host):
+        # red host is user0
+        if agent_type == "Red":
+            host = "lan1h1"
+            target = self._lookup_mininet_ip(target_host)
+            action = ""
+            cmd = f'{host} {action} {target}'
+        # blue host is undecided at the moment
+        elif agent_type == "Blue":
+            if action_type == "Remove":
+                print("Blue Remove")
+            elif action_type == "Restore":
+                print("Blue Restore")
+            host = self._lookup_mininet_host(target_host)
+            action = ""
+            cmd = f'{host} {action}'
+        return cmd
+        
     
     def send_mininet_command(self, agent_type):
         if self.mininet_process and self.mininet_process.isalive():
             # translate the last action of an agent to Linux command?
             target_host, action_type = self._parse_last_action(agent_type)
-            # command = build_command(action_type, target_host) # hey this should actually be host_agent_at ??? confused
+            # command = self.build_cmd(agent_type, action_type, target_host)
             
             # Send the command to Mininet
             # self.mininet_process.sendline(command)
