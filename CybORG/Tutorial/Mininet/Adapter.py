@@ -2,14 +2,16 @@ import subprocess
 import pexpect
 import yaml
 import collections
+import pprint
 import re
 from ipaddress import IPv4Address, IPv4Network
 from Mininet.utils.util import parse_action, \
                             translate_discover_remote_systems, \
                             translate_discover_network_services, \
                             translate_exploit_network_services, \
-                            translate_restore, translate_remove \
-                            
+                            translate_restore, translate_remove 
+import traceback 
+                          
                             
 from Mininet.mininet_utils.custom_utils import IP_components
 
@@ -18,16 +20,38 @@ class MininetAdapter:
         self.cyborg = None
         self.ip_map = None
         self.cidr_map = None
+        self.cyborg_ip_to_host_map = None
+        self.cyborg_host_to_ip_map = None
+
+        self.mininet_host_to_ip_map = None
+        self.mininet_ip_to_host_map = None
+        
         self.cyborg_to_mininet_name_map = None
-        self.cyborg_to_mininet_ip_map = None
+        
         self.cyborg_to_mininet_host_map = None
-        self.ip2host_map = None
-        self.host2ip_map = None
-        self.mininet_host_ip_mapping = None
+        self.mininet_to_cyborg_host_map = None
+        
         self.mininet_process = None
         self.edge_view = None
         self.routers = None
         self.topology_data = None
+
+    def __repr__(self):
+        # Utilize pprint for prettier printing of dictionaries
+        pp = pprint.PrettyPrinter(indent=4)
+        return f"MininetAdapter(\n" \
+               f"cyborg={self.cyborg},\n" \
+               f"ip_map={pp.pformat(self.ip_map)},\n" \
+               f"cidr_map={pp.pformat(self.cidr_map)},\n" \
+               f"cyborg_to_mininet_name_map={pp.pformat(self.cyborg_to_mininet_name_map)},\n" \
+               f"cyborg_to_mininet_host_map={pp.pformat(self.cyborg_to_mininet_host_map)},\n" \
+               f"cyborg_host_to_ip_map={pp.pformat(self.cyborg_host_to_ip_map)},\n" \
+               f"mininet_host_to_ip_map={pp.pformat(self.mininet_host_to_ip_map)},\n" \
+               f"mininet_ip_to_host_map={pp.pformat(self.mininet_ip_to_host_map)},\n" \
+               f"mininet_process={'Running' if self.mininet_process else 'Not running'},\n" \
+               f"edge_view={self.edge_view},\n" \
+               f"routers={self.routers},\n" \
+               f")"
 
     
     def set_environment(self, cyborg):
@@ -37,8 +61,9 @@ class MininetAdapter:
         self.cyborg_to_mininet_name_map = self._set_name_map()
         self.edge_view = self.cyborg.environment_controller.state.link_diagram.edges
         self.routers = {node for edge in self.edge_view for node in edge if node.endswith('_router')}
-        self.ip2host_map = dict(map(lambda item: (str(item[0]), item[1]), self.cyborg.environment_controller.state.ip_addresses.items()))
-        self.host2ip_map = {host: str(ip) for ip, host in self.ip_map.items()}
+        self.cyborg_ip_to_host_map = dict(map(lambda item: (str(item[0]), item[1]),   
+                                              self.cyborg.environment_controller.state.ip_addresses.items()))
+        self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
 
     
     def _set_name_map(self):
@@ -65,11 +90,13 @@ class MininetAdapter:
         # Create LANs based on the networks
         for lan_name, network in self.cidr_map.items():
             hosts = [name for name, ip in self.ip_map.items() if ip in network and not name.endswith('_router')]
+            hosts_info = { f'h{i+1}': str(self.ip_map[name]) for i, name in enumerate(hosts)}
             lans_info.append({
                 'name': self.cyborg_to_mininet_name_map[lan_name],
                 'router': self.cyborg_to_mininet_name_map[f'{lan_name}_router'],
                 'subnet': str(network),
-                'hosts': len(hosts)
+                'hosts': len(hosts),
+                'hosts_info': hosts_info
             })
         return lans_info
 
@@ -86,7 +113,7 @@ class MininetAdapter:
         for i, link in enumerate(router_links):
             ep1, ep2 = link
             # Assuming you have a function or a way to get the subnet for a given link
-            subnet = str(IPv4Network(f'10.{50*(i+1)}.1.0/28'))  # Placeholder, replace with your subnet logic
+            subnet = str(IPv4Network(f'10.{50*(i+1)}.1.0/28'))  # Placeholder, replace with your subnet logic # needs fix
             links_info.append({
                 'ep1-router': self.cyborg_to_mininet_name_map[ep1],
                 'ep2-router': self.cyborg_to_mininet_name_map[ep2],
@@ -113,7 +140,7 @@ class MininetAdapter:
 
             # Structure the 'Links' information
             self.topology_data['topo']['links'] = self._get_links_info()
-                
+            
             # Convert the data structure to YAML format
             yaml_content = yaml.dump(self.topology_data, default_flow_style=False, sort_keys=False)
             
@@ -126,6 +153,7 @@ class MininetAdapter:
         except Exception as e:
             print("An error occurred while creating the YAML file:")
             print(e)
+            traceback.print_exc() 
 
     
     def create_mininet_topo(self):
@@ -160,38 +188,38 @@ class MininetAdapter:
             matches.extend(matches2)
             
             # Create a dictionary to map host names to their IP addresses
-            self.mininet_host_ip_mapping = {match.group('host'): match.group('ip') for match in matches}
+            self.mininet_host_to_ip_map = {match.group('host'): match.group('ip') for match in matches}
 
-            print(self.mininet_host_ip_mapping)
+            self.mininet_ip_to_host_map = {match.group('ip'): match.group('host') for match in matches}
 
+            self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[match.group('ip')]:
+                                               self.mininet_ip_to_host_map[match.group('ip')] for match in matches}
 
         except Exception as e:
             # Handle exceptions
             print("An error occurred while creating Mininet topology:")
             print(str(e))
+            traceback.print_exc() 
+
 
     
     def _parse_last_action(self, agent_type):
-        action_str = self.cyborg.get_last_action(type).__str__()
-        target_host, action_type = parse_action(self.cyborg, action_str, agent_type, self.host2ip_map, self.ip2host_map)
-        return self.cyborg_to_mininet_name_map[target_host], action_type        
-
-    
-    def _lookup_mininet_ip(self, target_host):
-        ip = self.host2ip_map[target_host]
-        mininet_ip = self.cyborg_to_mininet_ip_map[ip]
-        return mininet_ip
-
-    
-    def _lookup_mininet_host(self, target_host):
-        pass
-
+        action_str = self.cyborg.get_last_action(agent_type).__str__()
+        print(action_str)
+        
+        target_host, action_type, isSucess = parse_action(self.cyborg, 
+                                                action_str, 
+                                                agent_type, 
+                                                self.cyborg_ip_to_host_map)
+        
+        return self.cyborg_to_mininet_name_map[target_host], action_type, isSucess        
+        
     
     def build_cmd(self, agent_type, action_type, target_host):
         # red host is user0
         if agent_type == "Red":
             host = "lan1h1"
-            target = self._lookup_mininet_ip(target_host)
+            target = ""
             action = ""
             cmd = f'{host} {action} {target}'
         # blue host is undecided at the moment
@@ -200,7 +228,7 @@ class MininetAdapter:
                 print("Blue Remove")
             elif action_type == "Restore":
                 print("Blue Restore")
-            host = self._lookup_mininet_host(target_host)
+            host = ""
             action = ""
             cmd = f'{host} {action}'
         return cmd
@@ -209,14 +237,15 @@ class MininetAdapter:
     def send_mininet_command(self, agent_type):
         if self.mininet_process and self.mininet_process.isalive():
             # translate the last action of an agent to Linux command?
-            target_host, action_type = self._parse_last_action(agent_type)
+            target_host, action_type, isSucess = self._parse_last_action(agent_type)
+            print((agent_type, action_type, isSucess, target_host))
+
             # command = self.build_cmd(agent_type, action_type, target_host)
             
             # Send the command to Mininet
             # self.mininet_process.sendline(command)
             # self.mininet_process.sendline('lan1h1 ping -c 4 lan1h2')
             self.mininet_process.sendline('lan1h1 ls -a')
-
 
 
             # Wait for the command to be processed and output to be generated
