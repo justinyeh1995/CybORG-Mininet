@@ -195,6 +195,9 @@ class MininetAdapter:
             self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[match.group('ip')]:
                                                self.mininet_ip_to_host_map[match.group('ip')] for match in matches}
 
+            self.mininet_to_cyborg_host_map = { self.mininet_ip_to_host_map[match.group('ip')]:
+                                       self.cyborg_ip_to_host_map[match.group('ip')] for match in matches}
+
         except Exception as e:
             # Handle exceptions
             print("An error occurred while creating Mininet topology:")
@@ -218,7 +221,7 @@ class MininetAdapter:
     def build_cmd(self, agent_type, action_type, target_host):
         # red host is user0
         if agent_type == "Red":
-            host = "lan1h1"
+            host = self.cyborg_to_mininet_host_map["User0"]
             target = ""
             action = ""
             cmd = f'{host} {action} {target}'
