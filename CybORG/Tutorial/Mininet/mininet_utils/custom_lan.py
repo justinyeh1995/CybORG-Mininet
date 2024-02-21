@@ -40,6 +40,7 @@ class CustomLAN ():
     self.router_intf_num = router_intf_num  # router interface number used to connect to LAN
     self.subnet = lan_spec['subnet']  # subnet of this LAN
     self.num_hosts = lan_spec['hosts']   # number of hosts in this LAN
+    self.hosts_info = lan_spec['hosts_info']
     self.switch = None  # this will hold the created switch
     self.hosts = []  # this will be a list of all created hosts
     if 'nat' in lan_spec.keys ():  # check if "nat" is a dictionary key in this LAN or not
@@ -103,9 +104,9 @@ class CustomLAN ():
       next_num += 1  # used in IP address assignment
       
       # create the host
-      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + ip_prefix + str (next_num) + " and default route = " + "via " + ip_prefix + "1" + prefix_len + "\n")
+      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + self.hosts_info["h"+str(i+1)] + " and default route = " + "via " + ip_prefix + "1" + prefix_len + "\n")
       h = self.topo.addHost (name=self.name+"h"+str(i+1),
-                             ip=ip_prefix + str (next_num) + prefix_len,
+                             ip=self.hosts_info["h"+str(i+1)],
                              defaultRoute = " via " + ip_prefix + "1")
 
       # save this host (in case we need it)
