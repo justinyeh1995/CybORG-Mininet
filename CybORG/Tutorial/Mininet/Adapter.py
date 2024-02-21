@@ -172,7 +172,7 @@ class MininetAdapter:
             # Print the output
             print("Mininet Topology Created Successfully:")
             output = self.mininet_process.before.decode()  # Decoding may be necessary
-            print(output)
+            # print(output)
 
             # Define a regex pattern to extract hostnames and IP addresses
             pattern1 = re.compile(r'(Router):\s+(?P<host>\S+)\s+with IP:\s+(?P<ip>\S+)')
@@ -212,7 +212,7 @@ class MininetAdapter:
                                                 agent_type, 
                                                 self.cyborg_ip_to_host_map)
         
-        return self.cyborg_to_mininet_name_map[target_host], action_type, isSucess        
+        return self.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSucess        
         
     
     def build_cmd(self, agent_type, action_type, target_host):
@@ -265,7 +265,7 @@ class MininetAdapter:
         for type in ['Blue', 'Red']:
             print(type)
             output = self.send_mininet_command(type)
-            print(output)
+            # print(output)
             # do something?
     
     
@@ -283,7 +283,7 @@ class MininetAdapter:
             cleanup_process.timeout = 60
             cleanup_process.expect(pexpect.EOF)  # Wait for the end of the process
             print("Cleaned up the topology successfully")
-            print(cleanup_process.before.decode())
+            # print(cleanup_process.before.decode())
 
         except Exception as e:
             print("An error occurred while cleaning up the topology:")
