@@ -4,24 +4,24 @@ import yaml
 import collections
 import pprint
 import re
+import traceback 
+from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
-from Mininet.utils.util import parse_action, get_all_matches, \
+from Mininet.mininet_utils.custom_utils import IP_components
+from Mininet.utils.util import parse_action, parse_mininet_ip, \
+                            set_name_map, get_routers_info, get_lans_info, get_links_info, \
                             translate_discover_remote_systems, \
                             translate_discover_network_services, \
                             translate_exploit_network_services, \
                             translate_restore, translate_remove 
-import traceback 
-from typing import List, Dict
-                          
-                            
-from Mininet.mininet_utils.custom_utils import IP_components
+                       
 
 class MininetAdapter:
     def __init__(self):
+        
         self.cyborg = None
         self.ip_map = None
         self.cidr_map = None
-        self.edge_view = None
         
         self.cyborg_ip_to_host_map = None
         self.cyborg_host_to_ip_map = None
@@ -33,8 +33,7 @@ class MininetAdapter:
         self.mininet_to_cyborg_host_map = None
         
         self.cyborg_to_mininet_name_map = None
-        
-        self.routers = None
+                
         self.topology_data = None
         
         self.mininet_process = None
@@ -53,78 +52,22 @@ class MininetAdapter:
                f"mininet_host_to_ip_map={pp.pformat(self.mininet_host_to_ip_map)},\n" \
                f"mininet_ip_to_host_map={pp.pformat(self.mininet_ip_to_host_map)},\n" \
                f"mininet_process={'Running' if self.mininet_process else 'Not running'},\n" \
-               f"edge_view={self.edge_view},\n" \
-               f"routers={self.routers},\n" \
                f")"
 
     
     def set_environment(self, cyborg) -> None:
         self.cyborg = cyborg
+        
+
+    def create_mapping(self) -> None: 
         self.ip_map = self.cyborg.get_ip_map()
         self.cidr_map = self.cyborg.get_cidr_map()
-        self.cyborg_to_mininet_name_map = self._set_name_map()
-        self.edge_view = self.cyborg.environment_controller.state.link_diagram.edges
-        self.routers = {node for edge in self.edge_view for node in edge if node.endswith('_router')}
         self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()}
         self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
-
-    
-    def _set_name_map(self) -> Dict:
-        cyborg_to_mininet_name_map = collections.defaultdict(str)
         
-        for cnt, (lan_name, network) in enumerate(self.cidr_map.items()):
-                cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
-                cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}'
-            
-        return cyborg_to_mininet_name_map
+        self.cyborg_to_mininet_name_map = set_name_map(self.cyborg)
 
-    
-    def _get_routers_info(self) -> List:
-        """
-        Assume the router names are suffixed with '_router'
-        """
-        return [{'router': self.cyborg_to_mininet_name_map[name], 
-                 'ip': str(ip)} for name, ip in self.ip_map.items() if name.endswith('_router')]
 
-    
-    def _get_lans_info(self) -> List:
-        lans_info = []
-        # Create LANs based on the networks
-        for lan_name, network in self.cidr_map.items():
-            hosts = [name for name, ip in self.ip_map.items() if ip in network and not name.endswith('_router')]
-            hosts_info = { f'h{i+1}': str(self.ip_map[name]) for i, name in enumerate(hosts)}
-            lans_info.append({
-                'name': self.cyborg_to_mininet_name_map[lan_name],
-                'router': self.cyborg_to_mininet_name_map[f'{lan_name}_router'],
-                'subnet': str(network),
-                'hosts': len(hosts),
-                'hosts_info': hosts_info
-            })
-        return lans_info
-
-    
-    def _get_router2router_links(self) -> List:
-        """
-        Filter only for router-to-router links
-        """
-        return [edge for edge in self.edge_view if all(node in self.routers for node in edge)]
-
-    
-    def _get_links_info(self) -> List:
-        router_links = self._get_router2router_links()
-        links_info = []
-        for i, link in enumerate(router_links):
-            ep1, ep2 = link
-            # Assuming you have a function or a way to get the subnet for a given link
-            subnet = str(IPv4Network(f'10.{50*(i+1)}.1.0/28'))  # Placeholder, replace with your subnet logic # needs fix
-            links_info.append({
-                'ep1-router': self.cyborg_to_mininet_name_map[ep1],
-                'ep2-router': self.cyborg_to_mininet_name_map[ep2],
-                'subnet': subnet
-            })
-        return links_info
-
-    
     def _create_yaml(self) -> None:
         """ 
         Write the topo into a yaml file
@@ -138,15 +81,16 @@ class MininetAdapter:
                     'links': [],  # Placeholder, add your actual links here
                 }
             }        
-            # Structure the 'Routers' information
-            self.topology_data['topo']['routers'] = self._get_routers_info()
-
-            # Structure the 'LANs' information
-            self.topology_data['topo']['lans'] = self._get_lans_info()
-
-            # Structure the 'Links' information
-            self.topology_data['topo']['links'] = self._get_links_info()
             
+            # Structure the 'Routers' information
+            self.topology_data['topo']['routers'] = get_routers_info(self.cyborg, self.cyborg_to_mininet_name_map)
+    
+            # Structure the 'LANs' information
+            self.topology_data['topo']['lans'] = get_lans_info(self.cyborg, self.cyborg_to_mininet_name_map)
+    
+            # Structure the 'Links' information
+            self.topology_data['topo']['links'] = get_links_info(self.cyborg, self.cyborg_to_mininet_name_map)
+                
             # Convert the data structure to YAML format
             yaml_content = yaml.dump(self.topology_data, default_flow_style=False, sort_keys=False)
             
@@ -164,7 +108,7 @@ class MininetAdapter:
 
     def update_mapping(self, output: str) -> None:
         
-        matches = get_all_matches(output)
+        matches = parse_mininet_ip(output)
         
         # Create a dictionary to map host names to their IP addresses
         self.mininet_host_to_ip_map = {match.group('host'): match.group('ip') for match in matches}
@@ -286,7 +230,6 @@ class MininetAdapter:
     
     def perform_emulation(self):
         for type in ['Blue', 'Red']:
-            print(type)
             output = self.send_mininet_command(type)
             # print(output)
             # do something?
@@ -319,6 +262,7 @@ class MininetAdapter:
     
     def reset(self) -> None:
         self.clean()
+        self.create_mapping()
         expect_str = self.create_mininet_topo()
         self.update_mapping(expect_str)
 
