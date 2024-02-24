@@ -5,7 +5,6 @@ from CybORG.Agents import B_lineAgent, BlueReactRestoreAgent, BlueReactRemoveAge
 from CybORG.Agents.MainAgent import MainAgent
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
-from CybORG.Agents.Wrappers.ChallengeWrapper2 import ChallengeWrapper2
 from CybORG.Agents.Wrappers import EnumActionWrapper
 from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
 from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
