@@ -9,4 +9,8 @@ networkx
 matplotlib
 paramiko
 pygame
+pandas
 plotly
+torch 
+torchvision 
+torchaudio
