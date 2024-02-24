@@ -11,6 +11,4 @@ paramiko
 pygame
 pandas
 plotly
-torch 
-torchvision 
-torchaudio
+torch==2.1.1
