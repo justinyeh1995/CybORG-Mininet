@@ -32,7 +32,8 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
             'router': cyborg_to_mininet_name_map[f'{lan_name}_router'],
             'subnet': str(network),
             'hosts': len(hosts),
-            'hosts_info': hosts_info
+            'hosts_info': hosts_info,
+            'nat': 'nat0'
         })
     return lans_info
 
@@ -60,6 +61,44 @@ def get_links_info(cyborg, cyborg_to_mininet_name_map) -> List:
             'subnet': subnet
         })
     return links_info
+
+    
+def generate_routing_rules(topology):
+    routes = {}
+    for link in topology["topo"]["links"]:
+        r1, r2 = link["ep1-router"], link["ep2-router"]
+        subnet = link["subnet"]
+
+        # Initialize dictionaries if not already present
+        routes.setdefault(r1, []).append({"to": r2, "via": subnet})
+        routes.setdefault(r2, []).append({"to": r1, "via": subnet})
+
+    for lan in topology["topo"]["lans"]:
+        router = lan["router"]
+        subnet = lan["subnet"]
+        for r in routes:
+            if r == router:
+                continue
+            routes[r].append({"to": subnet, "via": router})
+
+    # Format routing rules
+    routing_rules = []
+    for router, entries in routes.items():
+        router_rules = {"router": router, "entries": []}
+        for entry in entries:
+            entry_str = f"{entry['to']} via {entry['via']}"
+            router_rules["entries"].append(entry_str)
+        routing_rules.append(router_rules)
+
+    return routing_rules
+
+    
+def get_nats_info(cyborg):
+    nats_info = [{
+        'name': 'nat0',
+        'subnets': [str(network) for lan_name, network in cyborg.get_cidr_map().items()]
+    }]
+    return nats_info
 
 
 def parse_action(cyborg, action_str, agent, ip_to_host_map):

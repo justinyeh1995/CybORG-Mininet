@@ -9,7 +9,9 @@ from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
 from Mininet.mininet_utils.custom_utils import IP_components
 from Mininet.utils.util import parse_action, parse_mininet_ip, \
-                            set_name_map, get_routers_info, get_lans_info, get_links_info, \
+                            set_name_map, get_routers_info, get_lans_info, \
+                            get_links_info, get_nats_info, \
+                            generate_routing_rules, \
                             translate_discover_remote_systems, \
                             translate_discover_network_services, \
                             translate_exploit_network_services, \
@@ -79,6 +81,8 @@ class MininetAdapter:
                     'routers': [],
                     'lans': [],
                     'links': [],  # Placeholder, add your actual links here
+                    'routes': [],
+                    'nats': []
                 }
             }        
             
@@ -90,6 +94,10 @@ class MininetAdapter:
     
             # Structure the 'Links' information
             self.topology_data['topo']['links'] = get_links_info(self.cyborg, self.cyborg_to_mininet_name_map)
+
+            self.topology_data['topo']['nats'] = get_nats_info(self.cyborg)
+
+            self.topology_data['topo']['routes'] = generate_routing_rules(self.topology_data)
                 
             # Convert the data structure to YAML format
             yaml_content = yaml.dump(self.topology_data, default_flow_style=False, sort_keys=False)
