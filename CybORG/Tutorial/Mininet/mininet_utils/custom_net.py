@@ -67,18 +67,18 @@ def main ():
   topo.fix_default_route (net)
   
   # add user-specified routes
-  # info ("Add user-specified routes\n")
-  # topo.add_routes (net)
+  info ("Add user-specified routes\n")
+  topo.add_routes (net)
 
   # Now add the iptable rules in the nat nodes
-  # info ("Add additional iptable rules per subnet that needs NAT access\n")
-  # topo.add_nat_rules (net)
+  info ("Add additional iptable rules per subnet that needs NAT access\n")
+  topo.add_nat_rules (net)
   
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
   CLI (net)   # this gives us mininet prompt
-  # info ("Cleanup additional NAT rules\n")
-  # topo.cleanup_nat_rules (net)  # cleanup the additional nat rules
+  info ("Cleanup additional NAT rules\n")
+  topo.cleanup_nat_rules (net)  # cleanup the additional nat rules
   info ("Stop the net\n")
   net.stop ()  # this cleans up the network
 

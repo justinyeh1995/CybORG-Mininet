@@ -2,7 +2,7 @@ import subprocess
 import pexpect
 import yaml
 import collections
-import pprint
+from pprint import pprint
 import re
 import traceback 
 from typing import List, Dict
@@ -95,10 +95,12 @@ class MininetAdapter:
             # Structure the 'Links' information
             self.topology_data['topo']['links'] = get_links_info(self.cyborg, self.cyborg_to_mininet_name_map)
 
-            self.topology_data['topo']['nats'] = get_nats_info(self.cyborg)
+            self.topology_data['topo']['nats'] = get_nats_info(self.cyborg, self.topology_data)
 
             self.topology_data['topo']['routes'] = generate_routing_rules(self.topology_data)
-                
+
+            # pprint(self.topology_data)
+
             # Convert the data structure to YAML format
             yaml_content = yaml.dump(self.topology_data, default_flow_style=False, sort_keys=False)
             
@@ -276,6 +278,6 @@ class MininetAdapter:
 
 
 if __name__ == "__main__":
-    print("Hello Mininet!")
+    print("Hello Mininet Adapter!")
     
         

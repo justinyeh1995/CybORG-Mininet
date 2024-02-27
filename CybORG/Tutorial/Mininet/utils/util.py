@@ -1,7 +1,9 @@
 import re
 import collections
+from pprint import pprint
 from typing import Iterator, Pattern, Tuple, Dict, List
 from ipaddress import IPv4Address, IPv4Network
+from Mininet.mininet_utils import custom_utils as cu
 
 def set_name_map(cyborg) -> Dict:
     cyborg_to_mininet_name_map = collections.defaultdict(str)
@@ -32,9 +34,9 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
             'router': cyborg_to_mininet_name_map[f'{lan_name}_router'],
             'subnet': str(network),
             'hosts': len(hosts),
-            'hosts_info': hosts_info,
-            'nat': 'nat0'
+            'hosts_info': hosts_info
         })
+    lans_info[-1]['nat'] = 'nat0' # bad design, mimic adding nat to the last LAN, e.g., LAN3 here
     return lans_info
 
 
@@ -64,40 +66,63 @@ def get_links_info(cyborg, cyborg_to_mininet_name_map) -> List:
 
     
 def generate_routing_rules(topology):
+    routers_cidr = { entry['router']: entry['subnet'] for entry in topology["topo"]['lans']}
+    routers_ip = { entry['router']: entry['ip'] for entry in topology["topo"]['routers']}
+
+    iterface_table = {
+        "r1": {"r2": 1, "r3": 2},
+        "r2": {"r1": 1, "r3": 2},
+        "r3": {"r1": 1, "r2": 2},
+    }
     routes = {}
-    for link in topology["topo"]["links"]:
+    for i, link in enumerate(topology["topo"]["links"]):
         r1, r2 = link["ep1-router"], link["ep2-router"]
         subnet = link["subnet"]
 
+        ip_prefix, prefix_len, last_octet = cu.IP_components (link['subnet'])
+
         # Initialize dictionaries if not already present
-        routes.setdefault(r1, []).append({"to": r2, "via": subnet})
-        routes.setdefault(r2, []).append({"to": r1, "via": subnet})
-
-    for lan in topology["topo"]["lans"]:
-        router = lan["router"]
-        subnet = lan["subnet"]
-        for r in routes:
-            if r == router:
-                continue
-            routes[r].append({"to": subnet, "via": router})
-
+        routes.setdefault(r1, []).append({"to": routers_cidr[r2], "via": ip_prefix + str (1) + prefix_len, "dev":f'{r1}-eth{iterface_table[r1][r2]}'})
+        routes.setdefault(r2, []).append({"to": routers_cidr[r1], "via": ip_prefix + str (2) + prefix_len, "dev":f'{r2}-eth{iterface_table[r2][r1]}'})
+    
     # Format routing rules
     routing_rules = []
-    for router, entries in routes.items():
+    for i, (router, entries) in enumerate(routes.items()):
         router_rules = {"router": router, "entries": []}
         for entry in entries:
-            entry_str = f"{entry['to']} via {entry['via']}"
+            entry_str = f"{entry['to']} via {entry['via']} dev {entry['dev']}"
             router_rules["entries"].append(entry_str)
+        if i == len(routes)-1: # To-Do: Hard coding is always bad
+            ip_prefix, prefix_len, last_octet = cu.IP_components (routers_cidr[router])
+
+            router_rules["entries"].append(f"default via {ip_prefix + str(int (last_octet) + 2)} dev {router}-eth0")
+        else:
+            router_rules["entries"].append(f"default via {entries[-1]['via']} dev {entries[-1]['dev']}")
+
         routing_rules.append(router_rules)
+
+    for nat in topology["topo"]["nats"]:
+        router_rules = {"router": nat["name"], "entries": []}
+        router_ip = routers_ip[nat["router"]]
+        for subnet in nat['subnets']:
+            entry_str = f"{subnet} via {router_ip} dev {nat['name']}-eth0"
+            router_rules["entries"].append(entry_str)
+
+    pprint(routing_rules)
 
     return routing_rules
 
     
-def get_nats_info(cyborg):
-    nats_info = [{
-        'name': 'nat0',
-        'subnets': [str(network) for lan_name, network in cyborg.get_cidr_map().items()]
-    }]
+def get_nats_info(cyborg, topology):
+    nats_info = []
+    for lan in topology["topo"]['lans']:
+        if lan.get('nat', None):
+            nats_info.append({
+                'name': lan['nat'],
+                'subnets': [str(network) for lan_name, network in cyborg.get_cidr_map().items() if lan_name != lan['name']],
+                'router': lan['router']
+            })
+
     return nats_info
 
 

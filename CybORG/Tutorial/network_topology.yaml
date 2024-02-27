@@ -1,40 +1,41 @@
 topo:
   routers:
   - router: r1
-    ip: 10.0.61.137
+    ip: 10.0.206.185
   - router: r2
-    ip: 10.0.241.97
+    ip: 10.0.183.119
   - router: r3
-    ip: 10.0.1.226
+    ip: 10.0.43.117
   lans:
   - name: lan1
     router: r1
-    subnet: 10.0.61.128/28
+    subnet: 10.0.206.176/28
     hosts: 4
     hosts_info:
-      h1: 10.0.61.129
-      h2: 10.0.61.135
-      h3: 10.0.61.130
-      h4: 10.0.61.132
+      h1: 10.0.206.184
+      h2: 10.0.206.181
+      h3: 10.0.206.180
+      h4: 10.0.206.183
   - name: lan2
     router: r2
-    subnet: 10.0.241.96/28
+    subnet: 10.0.183.112/28
     hosts: 4
     hosts_info:
-      h1: 10.0.241.105
-      h2: 10.0.241.99
-      h3: 10.0.241.101
-      h4: 10.0.241.110
+      h1: 10.0.183.122
+      h2: 10.0.183.126
+      h3: 10.0.183.114
+      h4: 10.0.183.123
   - name: lan3
     router: r3
-    subnet: 10.0.1.224/28
+    subnet: 10.0.43.112/28
     hosts: 5
     hosts_info:
-      h1: 10.0.1.231
-      h2: 10.0.1.233
-      h3: 10.0.1.235
-      h4: 10.0.1.225
-      h5: 10.0.1.230
+      h1: 10.0.43.120
+      h2: 10.0.43.125
+      h3: 10.0.43.121
+      h4: 10.0.43.122
+      h5: 10.0.43.115
+    nat: nat0
   links:
   - ep1-router: r1
     ep2-router: r2
@@ -45,3 +46,26 @@ topo:
   - ep1-router: r2
     ep2-router: r3
     subnet: 10.150.1.0/28
+  routes:
+  - router: r1
+    entries:
+    - 10.0.183.112/28 via 10.50.1.1/28 dev r1-eth1
+    - 10.0.43.112/28 via 10.100.1.1/28 dev r1-eth2
+    - default via 10.100.1.1/28 dev r1-eth2
+  - router: r2
+    entries:
+    - 10.0.206.176/28 via 10.50.1.2/28 dev r2-eth1
+    - 10.0.43.112/28 via 10.150.1.1/28 dev r2-eth2
+    - default via 10.150.1.1/28 dev r2-eth2
+  - router: r3
+    entries:
+    - 10.0.206.176/28 via 10.100.1.2/28 dev r3-eth1
+    - 10.0.183.112/28 via 10.150.1.2/28 dev r3-eth2
+    - default via 10.0.43.114 dev r3-eth0
+  nats:
+  - name: nat0
+    subnets:
+    - 10.0.206.176/28
+    - 10.0.183.112/28
+    - 10.0.43.112/28
+    router: r3
