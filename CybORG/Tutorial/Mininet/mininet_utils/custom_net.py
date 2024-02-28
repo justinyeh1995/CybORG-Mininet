@@ -64,7 +64,7 @@ def main ():
   # fix some of the nonsensical routes
   #info ("Fix mininet-created routes at hosts that might be wrong\n")
   # Maybe it is doing things correctly and it is us who were wrong.
-  topo.fix_default_route (net)
+  #topo.fix_default_route (net)
   
   # add user-specified routes
   info ("Add user-specified routes\n")

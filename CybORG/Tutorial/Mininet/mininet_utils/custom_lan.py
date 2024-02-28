@@ -37,6 +37,7 @@ class CustomLAN ():
     self.topo = None  # our parent topo
     self.name = lan_spec['name']   # used as prefix when creating a switch and hosts
     self.router = lan_spec['router']  # router connected to this LAN
+    self.router_ip = lan_spec['router_ip']
     self.router_intf_num = router_intf_num  # router interface number used to connect to LAN
     self.subnet = lan_spec['subnet']  # subnet of this LAN
     self.num_hosts = lan_spec['hosts']   # number of hosts in this LAN
@@ -77,14 +78,14 @@ class CustomLAN ():
     self.topo.addLink (self.router,
                        s,
                        intfName1=self.router + "-eth" + str (self.router_intf_num),
-                       params1={"ip": ip_prefix + str (next_num) + prefix_len})
+                       params1={"ip": self.router_ip + prefix_len})
     
     # check if there is a NAT node in this LAN and handle it so it always gets
     # the second address in this LAN
     if self.nat_node:
       next_num += 1
-      # create the NAT node
-      info ("NAT node" + self.nat_node + " with IP: " + ip_prefix + str (next_num) + prefix_len + " and default route = " + "via " + ip_prefix + "1" + prefix_len + "\n")
+      # create the NAT node # @To-do this line set the wrong default route to router 
+      info ("NAT node" + self.nat_node + " with IP: " + ip_prefix + str (next_num) + prefix_len + " and default route = " + "via " + self.router_ip + "\n")
       h = self.topo.addHost (self.nat_node,  # name
                              cls=NAT,  # of type NAT
                              subnet=self.subnet,  # subnet to which this nat node belongs
@@ -103,12 +104,13 @@ class CustomLAN ():
     for i in range (self.num_hosts):  # create as many hosts as the number we specified
       next_num += 1  # used in IP address assignment
       
-      # create the host
-      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + self.hosts_info["h"+str(i+1)] + " and default route = " + "via " + ip_prefix + "1" + prefix_len + "\n")
+      # create the host # @To-do this line set the wrong default route to router 
+      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + self.hosts_info["h"+str(i+1)] + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
       h = self.topo.addHost (name=self.name+"h"+str(i+1),
-                             ip=self.hosts_info["h"+str(i+1)],
-                             defaultRoute = " via " + ip_prefix + "1")
-
+                             ip=ip_prefix + str (next_num) + prefix_len,
+                             # ip=self.hosts_info["h"+str(i+1)],
+                             defaultRoute = " via " + self.router_ip) #
+        
       # save this host (in case we need it)
       self.hosts.append (h)
 
