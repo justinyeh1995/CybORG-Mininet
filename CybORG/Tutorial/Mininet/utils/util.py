@@ -28,14 +28,19 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
     # Create LANs based on the networks
     for lan_name, network in cyborg.get_cidr_map().items():
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
+        
         hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
+        router_ip = str(cyborg.get_ip_map()[f'{lan_name}_router'])
+        
         lans_info.append({
             'name': cyborg_to_mininet_name_map[lan_name],
             'router': cyborg_to_mininet_name_map[f'{lan_name}_router'],
+            'router_ip': router_ip,
             'subnet': str(network),
             'hosts': len(hosts),
             'hosts_info': hosts_info
         })
+        
     lans_info[-1]['nat'] = 'nat0' # bad design, mimic adding nat to the last LAN, e.g., LAN3 here
     return lans_info
 
@@ -82,8 +87,8 @@ def generate_routing_rules(topology):
         ip_prefix, prefix_len, last_octet = cu.IP_components (link['subnet'])
 
         # Initialize dictionaries if not already present
-        routes.setdefault(r1, []).append({"to": routers_cidr[r2], "via": ip_prefix + str (1) + prefix_len, "dev":f'{r1}-eth{iterface_table[r1][r2]}'})
-        routes.setdefault(r2, []).append({"to": routers_cidr[r1], "via": ip_prefix + str (2) + prefix_len, "dev":f'{r2}-eth{iterface_table[r2][r1]}'})
+        routes.setdefault(r1, []).append({"to": routers_cidr[r2], "via": ip_prefix + str (2), "dev":f'{r1}-eth{iterface_table[r1][r2]}'})
+        routes.setdefault(r2, []).append({"to": routers_cidr[r1], "via": ip_prefix + str (1), "dev":f'{r2}-eth{iterface_table[r2][r1]}'})
     
     # Format routing rules
     routing_rules = []
@@ -96,8 +101,8 @@ def generate_routing_rules(topology):
             ip_prefix, prefix_len, last_octet = cu.IP_components (routers_cidr[router])
 
             router_rules["entries"].append(f"default via {ip_prefix + str(int (last_octet) + 2)} dev {router}-eth0")
-        else:
-            router_rules["entries"].append(f"default via {entries[-1]['via']} dev {entries[-1]['dev']}")
+        # else:
+        #     router_rules["entries"].append(f"default via {entries[-1]['via']} dev {entries[-1]['dev']}")
 
         routing_rules.append(router_rules)
 
