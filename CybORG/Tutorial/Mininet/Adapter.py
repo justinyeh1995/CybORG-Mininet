@@ -173,14 +173,18 @@ class MininetAdapter:
     def build_red_cmd(self, action_type, target_host) -> str:
         if action_type == "DiscoverRemoteSystems":
             print("Red Discover Remote Systems")
+            host = self.cyborg_to_mininet_name_map['User0'] 
+            action = "nmap -sn"
+            target = target_host
         elif action_type == "DiscoverNetworkServices":
             print("Red Discover Network Services")
+            host = self.cyborg_to_mininet_name_map['User0'] 
+            action = "nmap -sV"
+            target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
+        
         # red host is always user0
-        host = self.cyborg_to_mininet_host_map["User0"]
-        target = ""
-        action = ""
         cmd = f'{host} {action} {target}'
         
         return cmd
