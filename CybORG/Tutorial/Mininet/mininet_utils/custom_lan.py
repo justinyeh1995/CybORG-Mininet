@@ -105,7 +105,7 @@ class CustomLAN ():
       next_num += 1  # used in IP address assignment
       
       # create the host # @To-do this line set the wrong default route to router 
-      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + self.hosts_info["h"+str(i+1)] + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
+      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + ip_prefix + str (next_num) + prefix_len + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
       h = self.topo.addHost (name=self.name+"h"+str(i+1),
                              ip=ip_prefix + str (next_num) + prefix_len,
                              # ip=self.hosts_info["h"+str(i+1)],
