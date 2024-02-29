@@ -11,6 +11,7 @@ from Mininet.mininet_utils.custom_utils import IP_components
 from Mininet.utils.util import parse_action, parse_mininet_ip, \
                             set_name_map, get_routers_info, get_lans_info, \
                             get_links_info, get_nats_info, \
+                            build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map, \
                             generate_routing_rules, \
                             translate_discover_remote_systems, \
                             translate_discover_network_services, \
@@ -116,26 +117,6 @@ class MininetAdapter:
             traceback.print_exc() 
 
     
-    def build_mininet_host_to_cyborg_ip_map(self, topology):
-        mininet_host_to_cyborg_ip_map = {}
-        for entry in topology["topo"]['lans']:
-            lan_name = entry['name']
-            for host, ip in entry['hosts_info'].items():
-                mininet_host_to_cyborg_ip_map[f"{lan_name}{host}"] = ip
-            mininet_host_to_cyborg_ip_map[entry['router']] = entry['router_ip']
-        return mininet_host_to_cyborg_ip_map
-
-
-    def build_cyborg_ip_to_mininet_host_map(self, topology):
-        cyborg_ip_to_mininet_host_map = {}
-        for entry in topology["topo"]['lans']:
-            lan_name = entry['name']
-            for host, ip in entry['hosts_info'].items():
-                cyborg_ip_to_mininet_host_map[ip] = f"{lan_name}{host}"
-            cyborg_ip_to_mininet_host_map[entry['router_ip']] = entry['router']
-        return cyborg_ip_to_mininet_host_map
-        
-    
     def update_mapping(self, output: str) -> None:
         
         matches = parse_mininet_ip(output)
@@ -145,20 +126,21 @@ class MininetAdapter:
 
         self.mininet_ip_to_host_map = {match.group('ip'): match.group('host') for match in matches}
 
-        self.mininet_host_to_cyborg_ip_map = self.build_mininet_host_to_cyborg_ip_map(self.topology_data) 
+        self.mininet_host_to_cyborg_ip_map = build_mininet_host_to_cyborg_ip_map(self.topology_data) 
 
-        self.cyborg_ip_to_mininet_host_map = self.build_cyborg_ip_to_mininet_host_map(self.topology_data)
+        self.cyborg_ip_to_mininet_host_map = build_cyborg_ip_to_mininet_host_map(self.topology_data)
 
-        self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[cyborg_ip]:
-                                           self.cyborg_ip_to_mininet_host_map[cyborg_ip] for cyborg_ip in self.cyborg_ip_to_host_map}
+        self.cyborg_to_mininet_host_map = { 
+            self.cyborg_ip_to_host_map[cyborg_ip]:self.cyborg_ip_to_mininet_host_map[cyborg_ip] 
+            for cyborg_ip in self.cyborg_ip_to_host_map}
 
-        self.mininet_to_cyborg_host_map = { self.cyborg_ip_to_mininet_host_map[cyborg_ip]:
-                                   self.cyborg_ip_to_host_map[cyborg_ip] for cyborg_ip in self.cyborg_ip_to_host_map}
+        self.mininet_to_cyborg_host_map = {
+            self.cyborg_ip_to_mininet_host_map[cyborg_ip]:self.cyborg_ip_to_host_map[cyborg_ip] 
+            for cyborg_ip in self.cyborg_ip_to_host_map}
         
         self.cyborg_ip_to_mininet_ip_map = { 
             self.cyborg_host_to_ip_map[cyborg_h]:self.mininet_host_to_ip_map[mininet_h] 
                 for cyborg_h, mininet_h in self.cyborg_to_mininet_host_map.items()}
-
         
         self.mininet_ip_to_cyborg_ip_map ={
             self.mininet_host_to_ip_map[mininet_h]:self.cyborg_host_to_ip_map[cyborg_h] 
@@ -265,10 +247,6 @@ class MininetAdapter:
                 print(command)
                 # Send the command to Mininet
                 self.mininet_process.sendline(command)
-                
-                # self.mininet_process.sendline('lan1h1 ping -c 1 lan1h2')
-                # self.mininet_process.sendline('lan1h1 ls -a')
-    
     
                 # Wait for the command to be processed and output to be generated
                 # The specific pattern to expect might vary based on your command and Mininet's output
