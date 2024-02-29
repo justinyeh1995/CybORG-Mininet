@@ -8,10 +8,10 @@ import collections
 from pprint import pprint
 
 # import matplotlib.pyplot as plt
-import networkx as nx
-from networkx import connected_components
-import plotly.graph_objects as go
-import plotly.express as px
+# import networkx as nx
+# from networkx import connected_components
+# import plotly.graph_objects as go
+# import plotly.express as px
 import pandas as pd
 
 from CybORG import CybORG, CYBORG_VERSION
