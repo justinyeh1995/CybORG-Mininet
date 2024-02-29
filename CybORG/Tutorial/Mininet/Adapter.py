@@ -207,7 +207,7 @@ class MininetAdapter:
             action = "ssh cpswtjustin@"
             target = "8.8.8.8" # dummy
         elif action_type == "PrivilegeEscalate":
-            action = "ping" # dummy
+            action = "ping -c 1" # dummy
             target = "nat0" # dummy
         else:
             action = "sleep 1" # dummy
@@ -231,7 +231,7 @@ class MininetAdapter:
         host = ""
         action = ""
         cmd = f'{host} timeout {timeout} {action}'
-        cmd = 'lan1h1 ping -c 1 lan1h2'
+        cmd = 'lan1h1 ping -c 1 lan2h2'
         return cmd
 
 

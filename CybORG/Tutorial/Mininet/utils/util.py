@@ -30,7 +30,6 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
         
         hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
-        pprint(cyborg.get_ip_map())
         router_ip = str(cyborg.get_ip_map()[f'{lan_name}_router'])
         
         lans_info.append({
@@ -134,7 +133,7 @@ def generate_routing_rules(topology):
             entry_str = f"{subnet} via {router_ip} dev {nat['name']}-eth0"
             router_rules["entries"].append(entry_str)
 
-    pprint(routing_rules)
+    # pprint(routing_rules)
 
     return routing_rules
 
