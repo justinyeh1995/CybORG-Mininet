@@ -115,7 +115,25 @@ class MininetAdapter:
             print(e)
             traceback.print_exc() 
 
+    
+    def build_mininet_host_to_cyborg_ip_map(self, topology):
+        mininet_host_to_cyborg_ip_map = {}
+        for entry in topology["topo"]['lans']:
+            lan_name = entry['name']
+            for host, ip in entry['hosts_info']:
+                mininet_host_to_cyborg_ip_map[f"{lan_name}{host}"] = ip
+        return mininet_host_to_cyborg_ip_map
 
+
+    def build_cyborg_ip_to_mininet_host_map(self, topology):
+        cyborg_ip_to_mininet_host_map = {}
+        for entry in topology["topo"]['lans']:
+            lan_name = entry['name']
+            for host, ip in entry['hosts_info']:
+                cyborg_ip_to_mininet_host_map[ip] = f"{lan_name}{host}"
+        return cyborg_ip_to_mininet_host_map
+        
+    
     def update_mapping(self, output: str) -> None:
         
         matches = parse_mininet_ip(output)
@@ -125,13 +143,18 @@ class MininetAdapter:
 
         self.mininet_ip_to_host_map = {match.group('ip'): match.group('host') for match in matches}
 
-        self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[match.group('ip')]:
-                                           self.mininet_ip_to_host_map[match.group('ip')] for match in matches}
+        self.mininet_host_to_cyborg_ip_map = self.build_mininet_host_to_cyborg_ip_map(self.topology) 
 
-        self.mininet_to_cyborg_host_map = { self.mininet_ip_to_host_map[match.group('ip')]:
-                                   self.cyborg_ip_to_host_map[match.group('ip')] for match in matches}
+        self.cyborg_ip_to_mininet_host_map = self.build_cyborg_ip_to_mininet_host_map(self.topology)
         
+        self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[cyborg_ip]:
+                                           self.cyborg_ip_to_mininet_host_map[cyborg_ip] for cyborg_ip in self.ip_map}
+
+        self.mininet_to_cyborg_host_map = { self.cyborg_ip_to_mininet_host_map[cyborg_ip]:
+                                   self.cyborg_ip_to_host_map[cyborg_ip] for cyborg_ip in self.ip_map}
         
+        self.cyborg_ip_to_mininet_ip_map = {}
+        self.mininet_ip_to_cyborg_ip_map = {}
     def create_mininet_topo(self) -> str:
         try:
             self._create_yaml()
