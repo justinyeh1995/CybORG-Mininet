@@ -120,8 +120,9 @@ class MininetAdapter:
         mininet_host_to_cyborg_ip_map = {}
         for entry in topology["topo"]['lans']:
             lan_name = entry['name']
-            for host, ip in entry['hosts_info']:
+            for host, ip in entry['hosts_info'].items():
                 mininet_host_to_cyborg_ip_map[f"{lan_name}{host}"] = ip
+            mininet_host_to_cyborg_ip_map[entry['router']] = entry['router_ip']
         return mininet_host_to_cyborg_ip_map
 
 
@@ -129,8 +130,9 @@ class MininetAdapter:
         cyborg_ip_to_mininet_host_map = {}
         for entry in topology["topo"]['lans']:
             lan_name = entry['name']
-            for host, ip in entry['hosts_info']:
+            for host, ip in entry['hosts_info'].items():
                 cyborg_ip_to_mininet_host_map[ip] = f"{lan_name}{host}"
+            cyborg_ip_to_mininet_host_map[entry['router_ip']] = entry['router']
         return cyborg_ip_to_mininet_host_map
         
     
@@ -143,18 +145,31 @@ class MininetAdapter:
 
         self.mininet_ip_to_host_map = {match.group('ip'): match.group('host') for match in matches}
 
-        self.mininet_host_to_cyborg_ip_map = self.build_mininet_host_to_cyborg_ip_map(self.topology) 
+        self.mininet_host_to_cyborg_ip_map = self.build_mininet_host_to_cyborg_ip_map(self.topology_data) 
 
-        self.cyborg_ip_to_mininet_host_map = self.build_cyborg_ip_to_mininet_host_map(self.topology)
-        
+        self.cyborg_ip_to_mininet_host_map = self.build_cyborg_ip_to_mininet_host_map(self.topology_data)
+
         self.cyborg_to_mininet_host_map = { self.cyborg_ip_to_host_map[cyborg_ip]:
-                                           self.cyborg_ip_to_mininet_host_map[cyborg_ip] for cyborg_ip in self.ip_map}
+                                           self.cyborg_ip_to_mininet_host_map[cyborg_ip] for cyborg_ip in self.cyborg_ip_to_host_map}
 
         self.mininet_to_cyborg_host_map = { self.cyborg_ip_to_mininet_host_map[cyborg_ip]:
-                                   self.cyborg_ip_to_host_map[cyborg_ip] for cyborg_ip in self.ip_map}
+                                   self.cyborg_ip_to_host_map[cyborg_ip] for cyborg_ip in self.cyborg_ip_to_host_map}
         
-        self.cyborg_ip_to_mininet_ip_map = {}
-        self.mininet_ip_to_cyborg_ip_map = {}
+        self.cyborg_ip_to_mininet_ip_map = { 
+            self.cyborg_host_to_ip_map[cyborg_h]:self.mininet_host_to_ip_map[mininet_h] 
+                for cyborg_h, mininet_h in self.cyborg_to_mininet_host_map.items()}
+
+        
+        self.mininet_ip_to_cyborg_ip_map ={
+            self.mininet_host_to_ip_map[mininet_h]:self.cyborg_host_to_ip_map[cyborg_h] 
+                for cyborg_h, mininet_h in self.cyborg_to_mininet_host_map.items()}
+
+        # pprint(self.cyborg_ip_to_mininet_host_map)
+        # pprint(self.cyborg_ip_to_host_map)
+        # pprint(self.mininet_host_to_ip_map)
+        # pprint(self.cyborg_ip_to_mininet_ip_map)
+
+    
     def create_mininet_topo(self) -> str:
         try:
             self._create_yaml()
@@ -194,26 +209,36 @@ class MininetAdapter:
         
     
     def build_red_cmd(self, action_type, target_host) -> str:
+        host = self.cyborg_to_mininet_host_map['User0'] # red host is always user0
+        timeout = 60
+        # @To-Do code smells
         if action_type == "DiscoverRemoteSystems":
             print("Red Discover Remote Systems")
-            host = self.cyborg_to_mininet_name_map['User0'] 
             action = "nmap -sn"
             target = target_host
         elif action_type == "DiscoverNetworkServices":
             print("Red Discover Network Services")
-            host = self.cyborg_to_mininet_name_map['User0'] 
             action = "nmap -sV"
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
-        
-        # red host is always user0
-        cmd = f'{host} {action} {target}'
+            action = "ssh cpswtjustin@"
+            target = "8.8.8.8" # dummy
+        elif action_type == "PrivilegeEscalate":
+            action = "ping" # dummy
+            target = "nat0" # dummy
+        else:
+            action = "sleep 1" # dummy
+            target = "" # dummy
+            
+        cmd = f'{host} timeout {timeout} {action} {target}'
         
         return cmd
 
 
     def build_blue_cmd(self, action_type, target_host) -> str:
+        timeout = 10
+        # @To-Do code smells
         # blue host is undecided at the moment
         if action_type == "Remove":
             print("Blue Remove")
@@ -223,8 +248,8 @@ class MininetAdapter:
             print("Blue Monitor")
         host = ""
         action = ""
-        cmd = f'{host} {action}'
-        
+        cmd = f'{host} timeout {timeout} {action}'
+        cmd = 'lan1h1 ping -c 1 lan1h2'
         return cmd
 
 
@@ -235,13 +260,14 @@ class MininetAdapter:
                 target_host, action_type, isSucess = self._parse_last_action(agent_type)
                 print((agent_type, action_type, isSucess, target_host))
     
-                # command = self.build_red_cmd(action_type, target_host) if agent_type == "Red" else self.build_blue_cmd(action_type, target_host)
-                
+                command = self.build_red_cmd(action_type, target_host) if agent_type == "Red" else self.build_blue_cmd(action_type, target_host)
+
+                print(command)
                 # Send the command to Mininet
-                # self.mininet_process.sendline(command)
+                self.mininet_process.sendline(command)
                 
-                # self.mininet_process.sendline('lan1h1 ping -c 4 lan1h2')
-                self.mininet_process.sendline('lan1h1 ls -a')
+                # self.mininet_process.sendline('lan1h1 ping -c 1 lan1h2')
+                # self.mininet_process.sendline('lan1h1 ls -a')
     
     
                 # Wait for the command to be processed and output to be generated
@@ -268,7 +294,7 @@ class MininetAdapter:
     def perform_emulation(self):
         for type in ['Blue', 'Red']:
             output = self.send_mininet_command(type)
-            # print(output)
+            print(output)
             # do something?
     
     
