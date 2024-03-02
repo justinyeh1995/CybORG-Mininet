@@ -22,11 +22,14 @@ class GameStateManager:
         self.red_agent = None
         self.cyborg = None
         self.num_steps = None
+        
         self.ip_map = None
         self.host_map = None
+        
         self.true_state = None
-        self.true_table = None
+        
         self.accumulated_rewards = collections.defaultdict(lambda: collections.defaultdict(float))
+        
         self.game_states = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
         
         self.compromised_hosts = set(['User0'])
@@ -48,10 +51,6 @@ class GameStateManager:
 
     def _get_true_state(self):
         return deepcopy(self.cyborg.get_agent_state('True'))
-
-    def _get_true_state_table(self):
-        self.true_state = self._get_true_state()
-        return true_obs_to_table(self.true_state, self.cyborg)
 
     def _get_host_info(self, node):
         if '_router' in node:
@@ -257,6 +256,10 @@ class GameStateManager:
             
         return state_snapshot
 
+    def update_state_snapshot(self, observation):
+        # @To-Do: get mininet observation involed
+        pass
+    
     def reset(self):
         self.compromised_hosts = set(['User0'])
         self.exploited_hosts = set()
