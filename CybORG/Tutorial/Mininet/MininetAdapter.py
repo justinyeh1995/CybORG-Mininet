@@ -56,8 +56,9 @@ class MininetAdapter:
     def perform_emulation(self):
         # Example of performing emulation
         # Translate CybORG action to Mininet command and send it
-        cyborg_action = "some_action_from_cyborg"
-        mininet_command = self._translate_action_to_command(cyborg_action)
+        # @To-Do
+        cyborg_action = "some_action_from_cyborg" #_parse_last_action
+        mininet_command = self._translate_action_to_command(cyborg_action) # To-Do
         mininet_cli_text = self.command_interface.send_command(mininet_command)
         return self.results_bundler.bundle(mininet_cli_text)
 
