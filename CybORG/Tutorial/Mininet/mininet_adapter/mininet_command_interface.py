@@ -1,14 +1,14 @@
 import pexpect
-from Mininet.utils.util import parse_action, get_all_matches
+import traceback 
 
 class MininetCommandInterface:
     def __init__(self):
         self.mininet_process = None
 
     
-    def start_mininet(self, topology_file: str) -> s:
+    def start_mininet(self, topology_file: str) -> str:
         self.clean()
-        self.mininet_process = pexpect.spawn(f"sudo python3 Mininet/mininet_utils/custom_net.py -y {topology_file}")
+        self.mininet_process = pexpect.spawn(f"sudo python3 mininet_utils/custom_net.py -y {topology_file}")
         self.mininet_process.timeout = 300
         self.mininet_process.expect("mininet>")
         return self.mininet_process.before.decode()

@@ -1,10 +1,12 @@
+import traceback 
+
 class ActionTranslator:
     def translate(self, action):
         raise NotImplementedError
 
 class RedActionTranslator(ActionTranslator):
-    def translate(self, action_type, target_host) -> str:
-        host = self.cyborg_to_mininet_host_map['User0'] # red host is always user0
+    def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
+        host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
         # @To-Do code smells
         if action_type == "DiscoverRemoteSystems":
@@ -31,7 +33,7 @@ class RedActionTranslator(ActionTranslator):
         return cmd
 
 class BlueActionTranslator(ActionTranslator):
-    def translate(self, action_type, target_host) -> str:
+    def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
         timeout = 10
         # @To-Do code smells
         # blue host is undecided at the moment
@@ -41,7 +43,7 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Restore")
         elif action_type == "Monitor":
             print("Blue Monitor")
-        host = ""
+        host = target_host
         action = ""
         cmd = f'{host} timeout {timeout} {action}'
         cmd = 'lan1h1 ping -c 1 lan2h2'

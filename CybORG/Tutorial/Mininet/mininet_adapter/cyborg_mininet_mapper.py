@@ -3,17 +3,8 @@ from pprint import pprint
 import re
 import traceback 
 from typing import List, Dict
-from ipaddress import IPv4Address, IPv4Network
-from Mininet.mininet_utils.custom_utils import IP_components
-from Mininet.utils.util import parse_action, parse_mininet_ip, \
-                            set_name_map, get_routers_info, get_lans_info, \
-                            get_links_info, get_nats_info, \
-                            build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map, \
-                            generate_routing_rules, \
-                            translate_discover_remote_systems, \
-                            translate_discover_network_services, \
-                            translate_exploit_network_services, \
-                            translate_restore, translate_remove 
+from CybORG.Tutorial.Mininet.utils.util import set_name_map, parse_mininet_ip, \
+                            build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map
 
 class CybORGMininetMapper:
     def __init__(self):
@@ -29,7 +20,7 @@ class CybORGMininetMapper:
         self.cyborg_to_mininet_name_map = set_name_map(cyborg)
 
     
-    def update_mapping(self, output: str) -> None:
+    def update_mapping(self, output: str, topology_data: dict) -> None:
         
         matches = parse_mininet_ip(output)
         
@@ -38,9 +29,9 @@ class CybORGMininetMapper:
 
         self.mininet_ip_to_host_map = {match.group('ip'): match.group('host') for match in matches}
 
-        self.mininet_host_to_cyborg_ip_map = build_mininet_host_to_cyborg_ip_map(self.topology_data) 
+        self.mininet_host_to_cyborg_ip_map = build_mininet_host_to_cyborg_ip_map(topology_data) 
 
-        self.cyborg_ip_to_mininet_host_map = build_cyborg_ip_to_mininet_host_map(self.topology_data)
+        self.cyborg_ip_to_mininet_host_map = build_cyborg_ip_to_mininet_host_map(topology_data)
 
         self.cyborg_to_mininet_host_map = { 
             self.cyborg_ip_to_host_map[cyborg_ip]:self.cyborg_ip_to_mininet_host_map[cyborg_ip] 
