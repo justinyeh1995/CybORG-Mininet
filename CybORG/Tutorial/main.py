@@ -13,12 +13,15 @@ from pprint import pprint
 # import plotly.graph_objects as go
 # import plotly.express as px
 import pandas as pd
+from dataclasses import dataclass
 
 from CybORG import CybORG, CYBORG_VERSION
 
 from CybORG.Agents import B_lineAgent, BlueReactRestoreAgent, BlueReactRemoveAgent, \
     RandomAgent, RedMeanderAgent, SleepAgent
+from CybORG.Agents import BaseAgent
 from CybORG.Agents.MainAgent import MainAgent
+from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
 from CybORG.Agents.Wrappers.ChallengeWrapper2 import ChallengeWrapper2
@@ -36,15 +39,50 @@ MAX_EPS = 1
 agent_name = 'Blue'
 random.seed(0)
 cyborg_version = CYBORG_VERSION
-scenario = 'Scenario2'
+# scenario = 'Scenario2'
+scenario = 'Scenario2_cyborg--'
+
+@dataclass
+class AgentFactory:
+    """Class for keeping building agents."""
+    
+    def create(self, type: str) -> BaseAgent:
+        if type == "CardiffUni":
+            return MainAgent()
+        elif type == "CASTLEgym":
+            return MainAgent_cyborg_mm()
+        else:
+            return BlueReactRemoveAgent()  
+
+@dataclass
+class CybORGFactory:
+    """Class for keeping building agents."""
+    type: str = "wrap"
+    file_name: str = "Scenario2_cyborg--"
+    
+    def wrap(self, env):
+        # return ChallengeWrapper2(env=env, agent_name='Blue')
+        return ChallengeWrapper(env=env, agent_name='Blue')
+    
+    def create(self, type: str, red_agent) -> BaseAgent:
+        red_agent = red_agent()
+        path = str(inspect.getfile(CybORG))
+        path = path[:-7] + f'/Simulator/Scenarios/scenario_files/{self.file_name}.yaml'
+        sg = FileReaderScenarioGenerator(path)
+        cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+        
+        if type == "wrap":
+            return self.wrap(cyborg)
+            
+        return cyborg
 
 def wrap(env):
-    return ChallengeWrapper2(env=env, agent_name='Blue')
-    # return ChallengeWrapper(env=env, agent_name='Blue')
+    # return ChallengeWrapper2(env=env, agent_name='Blue')
+    return ChallengeWrapper(env=env, agent_name='Blue')
 
-def main():
+def main_pretained_agent(type):
     cyborg_version = CYBORG_VERSION
-    scenario = 'Scenario2'
+    scenario = scenario
     # commit_hash = get_git_revision_hash()
     commit_hash = "Not using git"
     # ask for a name
@@ -57,8 +95,10 @@ def main():
     lines = inspect.getsource(wrap)
     wrap_line = lines.split('\n')[1].split('return ')[1]
 
+
+    factory = AgentFactory()
     # Change this line to load your agent
-    agent = MainAgent()
+    agent = factory.create(type=type)
     
     print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
 
@@ -71,7 +111,7 @@ def main():
     # game manager initialization
     game_state_manager = GameStateManager()
     
-    for num_steps in [30]:
+    for num_steps in [10]:
         for red_agent in [B_lineAgent]:
             red_agent = red_agent()
             cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
@@ -117,9 +157,9 @@ def main():
     return game_state_manager.get_game_state()
 
 
-def main_simple_agent():
+def main(agent_type: str, cyborg_type: str) -> None:
     cyborg_version = CYBORG_VERSION
-    scenario = 'Scenario2'
+    scenario = 'Scenario2_cyborg--'
     # commit_hash = get_git_revision_hash()
     commit_hash = "Not using git"
     # ask for a name
@@ -133,14 +173,13 @@ def main_simple_agent():
     wrap_line = lines.split('\n')[1].split('return ')[1]
 
     # Change this line to load your agent
-    agent = BlueReactRemoveAgent()
+    agent_factory = AgentFactory()
+    # Change this line to load your agent
+    agent = agent_factory.create(type=agent_type)
     
     print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
 
-    path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Tutorial/Scenario2_simple.yaml'
-
-    sg = FileReaderScenarioGenerator(path)
+    cyborg_factory = CybORGFactory()
 
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
@@ -150,10 +189,10 @@ def main_simple_agent():
     mininet_adapter = MininetAdapter()
 
     
-    for num_steps in [1]:
+    for num_steps in [10]:
         for red_agent in [B_lineAgent]:
-            red_agent = red_agent()
-            cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+            
+            cyborg = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
 
             observation = cyborg.reset()
             # print('observation is:',observation)
@@ -215,5 +254,8 @@ def main_simple_agent():
 
 
 if __name__ == "__main__":
-    game_state_simple = main_simple_agent()
+    # game_pretrained_agent_state = main_pretained_agent("CardiffUni")
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap")
+
+
     
