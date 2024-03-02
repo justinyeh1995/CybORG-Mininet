@@ -155,10 +155,9 @@ class NetworkVisualizer:
                         )
         
         # Create annotations for agent actions, initially invisible
-        observations_annotations = []
         vertical_padding = 0.18
         # for idx, action_info in enumerate(action_info):
-        observations_annotations.append(dict(
+        simulation_obs = dict(
             xref='paper', yref='paper',
             x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"<br>🎯{agent} Action: {action_info['action']} \
@@ -171,9 +170,28 @@ class NetworkVisualizer:
             font=dict(
                 size=10,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+                )
             )
-        ))
         
+        emulation_obs = dict(
+            xref='paper', yref='paper',
+            x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            text=f"<br>🎯{agent} Action: {action_info['action']} \
+                    <br>✅Success: {action_info['success']} \
+                    <br>💰Reward: {20000} \
+                    <br>💎Accumulated {agent} Reward: {accumulate_reward}",
+            showarrow=False,
+            visible=False,  # Initially not visible
+            align="left",  # Ensure text is aligned for both agents
+            font=dict(
+                size=10,
+                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+                )
+            )
+        
+        observations_annotations = [simulation_obs, emulation_obs]
+        # observations_annotations = [simulation_obs]
+
         # Prepare and plot the figure
         fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
         self._setup_annotations_and_buttons(fig, observations_annotations)
@@ -193,14 +211,18 @@ class NetworkVisualizer:
             updatemenus=[
                 dict(
                     buttons=list([
-                        dict(label="Show Observations",
+                        dict(label="Show Simulation Observations",
                              method="update",
-                             args=[{"visible": [True, True, True, True]},  # Set the visibility as required
-                                   {"annotations": annotations}]),
+                             args=[{"visible": [True, True, True, True]},  # Assuming you want all traces visible
+                                   {"annotations": [annotations[0]]}]),  # annotations[0] should contain simulation annotations
+                        dict(label="Show Emulation Observations",
+                             method="update",
+                             args=[{"visible": [True, True, True, True]},  # Assuming you want all traces visible
+                                   {"annotations": [annotations[1]]}]),  # annotations[1] should contain emulation annotations
                         dict(label="Hide Observations",
                              method="update",
-                             args=[{"visible": [True, True, True, False]},  # Reset to original visibility
-                                   {"annotations": []}])
+                             args=[{"visible": [True, True, True, True]},  # Keeping the traces visible but hiding annotations
+                                   {"annotations": []}])  # Hides all annotations
                     ]),
                     direction="down",
                     pad={"r": 10, "t": 10},
