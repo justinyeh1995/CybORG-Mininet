@@ -268,6 +268,9 @@ class MininetAdapter:
             traceback.print_exc() 
 
 
+    def bundle_results(self, output: str) -> str:
+        pass
+        
     
     def perform_emulation(self):
         for type in ['Blue', 'Red']:
