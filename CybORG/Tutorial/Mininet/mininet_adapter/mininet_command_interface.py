@@ -1,5 +1,7 @@
 import pexpect
 import traceback 
+import inspect
+from CybORG import CybORG, CYBORG_VERSION
 
 class MininetCommandInterface:
     def __init__(self):
@@ -8,7 +10,9 @@ class MininetCommandInterface:
     
     def start_mininet(self, topology_file: str) -> str:
         self.clean()
-        self.mininet_process = pexpect.spawn(f"sudo python3 mininet_utils/custom_net.py -y {topology_file}")
+        path = str(inspect.getfile(CybORG))
+        path = path[:-7] + f'/Tutorial/Mininet/mininet_utils/custom_net.py'
+        self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
         self.mininet_process.timeout = 300
         self.mininet_process.expect("mininet>")
         return self.mininet_process.before.decode()
