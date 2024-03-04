@@ -5,9 +5,9 @@ from CybORG.Simulator.State import State
 
 from CybORG.Simulator.Actions import Action
 
-from .GetTextFileContentsAction import GetTextFileContentsAction
-from .ProcessListingAction import ProcessListingAction
-from .KillProcessAction import KillProcessAction
+from CybORG.Emulator.Actions.Velociraptor.GetTextFileContentsAction import GetTextFileContentsAction
+from CybORG.Emulator.Actions.Velociraptor.ProcessListingAction import ProcessListingAction
+from CybORG.Emulator.Actions.Velociraptor.KillProcessAction import KillProcessAction
 
 
 class KillProcessesFromFileAction(Action):

@@ -1,6 +1,6 @@
 import json
-from CybORG.Emulator.Velociraptor.Actions.VerifyFilesAction import VerifyFilesAction
-from CybORG.Emulator.Velociraptor.Observations.VerifyFilesObservation import VerifyFilesObservation
+from CybORG.Emulator.Actions.Velociraptor.VerifyFilesAction import VerifyFilesAction
+from CybORG.Emulator.Observations.Velociraptor import VerifyFilesObservation
 
 credentials_file = "prog_client.yaml"
 

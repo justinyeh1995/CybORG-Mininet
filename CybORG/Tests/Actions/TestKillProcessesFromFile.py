@@ -1,5 +1,5 @@
-from CybORG.Emulator.Velociraptor.Actions.KillProcessesFromFileAction import KillProcessesFromFileAction
-from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
+from CybORG.Emulator.Actions.Velociraptor import KillProcessesFromFileAction
+from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
 
 credentials_file = "prog_client.yaml"
 

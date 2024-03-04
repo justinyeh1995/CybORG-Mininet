@@ -7,7 +7,7 @@ from typing import Union
 
 import yaml
 
-from CybORG.Emulator.Velociraptor.Actions.ClientListAction import ClientListAction
+from CybORG.Emulator.Actions.Velociraptor import ClientListAction
 from CybORG.Shared import Scenario
 from CybORG.Shared.Scenarios.ScenarioGenerator import ScenarioGenerator
 

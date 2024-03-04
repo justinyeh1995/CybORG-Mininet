@@ -1,4 +1,4 @@
-from CybORG.Emulator.Velociraptor.Actions.GetTextFileContentsAction import GetTextFileContentsAction
+from CybORG.Emulator.Actions.Velociraptor import GetTextFileContentsAction
 
 credentials_file = "prog_client.yaml"
 

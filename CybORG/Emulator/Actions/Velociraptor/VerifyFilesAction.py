@@ -5,9 +5,9 @@ from CybORG.Simulator.State import State
 
 from CybORG.Simulator.Actions import Action
 
-from ..Observations.VerifyFilesObservation import VerifyFilesObservation
+from CybORG.Emulator.Observations.Velociraptor.VerifyFilesObservation import VerifyFilesObservation
 
-from .RunProcessAction import RunProcessAction
+from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
 
 
 class VerifyFilesAction(Action):

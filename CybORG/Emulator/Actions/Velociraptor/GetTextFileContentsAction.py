@@ -3,8 +3,8 @@ from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 
-from .RunProcessAction import RunProcessAction
-from ..Observations.TextFileContentsObservation import TextFileContentsObservation
+from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
+from CybORG.Emulator.Observations.Velociraptor.TextFileContentsObservation import TextFileContentsObservation
 
 
 class GetTextFileContentsAction(RunProcessAction):

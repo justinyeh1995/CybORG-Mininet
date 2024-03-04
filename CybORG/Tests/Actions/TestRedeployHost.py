@@ -1,4 +1,4 @@
-from CybORG.Emulator.Velociraptor.Actions.RedeployHostAction import RedeployHostAction
+from CybORG.Emulator.Actions.RedeployHostAction import RedeployHostAction
 
 
 redeploy_host_action = RedeployHostAction(

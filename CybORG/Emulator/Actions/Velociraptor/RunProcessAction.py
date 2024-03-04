@@ -3,22 +3,19 @@ from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 
-from ..Observations.NetstatObservation import NetstatObservation
-from .VelociraptorAction import VelociraptorAction
+from CybORG.Emulator.Observations.Velociraptor.ProcessObservation import ProcessObservation
+from CybORG.Emulator.Actions.Velociraptor.VelociraptorAction import VelociraptorAction
 
 
-class NetstatAction(VelociraptorAction):
+class RunProcessAction(VelociraptorAction):
 
-    artifact_name = "Custom.Linux.Network.Netstat"
+    artifact_name = "Linux.Sys.BashShell"
 
-    def __init__(self, credentials_file, hostname, state_regex=None):
+    def __init__(self, credentials_file, hostname, command):
 
         super().__init__(credentials_file=credentials_file)
         self.hostname = hostname
-        if state_regex is None:
-            state_regex = "Listening|Established"
-
-        self.environment_dict = {"StateRegex": state_regex}
+        self.environment_dict = {"Command": f"{command}"}
 
     def execute(self, state: Union[State, None]) -> Observation:
 
@@ -30,8 +27,8 @@ class NetstatAction(VelociraptorAction):
             client_id, self.artifact_name, self.environment_dict
         )
 
-        return NetstatObservation(
+        return ProcessObservation(
             success=False
-        ) if output_list is None else NetstatObservation(
-            netstat_list=output_list, success=True
+        ) if output_list is None else ProcessObservation(
+            process_info=output_list[0], success=True
         )

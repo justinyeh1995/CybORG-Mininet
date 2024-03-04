@@ -1,4 +1,4 @@
-from .ProcessObservation import ProcessObservation
+from CybORG.Emulator.Observations.Velociraptor.ProcessObservation import ProcessObservation
 
 
 class TextFileContentsObservation(ProcessObservation):

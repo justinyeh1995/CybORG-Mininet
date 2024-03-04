@@ -1,5 +1,5 @@
 from CybORG.Shared import Observation
-from ..Actions.DictToAttributes import DictToAttributes
+from CybORG.Emulator.Observations.Velociraptor.DictToAttributes import DictToAttributes
 
 
 class NetstatInfo(DictToAttributes):
