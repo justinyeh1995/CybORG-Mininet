@@ -208,7 +208,7 @@ class NetworkVisualizer:
         # Add a button to toggle the visibility of observation annotations
         fig.update_layout(
             width=1000,
-            annotations=annotations[0],  # Include the annotations by default, shown initially
+            annotations=[annotations[0]],  # Include the annotations by default, shown initially
             updatemenus=[
                 dict(
                     buttons=[
