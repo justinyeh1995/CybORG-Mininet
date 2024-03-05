@@ -81,10 +81,11 @@ class MininetAdapter:
                                                                     target,
                                                                     self.mapper.cyborg_to_mininet_host_map)
                 
-            mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else "Unsuccessful Action"
-            print(mininet_cli_text)
-            mininet_obs = self.results_bundler.bundle(mininet_cli_text)
-            obs[type] = mininet_obs
+            mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
+            # print(mininet_cli_text)
+            mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text)
+            pprint(mininet_obs)
+            
         return obs
 
     
