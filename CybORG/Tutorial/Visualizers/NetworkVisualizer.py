@@ -181,6 +181,7 @@ class NetworkVisualizer:
             text=f"<br>🎯{agent} Action: {action_info['action']} \
                     <br>✅Success: {action_info['success']} \
                     <br>💰Observations: {mininet_obs} \
+                    ",
             showarrow=False,
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
