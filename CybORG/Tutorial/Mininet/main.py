@@ -154,12 +154,16 @@ def main(agent_type: str, cyborg_type: str) -> None:
                     
                     # create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot()
+                    
+                    # The adapter should pass the action as a param
+                    obs = mininet_adapter.perform_emulation()
+                    # pprint(mininet_adapter)
+
+                    # merge 
+                    state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, obs)
+                    
                     # game manager store state
                     game_state_manager.store_state(state_snapshot, i, j)
-
-                    # The adapter should pass the action as a param
-                    mininet_adapter.perform_emulation()
-                    # pprint(mininet_adapter)
 
                     
                 # game manager reset
