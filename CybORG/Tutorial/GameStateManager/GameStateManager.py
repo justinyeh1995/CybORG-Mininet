@@ -256,9 +256,12 @@ class GameStateManager:
             
         return state_snapshot
 
-    def update_state_snapshot(self, observation):
+    def update_state_snapshot(self, state_snapshot, observation):
         # @To-Do: get mininet observation involed
-        pass
+        for type in ['Blue', 'Red']:
+            obs = observation[type]
+            state_snapshot[type]['mininet_obs'] = obs
+        return state_snapshot  
     
     def reset(self):
         self.compromised_hosts = set(['User0'])
