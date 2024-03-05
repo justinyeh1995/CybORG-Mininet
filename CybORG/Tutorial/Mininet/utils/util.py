@@ -3,7 +3,7 @@ import collections
 from pprint import pprint
 from typing import Iterator, Pattern, Tuple, Dict, List
 from ipaddress import IPv4Address, IPv4Network
-from Mininet.mininet_utils import custom_utils as cu
+from CybORG.Tutorial.Mininet.mininet_utils import custom_utils as cu
 
 def set_name_map(cyborg) -> Dict:
     cyborg_to_mininet_name_map = collections.defaultdict(str)
@@ -162,7 +162,7 @@ def parse_action(cyborg, action_str, agent, ip_to_host_map):
         # Update target host if it's an IP address to get the hostname
         target_host = ip_to_host_map.get(target_host, target_host) #if target_host in ip_to_host_map else target_host
         # target_host = 
-    return target_host, action_type, isSuccess
+    return target_host, action_type, isSuccess == 'TRUE'
 
 
 def find_matches(pattern_str: str, raw_text: str) -> Iterator[re.Match]:
