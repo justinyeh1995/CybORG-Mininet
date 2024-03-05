@@ -74,6 +74,7 @@ class NetworkVisualizer:
         node_borders = state['node_borders']
         action_info = state['action_info']
         host_map = state['host_map']
+        mininet_obs = state['mininet_obs']
         reward = self._convert_reward_format(state['reward'])
         accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
 
@@ -179,8 +180,7 @@ class NetworkVisualizer:
             x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"<br>🎯{agent} Action: {action_info['action']} \
                     <br>✅Success: {action_info['success']} \
-                    <br>💰Reward: {20000} \
-                    <br>💎Accumulated {agent} Reward: {accumulate_reward}",
+                    <br>💰Observations: {mininet_obs} \
             showarrow=False,
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
