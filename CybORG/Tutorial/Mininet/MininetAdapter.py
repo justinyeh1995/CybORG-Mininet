@@ -70,8 +70,8 @@ class MininetAdapter:
         # @To-Do
         obs = {}
         for type in ['Blue', 'Red']:
-            cyborg_action, target, isSuccess = self._parse_last_action(type)
-            
+            target, cyborg_action, isSuccess = self._parse_last_action(type)
+            pprint((target, cyborg_action, isSuccess))
             if type == "Blue":
                 mininet_command = self.blue_action_translator.translate(cyborg_action, 
                                                                     target, 
@@ -82,10 +82,11 @@ class MininetAdapter:
                                                                     self.mapper.cyborg_to_mininet_host_map)
                 
             mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
-            # print(mininet_cli_text)
+            print(mininet_cli_text)
             mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text)
             pprint(mininet_obs)
-            
+            obs[type] = mininet_obs
+        
         return obs
 
     

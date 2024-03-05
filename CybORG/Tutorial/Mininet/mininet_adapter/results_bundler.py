@@ -34,7 +34,8 @@ def parse_nmap_port_scan(text, target) -> List:
 class ResultsBundler:
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str) -> Dict:
         # @To-Do
-        if mininet_cli_str == "":
+        print(isSuccess)
+        if not isSuccess:
             return {'success': False}
         
         if cyborg_action == "DiscoverRemoteSystems":
@@ -43,6 +44,5 @@ class ResultsBundler:
         elif cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_port_scan(mininet_cli_str, target)
 
-        return res
-        
+        return {'success': True}
         
