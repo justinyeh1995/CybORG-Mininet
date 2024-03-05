@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import networkx as nx
 from networkx import connected_components
+from pprint import pprint
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
@@ -165,7 +166,7 @@ class NetworkVisualizer:
                     <br>💰Reward: {reward} \
                     <br>💎Accumulated {agent} Reward: {accumulate_reward}",
             showarrow=False,
-            visible=True,  # Initially not visible
+            visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
                 size=10,
@@ -181,7 +182,7 @@ class NetworkVisualizer:
                     <br>💰Reward: {20000} \
                     <br>💎Accumulated {agent} Reward: {accumulate_reward}",
             showarrow=False,
-            visible=False,  # Initially not visible
+            visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
                 size=10,
@@ -191,7 +192,7 @@ class NetworkVisualizer:
         
         observations_annotations = [simulation_obs, emulation_obs]
         # observations_annotations = [simulation_obs]
-
+        
         # Prepare and plot the figure
         fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
         self._setup_annotations_and_buttons(fig, observations_annotations)
@@ -207,23 +208,20 @@ class NetworkVisualizer:
         # Add a button to toggle the visibility of observation annotations
         fig.update_layout(
             width=1000,
-            annotations=annotations,  # Include the annotations by default
+            annotations=annotations[0],  # Include the annotations by default, shown initially
             updatemenus=[
                 dict(
-                    buttons=list([
+                    buttons=[
                         dict(label="Show Simulation Observations",
-                             method="update",
-                             args=[{"visible": [True, True, True, True]},  # Assuming you want all traces visible
-                                   {"annotations": [annotations[0]]}]),  # annotations[0] should contain simulation annotations
+                             method="relayout",
+                             args=[{"annotations": [annotations[0]]}]),  # Assuming annotations[0] is for simulation
                         dict(label="Show Emulation Observations",
-                             method="update",
-                             args=[{"visible": [True, True, True, True]},  # Assuming you want all traces visible
-                                   {"annotations": [annotations[1]]}]),  # annotations[1] should contain emulation annotations
+                             method="relayout",
+                             args=[{"annotations": [annotations[1]]}]),  # Assuming annotations[1] is for emulation
                         dict(label="Hide Observations",
-                             method="update",
-                             args=[{"visible": [True, True, True, True]},  # Keeping the traces visible but hiding annotations
-                                   {"annotations": []}])  # Hides all annotations
-                    ]),
+                             method="relayout",
+                             args=[{"annotations": []}]),  # This should hide all annotations
+                    ],
                     direction="down",
                     pad={"r": 10, "t": 10},
                     showactive=True,
