@@ -32,32 +32,18 @@ class KillProcessesFromFileAction(Action):
         if not text_file_contents_observation.success:
             return observation
 
-        kill_process_name_list = list(text_file_contents_observation.contents)
-
-        process_listing_action = ProcessListingAction(
-            credentials_file=self.credentials_file,
-            hostname=self.hostname
-        )
-
-        process_listing_observation = process_listing_action.execute(state)
-
-        if not process_listing_observation.success:
-            return observation
-
-        process_list = process_listing_observation.process_list
+        kill_pids_list = list(text_file_contents_observation.contents)
 
         success = True
-        for process in process_list:
+        for pid in kill_pids_list:
 
-            for process_name in kill_process_name_list:
-                if process_name in process.CommandLine:
-                    kill_process_action = KillProcessAction(
-                        credentials_file=self.credentials_file, hostname=self.hostname, pid=process.Pid
-                    )
-                    kill_process_observation = kill_process_action.execute(state)
+            kill_process_action = KillProcessAction(
+                credentials_file=self.credentials_file, hostname=self.hostname, pid=pid
+            )
+            kill_process_observation = kill_process_action.execute(state)
 
-                    if not kill_process_observation.success:
-                        success = False
+            if not kill_process_observation.success:
+                success = False
 
         observation.set_success(success)
 
