@@ -1,17 +1,20 @@
 import re
 import traceback 
+from pprint import pprint
 from typing import List, Dict
 
-def parse_nmap_network_scan(text, target) -> List:
+def parse_nmap_network_scan(text, target, mapper) -> List:
     res = {'success': True}
     subnet = target
-    ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', text)
-    res[subnet] = ip_addresses
+    mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', text)
+    cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
+    res[subnet] = cyborg_ip_addresses
     return res
     
-def parse_nmap_port_scan(text, target) -> List:
+def parse_nmap_port_scan(text, target, mapper) -> List:
     res = {'success': True}
-    ip = target
+    mininet_ip = target
+    ip = mapper.mininet_ip_to_cyborg_ip_map[mininet_ip]
     # Regular expression to match the port information
     port_info_regex = re.compile(r'(\d+)/(\w+)\s+open\s+(\w+)\s+(.+)')
     
@@ -32,17 +35,17 @@ def parse_nmap_port_scan(text, target) -> List:
     return res
     
 class ResultsBundler:
-    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str) -> Dict:
+    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict:
         # @To-Do
         print(isSuccess)
         if not isSuccess:
             return {'success': False}
         
         if cyborg_action == "DiscoverRemoteSystems":
-            return parse_nmap_network_scan(mininet_cli_str, target)
+            return parse_nmap_network_scan(mininet_cli_str, target, mapper)
             
         elif cyborg_action == "DiscoverRemoteSystems":
-            return parse_nmap_port_scan(mininet_cli_str, target)
+            return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
         return {'success': True}
         

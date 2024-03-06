@@ -1,4 +1,5 @@
 import traceback 
+from pprint import pprint
 
 class ActionTranslator:
     def translate(self, action):
@@ -6,6 +7,7 @@ class ActionTranslator:
 
 class RedActionTranslator(ActionTranslator):
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
+        pprint(action_type)
         host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
         # @To-Do code smells
@@ -34,6 +36,7 @@ class RedActionTranslator(ActionTranslator):
 
 class BlueActionTranslator(ActionTranslator):
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
+        pprint(action_type)
         timeout = 10
         # @To-Do code smells
         # blue host is undecided at the moment
