@@ -110,7 +110,7 @@ class CustomLAN ():
                              ip=ip_prefix + str (next_num) + prefix_len,
                              # ip=self.hosts_info["h"+str(i+1)],
                              defaultRoute = " via " + self.router_ip) #
-        
+                
       # save this host (in case we need it)
       self.hosts.append (h)
 
