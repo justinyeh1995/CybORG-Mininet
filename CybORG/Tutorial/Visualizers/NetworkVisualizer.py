@@ -180,6 +180,7 @@ class NetworkVisualizer:
             x=0.01, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"<br>🎯{agent} Action: {action_info['action']} \
                     <br>✅Success: {action_info['success']} \
+                    <br>💰Reward: {reward} \
                     <br>💰Observations: {mininet_obs} \
                     ",
             showarrow=False,
