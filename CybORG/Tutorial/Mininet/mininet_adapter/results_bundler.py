@@ -3,18 +3,18 @@ import traceback
 from pprint import pprint
 from typing import List, Dict
 
-def parse_nmap_network_scan(text, target, mapper) -> List:
+def parse_nmap_network_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
     subnet = target
-    mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', text)
+    mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', nmap_output)
     cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
     res[subnet] = cyborg_ip_addresses
     return res
     
-def parse_nmap_port_scan(text, target, mapper) -> List:
+def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
-    mininet_ip = target
-    ip = mapper.mininet_ip_to_cyborg_ip_map[mininet_ip]
+    mininet_host = target
+    ip = mapper.mininet_host_to_cyborg_ip_map[mininet_host]
     # Regular expression to match the port information
     port_info_regex = re.compile(r'(\d+)/(\w+)\s+open\s+(\w+)\s+(.+)')
     
@@ -44,7 +44,7 @@ class ResultsBundler:
         if cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_network_scan(mininet_cli_str, target, mapper)
             
-        elif cyborg_action == "DiscoverRemoteSystems":
+        elif cyborg_action == "DiscoverNetworkServices":
             return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
         return {'success': True}
