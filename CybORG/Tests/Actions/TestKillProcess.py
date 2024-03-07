@@ -1,9 +1,8 @@
-import json
+# import json
 
-from CybORG.Emulator.Velociraptor.Actions.ProcessListingAction import ProcessListingAction
-from CybORG.Emulator.Velociraptor.Actions.KillProcessAction import KillProcessAction
-from CybORG.Emulator.Velociraptor.Actions.RunProcessAction import RunProcessAction
-from CybORG.Emulator.Velociraptor.Actions.VelociraptorInterace import VelociraptorInterface
+from CybORG.Emulator.Actions.Velociraptor import KillProcessAction, ProcessListingAction
+from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
+# from CybORG.Emulator.Velociraptor.Actions.VelociraptorInterface import VelociraptorInterface
 
 credentials_file = "prog_client.yaml"
 
@@ -20,12 +19,6 @@ END
 
 create_foobar_observation = create_foobar_action.execute(None)
 
-velociraptor_interface = VelociraptorInterface.get_velociraptor_interface(credentials_file)
-
-foo = velociraptor_interface.get_server_glob()
-
-foo_json = json.dumps(foo, sort_keys=True, indent=4)
-print(foo_json)
 run_foobar_action = RunProcessAction(
     credentials_file=credentials_file, hostname="TESTDOCKER1", command="bash FOOBAR.sh > /dev/null 2>&1 &"
 )

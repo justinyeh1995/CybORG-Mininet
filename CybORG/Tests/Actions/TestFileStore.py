@@ -1,4 +1,4 @@
-from CybORG.Emulator.Velociraptor.Actions.ClientListAction import ClientListAction
+from CybORG.Emulator.Actions.Velociraptor import ClientListAction
 
 credentials_file = "prog_client.yaml"
 

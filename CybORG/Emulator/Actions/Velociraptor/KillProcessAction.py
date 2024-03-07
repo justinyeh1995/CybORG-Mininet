@@ -1,4 +1,4 @@
-from .RunProcessAction import RunProcessAction
+from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
 
 
 class KillProcessAction(RunProcessAction):

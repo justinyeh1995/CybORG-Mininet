@@ -1,8 +1,8 @@
 from typing import Union
 
 from CybORG.Simulator.State import State
-from CybORG.Emulator.Velociraptor.Observations.ClientListObservation import ClientListObservation
-from .VelociraptorAction import VelociraptorAction
+from CybORG.Emulator.Observations.Velociraptor.ClientListObservation import ClientListObservation
+from CybORG.Emulator.Actions.Velociraptor.VelociraptorAction import VelociraptorAction
 
 
 class ClientListAction(VelociraptorAction):

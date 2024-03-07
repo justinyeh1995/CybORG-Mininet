@@ -3,8 +3,8 @@ from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 
-from CybORG.Emulator.Velociraptor.Observations.ProcessObservation import ProcessObservation
-from .VelociraptorAction import VelociraptorAction
+from CybORG.Emulator.Observations.Velociraptor.ProcessObservation import ProcessObservation
+from CybORG.Emulator.Actions.Velociraptor.VelociraptorAction import VelociraptorAction
 
 
 class RunProcessAction(VelociraptorAction):

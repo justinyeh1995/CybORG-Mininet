@@ -1,5 +1,5 @@
 from CybORG.Shared import Observation
-from CybORG.Emulator.Velociraptor.Actions.DictToAttributes import DictToAttributes
+from CybORG.Emulator.Observations.Velociraptor.DictToAttributes import DictToAttributes
 
 
 class ProcessInfo(DictToAttributes):
@@ -14,6 +14,8 @@ class ProcessListingObservation(Observation):
     def __init__(self, process_list=None, success: bool = None):
 
         super().__init__(success=success)
+
+        self.artifact_info = process_list
 
         if process_list is None:
             process_list = []
