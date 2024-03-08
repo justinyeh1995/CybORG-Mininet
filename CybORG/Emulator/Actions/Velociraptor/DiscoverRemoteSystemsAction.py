@@ -31,4 +31,5 @@ class DiscoverRemoteSystemsAction(RunProcessAction):
         for address_element in address_element_list:
             ip_address_list.append(address_element.attrib.get("addr"))
 
+        observation.set_success(True)
         return DiscoverRemoteSystemsObservation(observation, self.cidr, ip_address_list)

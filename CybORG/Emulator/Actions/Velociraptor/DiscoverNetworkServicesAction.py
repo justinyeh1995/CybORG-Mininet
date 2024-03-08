@@ -31,4 +31,5 @@ class DiscoverNetworkServicesAction(RunProcessAction):
         for port_element in port_element_list:
             port_list.append(port_element.attrib.get("portid"))
 
+        observation.set_success(True)
         return DiscoverNetworkServicesObservation(observation, self.ip_address, port_list)

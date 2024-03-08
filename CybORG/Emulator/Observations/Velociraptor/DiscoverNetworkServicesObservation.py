@@ -5,7 +5,7 @@ class DiscoverNetworkServicesObservation(ProcessObservation):
 
     def __init__(self, process_observation, ip_address, port_list):
 
-        super().__init__(process_observation.artifact_info)
+        super().__init__(process_observation.artifact_info, process_observation)
 
         self.ip_address = ip_address
 
