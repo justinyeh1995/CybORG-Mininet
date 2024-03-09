@@ -2,6 +2,7 @@ from typing import Union
 
 from pathlib import Path
 import tempfile
+import time
 
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
@@ -76,6 +77,9 @@ class RedeployHostAction(Action):
         sftp_client.put(str(cls.collect_script_path), cls.collect_script_name)
 
         ssh_session.exec_command(f"bash {cls.collect_script_name}")
+
+        # WAIT FOR EXEC'D COMMAND TO COMPLETE
+        time.sleep(5)
 
         sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
         sftp_client.close()
@@ -159,7 +163,7 @@ class RedeployHostAction(Action):
             flavor_id=flavor_id,
             image_id=image_id,
             networks=network_list,
-            key_name='castle-pem',
+            key_name='castle-control',
         )
 
         conn.compute.wait_for_server(reployed_instance)
