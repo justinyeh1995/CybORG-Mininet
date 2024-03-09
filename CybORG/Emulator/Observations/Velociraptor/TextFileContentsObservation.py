@@ -7,6 +7,6 @@ class TextFileContentsObservation(ProcessObservation):
 
         self.Stdout = ""  # So IDE doesn't complain about assignment below
 
-        super().__init__(process_info=process_observation.artifact_info)
+        super().__init__(process_info=process_observation.artifact_info, success=process_observation.success)
 
         self.contents = self.Stdout.splitlines()

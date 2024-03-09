@@ -5,7 +5,7 @@ class DiscoverRemoteSystemsObservation(ProcessObservation):
 
     def __init__(self, process_observation, cidr, ip_address_list):
 
-        super().__init__(process_observation.artifact_info)
+        super().__init__(process_observation.artifact_info, process_observation.success)
 
         self.cidr = cidr
 
