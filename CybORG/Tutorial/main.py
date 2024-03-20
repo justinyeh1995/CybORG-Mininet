@@ -1,4 +1,3 @@
-import subprocess
 import inspect
 import time
 import os
@@ -7,12 +6,6 @@ import random
 import collections
 from pprint import pprint
 
-# import matplotlib.pyplot as plt
-# import networkx as nx
-# from networkx import connected_components
-# import plotly.graph_objects as go
-# import plotly.express as px
-import pandas as pd
 from dataclasses import dataclass
 
 from CybORG import CybORG, CYBORG_VERSION
@@ -77,84 +70,7 @@ class CybORGFactory:
         return cyborg
 
 def wrap(env):
-    # return ChallengeWrapper2(env=env, agent_name='Blue')
     return ChallengeWrapper(env=env, agent_name='Blue')
-
-def main_pretained_agent(type):
-    cyborg_version = CYBORG_VERSION
-    scenario = scenario
-    # commit_hash = get_git_revision_hash()
-    commit_hash = "Not using git"
-    # ask for a name
-    name = "John Hannay"
-    # ask for a team
-    team = "CardiffUni"
-    # ask for a name for the agent
-    name_of_agent = "PPO + Greedy decoys"
-
-    lines = inspect.getsource(wrap)
-    wrap_line = lines.split('\n')[1].split('return ')[1]
-
-
-    factory = AgentFactory()
-    # Change this line to load your agent
-    agent = factory.create(type=type)
-    
-    print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
-
-    path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario2.yaml'
-    sg = FileReaderScenarioGenerator(path)
-
-    print(f'using CybORG v{cyborg_version}, {scenario}\n')
-    
-    # game manager initialization
-    game_state_manager = GameStateManager()
-    
-    for num_steps in [10]:
-        for red_agent in [B_lineAgent]:
-            red_agent = red_agent()
-            cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
-            wrapped_cyborg = wrap(cyborg)
-
-            observation = wrapped_cyborg.reset()
-            # observation = cyborg.reset().observation
-
-            # set up game_state_manager
-            game_state_manager.set_environment(cyborg=cyborg,
-                                               red_agent=red_agent,
-                                               blue_agent=agent,
-                                               num_steps=num_steps)
-            
-            action_space = wrapped_cyborg.get_action_space(agent_name)
-            # action_space = cyborg.get_action_space(agent_name)
-            total_reward = []
-            actions = []
-            for i in range(MAX_EPS):
-                r = []
-                a = []
-                
-                # cyborg.env.env.tracker.render()
-                for j in range(num_steps):
-                    action = agent.get_action(observation, action_space)
-                    observation, rew, done, info = wrapped_cyborg.step(action)
-                    # result = cyborg.step(agent_name, action)
-                    r.append(rew)
-                    # r.append(result.reward)
-                    a.append((str(cyborg.get_last_action('Blue')), str(cyborg.get_last_action('Red'))))
-                    
-                    # create state for this step
-                    state_snapshot = game_state_manager.create_state_snapshot()
-                    # game manager store state
-                    game_state_manager.store_state(state_snapshot, i, j)
-                # game manager reset
-                agent.end_episode()
-                total_reward.append(sum(r))
-                actions.append(a)
-                # observation = cyborg.reset().observation
-                observation = wrapped_cyborg.reset()
-                game_state_manager.reset()
-    return game_state_manager.get_game_state()
 
 
 def main(agent_type: str, cyborg_type: str) -> None:
@@ -230,11 +146,12 @@ def main(agent_type: str, cyborg_type: str) -> None:
                     # create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot()
                     # game manager store state
-                    game_state_manager.store_state(state_snapshot, i, j)
-
-                    # The adapter should pass the action as a param
-                    mininet_adapter.perform_emulation()
+                    obs = mininet_adapter.perform_emulation()
                     # pprint(mininet_adapter)
+                    state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, obs)
+                    
+                    # game manager store state
+                    game_state_manager.store_state(state_snapshot, i, j)
 
                     
                 # game manager reset
@@ -254,7 +171,6 @@ def main(agent_type: str, cyborg_type: str) -> None:
 
 
 if __name__ == "__main__":
-    # game_pretrained_agent_state = main_pretained_agent("CardiffUni")
     game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap")
 
 
