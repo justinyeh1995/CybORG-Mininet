@@ -84,7 +84,7 @@ class MininetAdapter:
                 
             mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
             
-            # print(mininet_cli_text)
+            print(mininet_cli_text)
             
             mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
 

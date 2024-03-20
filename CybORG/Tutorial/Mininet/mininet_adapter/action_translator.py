@@ -1,4 +1,7 @@
 import traceback 
+import inspect
+from CybORG import CybORG, CYBORG_VERSION
+
 from pprint import pprint
 
 class ActionTranslator:
@@ -8,6 +11,7 @@ class ActionTranslator:
 class RedActionTranslator(ActionTranslator):
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
         pprint(action_type)
+        pprint(cyborg_to_mininet_host_map)
         host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
         # @To-Do code smells
@@ -35,6 +39,9 @@ class RedActionTranslator(ActionTranslator):
         return cmd
 
 class BlueActionTranslator(ActionTranslator):
+    def __init__(self):
+        self.decoy_bin_path = str(inspect.getfile(CybORG))[:-7] + f'/Emulator/Velociraptor/Executables/Decoy'
+
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
         pprint(action_type)
         timeout = 10
@@ -46,6 +53,10 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Restore")
         elif action_type == "Monitor":
             print("Blue Monitor")
+        elif action_type.startswith("Decoy"):
+            action = self.decoy_bin_path + "/decoy" + " 80"
+            host = target_host
+            cmd = f'{host} timeout {timeout} {action}'
         host = target_host
         action = ""
         cmd = f'{host} timeout {timeout} {action}'

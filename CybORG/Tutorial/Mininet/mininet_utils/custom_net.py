@@ -77,7 +77,7 @@ def main ():
   # Now start ssh server
   info ("Start SSH server on every host")
   topo.startSSHServer (net)
-  
+    
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
   CLI (net)   # this gives us mininet prompt
