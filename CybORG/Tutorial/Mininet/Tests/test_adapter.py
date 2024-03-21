@@ -1,6 +1,7 @@
 import pytest
 import inspect
-from Mininet.Adapter import MininetAdapter
+
+from CybORG.Tutorial.Mininet.MininetAdapter import MininetAdapter
 
 def test():
     pass
