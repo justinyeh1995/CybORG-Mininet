@@ -233,7 +233,18 @@ class CustomTopology (Topo):
       for host_name, host_info in lan['hosts_info'].items():
         host = lan['name'] + host_name
         info (f"Start ssh server on {host}")
-        net[host].cmd('/usr/sbin/sshd -D &')
+        net[host].cmd('cp /etc/ssh/sshd_config /tmp/sshd_config_mininet')
+        net[host].cmd('/usr/sbin/sshd -D -f /tmp/sshd_config_mininet &')
+
+  def stopSSHServer(self, net):
+    for lan in self.topo_dict['lans']:
+      for host_name, _ in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        info(f"Stopping ssh server on {host}\n")
+        # Retrieve the PID of the SSH daemon
+        pid = net[host].cmd("ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{print $2}'")
+        # Kill the SSH daemon process
+        net[host].cmd(f'sudo kill {pid}')
 
   ##########################################
   # The overridden build method

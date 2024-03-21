@@ -81,8 +81,13 @@ def main ():
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
   CLI (net)   # this gives us mininet prompt
+    
   info ("Cleanup additional NAT rules\n")
   topo.cleanup_nat_rules (net)  # cleanup the additional nat rules
+
+  info ("Stop SSH server on every host")
+  topo.stopSSHServer (net)
+    
   info ("Stop the net\n")
   net.stop ()  # this cleans up the network
 
