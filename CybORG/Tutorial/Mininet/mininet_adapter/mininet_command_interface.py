@@ -1,6 +1,8 @@
 import pexpect
 import traceback 
 import inspect
+import logging
+
 from CybORG import CybORG, CYBORG_VERSION
 
 class MininetCommandInterface:
@@ -9,26 +11,31 @@ class MininetCommandInterface:
 
     
     def start_mininet(self, topology_file: str) -> str:
-        self.clean()
-        path = str(inspect.getfile(CybORG))
-        path = path[:-7] + f'/Tutorial/Mininet/mininet_utils/custom_net.py'
-        self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
-        self.mininet_process.timeout = 300
-        self.mininet_process.expect("mininet>")
-        return self.mininet_process.before.decode()
+        try:
+            self.clean()
+            path = str(inspect.getfile(CybORG))
+            path = path[:-7] + f'/Tutorial/Mininet/mininet_utils/custom_net.py' # To-Do: might need to be configurable in the config file
+            self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
+            self.mininet_process.timeout = 300
+            self.mininet_process.expect("mininet>")
+            return self.mininet_process.before.decode()
+        except Exception as e:
+            logging.error(f"Failed to start Mininet: {e}")
+            traceback.print_exc()
 
     
-    def send_command(self, command: str) -> str:
+    def send_command(self, command: str, expect_prompt: bool=True) -> str:
         if self.mininet_process and self.mininet_process.isalive():
             self.mininet_process.sendline(command)
-            self.mininet_process.expect('mininet>')
+            if expect_prompt:
+                self.mininet_process.expect('mininet>')
             return self.mininet_process.before.decode()
         return "Mininet process is not running."
 
     
     def stop_mininet(self) -> None:
         if self.mininet_process and self.mininet_process.isalive():
-            self.mininet_process.terminate()
+            self.send_command('exit', expect_prompt=False)
             self.mininet_process.expect(pexpect.EOF)
             print("Terminated the ongoing Mininet topology.")
 
@@ -43,12 +50,9 @@ class MininetCommandInterface:
             cleanup_process = pexpect.spawn("sudo mn -c")
             cleanup_process.timeout = 60
             cleanup_process.expect(pexpect.EOF)  # Wait for the end of the process
-            print("Cleaned up the topology successfully")
-            # print(cleanup_process.before.decode())
-
+            logging.info("Mininet cleaned up successfully.")
         except Exception as e:
-            print("An error occurred while cleaning up the topology:")
-            print(str(e))
+            logging.error(f"Error cleaning up Mininet: {e}")
 
         finally:
             if cleanup_process is not None and cleanup_process.isalive():
