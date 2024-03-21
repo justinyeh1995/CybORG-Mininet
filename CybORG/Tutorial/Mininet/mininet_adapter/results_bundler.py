@@ -37,7 +37,6 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
 class ResultsBundler:
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict:
         # @To-Do
-        print(isSuccess)
         if not isSuccess:
             return {'success': False}
         

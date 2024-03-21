@@ -10,8 +10,6 @@ class ActionTranslator:
 
 class RedActionTranslator(ActionTranslator):
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
-        pprint(action_type)
-        pprint(cyborg_to_mininet_host_map)
         host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
         # @To-Do code smells
@@ -43,7 +41,6 @@ class BlueActionTranslator(ActionTranslator):
         self.decoy_bin_path = str(inspect.getfile(CybORG))[:-7] + f'/Emulator/Velociraptor/Executables/Decoy'
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
-        pprint(action_type)
         timeout = 10
         # @To-Do code smells
         # blue host is undecided at the moment
