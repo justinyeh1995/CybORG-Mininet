@@ -4,4 +4,4 @@ import inspect
 from CybORG.Tutorial.Mininet.MininetAdapter import MininetAdapter
 
 def test():
-    pass
+    assert 1 == 1
