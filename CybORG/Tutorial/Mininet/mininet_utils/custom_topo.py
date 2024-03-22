@@ -241,10 +241,10 @@ class CustomTopology (Topo):
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
         info(f"Stopping ssh server on {host}\n")
-        # Retrieve the PID of the SSH daemon
-        pid = net[host].cmd("ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{print $2}'")
-        # Kill the SSH daemon process
-        net[host].cmd(f'sudo kill {pid}')
+        # Retrieve the PID of the SSH daemonKill the SSH daemon process
+        net[host].cmd("ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{print $2}' | xargs -r sudo kill")
+        # # Kill the SSH daemon process
+        # net[host].cmd(f'sudo kill {pid}')
 
   ##########################################
   # The overridden build method
