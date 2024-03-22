@@ -12,6 +12,9 @@ class MainAgent(PPOAgent):
         
         self.action_space = [132, 133, 134, 138, 2, 3, 4, 8, 15, 16, 17, 21, 10, 11, 12, 13, 140, 141, 142, 143,
                              131, 1, 14, 23, 24, 25, 26]
+
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+
         self.end_episode()
 
     def get_action(self, observation, action_space=None):
@@ -58,13 +61,17 @@ class MainAgent(PPOAgent):
         return BlueSleepAgent()
 
     def load_bline(self):
-        ckpt = os.path.join(os.getcwd(),"Models","cyborg--bline","model.pth")
+        # ckpt = os.path.join(os.getcwd(),"Models","cyborg--bline","model.pth") # To-Do needs to be flexible
+        ckpt = os.path.join(self.script_dir, "Models", "cyborg--bline", "model.pth")
+
         return PPOAgent(52, self.action_space, restore=True, ckpt=ckpt,
                        deterministic=True, training=False)
 
 
     def load_meander(self):
-        ckpt = os.path.join(os.getcwd(),"Models","meander","model.pth")
+        # ckpt = os.path.join(os.getcwd(),"Models","meander","model.pth")
+        ckpt = os.path.join(self.script_dir, "Models", "meander", "model.pth")
+
         return PPOAgent(52, self.action_space, restore=True, ckpt=ckpt,
                        deterministic=True, training=False)
 
