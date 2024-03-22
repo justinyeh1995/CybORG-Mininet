@@ -35,7 +35,7 @@ class MininetCommandInterface:
     
     def stop_mininet(self) -> None:
         if self.mininet_process and self.mininet_process.isalive():
-            self.send_command('exit', expect_prompt=False)
+            self.mininet_process.sendline('exit')
             self.mininet_process.expect(pexpect.EOF)
             print("Terminated the ongoing Mininet topology.")
 

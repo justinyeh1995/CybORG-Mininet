@@ -9,7 +9,7 @@ class ActionTranslator:
         raise NotImplementedError
 
 class RedActionTranslator(ActionTranslator):
-    def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
+    def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
         # @To-Do code smells
@@ -23,8 +23,8 @@ class RedActionTranslator(ActionTranslator):
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
-            action = "ssh cpswtjustin@"
-            target = "8.8.8.8" # dummy
+            action = "ssh"
+            target = f"cpswtjustin@{mininet_host_to_ip_map[target_host]}" # dummy
         elif action_type == "PrivilegeEscalate":
             action = "ping -c 1" # dummy
             target = "nat0" # dummy

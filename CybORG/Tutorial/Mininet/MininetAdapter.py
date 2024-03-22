@@ -80,7 +80,8 @@ class MininetAdapter:
             else:
                 mininet_command = self.red_action_translator.translate(cyborg_action, 
                                                                     target,
-                                                                    self.mapper.cyborg_to_mininet_host_map)
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)
                 
             mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
             
