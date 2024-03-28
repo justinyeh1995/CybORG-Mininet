@@ -10,6 +10,7 @@ COPY . /cage
 
 # Install system dependencies
 # Mininet installation instructions recommend python-is-python3 on Ubuntu to link python to python3
+# Packages that will be used to run actions shall be installed at this step as well
 RUN apt-get update && apt-get install -y \
     git \
     python3-pip \
