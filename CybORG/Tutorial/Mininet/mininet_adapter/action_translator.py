@@ -52,7 +52,9 @@ class RedActionTranslator(ActionTranslator):
 
 class BlueActionTranslator(ActionTranslator):
     def __init__(self):
-        self.decoy_bin_path = str(inspect.getfile(CybORG))[:-7] + f'/Emulator/Velociraptor/Executables/Decoy'
+        super().__init__()  # Correctly calls the __init__ method of ActionTranslator
+        self.decoy_bin_path = self.path + f'/Emulator/Velociraptor/Executables/Decoy'
+
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         timeout = 10
