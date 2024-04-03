@@ -51,6 +51,7 @@ class BlueActionTranslator(ActionTranslator):
         elif action_type == "Monitor":
             print("Blue Monitor")
         elif action_type.startswith("Decoy"):
+            print("Decoy")
             action = self.decoy_bin_path + "/decoy" + " 80"
             host = target_host
             cmd = f'{host} timeout {timeout} {action}'
