@@ -1,14 +1,25 @@
 import traceback 
 import inspect
 from CybORG import CybORG, CYBORG_VERSION
+from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
+from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
+from CybORG.Emulator.Actions.SshAction import SshAction
+from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
 
 from pprint import pprint
 
+
 class ActionTranslator:
+    def __init__(self):
+        self.path = str(inspect.getfile(CybORG))[:-7]
+
     def translate(self, action):
         raise NotImplementedError
 
 class RedActionTranslator(ActionTranslator):
+    def __init__(self):
+        super().__init__()  # Correctly calls the __init__ method of ActionTranslator
+        
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         host = cyborg_to_mininet_host_map['User0'] # red host is always user0
         timeout = 60
@@ -25,9 +36,12 @@ class RedActionTranslator(ActionTranslator):
             print("Red Exploit Network Services")
             action = "ssh"
             target = f"cpswtjustin@{mininet_host_to_ip_map[target_host]}" # dummy
-        elif action_type == "PrivilegeEscalate":
-            action = "ping -c 1" # dummy
-            target = "nat0" # dummy
+            # sshAction = SshAction(mininet_host_to_ip_map[target_host], "root", "1234", 22)
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Tutorial/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
+            target = mininet_host_to_ip_map[target_host]
+        # elif action_type == "PrivilegeEscalate":
+        #     action = "ping -c 1" # dummy
+        #     target = "nat0" # dummy
         else:
             action = "sleep 1" # dummy
             target = "" # dummy
@@ -40,10 +54,11 @@ class BlueActionTranslator(ActionTranslator):
     def __init__(self):
         self.decoy_bin_path = str(inspect.getfile(CybORG))[:-7] + f'/Emulator/Velociraptor/Executables/Decoy'
 
-    def translate(self, action_type, target_host, cyborg_to_mininet_host_map) -> str:
+    def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         timeout = 10
         # @To-Do code smells
         # blue host is undecided at the moment
+        cmd = 'lan1h1 ping -c 1 lan2h2'
         if action_type == "Remove":
             print("Blue Remove")
         elif action_type == "Restore":
@@ -52,11 +67,8 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Monitor")
         elif action_type.startswith("Decoy"):
             print("Decoy")
-            action = self.decoy_bin_path + "/decoy" + " 80"
-            host = target_host
-            cmd = f'{host} timeout {timeout} {action}'
-        host = target_host
-        action = ""
-        cmd = f'{host} timeout {timeout} {action}'
-        cmd = 'lan1h1 ping -c 1 lan2h2'
+            print(target_host)
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Tutorial/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
+            target = mininet_host_to_ip_map[target_host]
+            cmd = f'{target_host} timeout {timeout} {action} {target}'
         return cmd

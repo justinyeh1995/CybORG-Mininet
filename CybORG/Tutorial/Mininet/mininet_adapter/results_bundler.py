@@ -47,5 +47,11 @@ class ResultsBundler:
         elif cyborg_action == "DiscoverNetworkServices":
             return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
+        elif cyborg_action == "ExploitRemoteService":
+            return mininet_cli_str
+
+        elif cyborg_action.startswith("Decoy"):
+            return mininet_cli_str
+
         return {'success': True}
         
