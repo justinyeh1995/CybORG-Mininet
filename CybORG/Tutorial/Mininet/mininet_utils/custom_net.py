@@ -74,8 +74,12 @@ def main ():
   info ("Add additional iptable rules per subnet that needs NAT access\n")
   topo.add_nat_rules (net)
 
+  # Add passwd on every host
+  info ("Add passwd on every host\n")
+  topo.setPassword (net)
+    
   # Now start ssh server
-  info ("Start SSH server on every host")
+  info ("Start SSH server on every host\n")
   topo.startSSHServer (net)
     
   info ("Start the net\n")

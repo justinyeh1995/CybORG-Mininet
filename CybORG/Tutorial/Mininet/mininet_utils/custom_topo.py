@@ -228,13 +228,25 @@ class CustomTopology (Topo):
         net[nat_node].cmd( 'iptables -t nat -D POSTROUTING',
                            '-s', subnet, "'!'", '-d', subnet, '-j MASQUERADE' )
 
+  def setPassword(self, net):
+    for lan in self.topo_dict['lans']:
+      for host_name, host_info in lan['hosts_info'].items():
+        host = lan['name'] + host_name    
+        username = net[host].cmd('whoami').strip()
+        info (f"Set password for {username} on {host}\n")
+        password_change_command = f'echo "{username}:1234" | sudo chpasswd'
+        net[host].cmd(password_change_command)
+          
   def startSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
         host = lan['name'] + host_name
-        info (f"Start ssh server on {host}")
-        net[host].cmd('cp /etc/ssh/sshd_config /tmp/sshd_config_mininet')
-        net[host].cmd('/usr/sbin/sshd -D -f /tmp/sshd_config_mininet &')
+        info (f"Create a temporary ssh_config file on {host}\n")
+        net[host].cmd(f'cp /etc/ssh/ssh_config /tmp/sshd_config_mininet_{host}')
+        info (f"Configure ssh config to allow passwd auth on {host}\n")
+        net[host].cmd(f'echo "    PasswordAuthentication yes" | sudo tee -a /tmp/sshd_config_mininet_{host} > /dev/null')
+        info (f"Start ssh server on {host}\n")
+        net[host].cmd(f'/usr/sbin/sshd -D -f /tmp/sshd_config_mininet_{host} &')
 
   def stopSSHServer(self, net):
     for lan in self.topo_dict['lans']:
@@ -242,7 +254,8 @@ class CustomTopology (Topo):
         host = lan['name'] + host_name
         info(f"Stopping ssh server on {host}\n")
         # Retrieve the PID of the SSH daemonKill the SSH daemon process
-        net[host].cmd("ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{print $2}' | xargs -r sudo kill")
+        net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet_{host}' | awk '{{print $2}}' | xargs -r sudo kill")
+        net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
         # # Kill the SSH daemon process
         # net[host].cmd(f'sudo kill {pid}')
 
