@@ -15,6 +15,7 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
     mininet_host = target
     ip = mapper.mininet_host_to_cyborg_ip_map[mininet_host]
+
     # Regular expression to match the port information
     port_info_regex = re.compile(r'(\d+)/(\w+)\s+open\s+(\w+)\s+(.+)')
     

@@ -87,7 +87,7 @@ def main ():
 
   info ("Stop SSH server on every host")
   topo.stopSSHServer (net)
-    
+
   info ("Stop the net\n")
   net.stop ()  # this cleans up the network
 

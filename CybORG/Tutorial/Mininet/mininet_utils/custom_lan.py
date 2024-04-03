@@ -111,8 +111,6 @@ class CustomLAN ():
                              # ip=self.hosts_info["h"+str(i+1)],
                              defaultRoute = " via " + self.router_ip) #
         
-      # h.cmd('/usr/sbin/sshd -D &')
-        
       # save this host (in case we need it)
       self.hosts.append (h)
 
