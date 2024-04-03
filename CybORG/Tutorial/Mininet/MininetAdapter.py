@@ -76,7 +76,8 @@ class MininetAdapter:
             if type == "Blue":
                 mininet_command = self.blue_action_translator.translate(cyborg_action, 
                                                                     target, 
-                                                                    self.mapper.cyborg_to_mininet_host_map)  
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)  
             else:
                 mininet_command = self.red_action_translator.translate(cyborg_action, 
                                                                     target,
