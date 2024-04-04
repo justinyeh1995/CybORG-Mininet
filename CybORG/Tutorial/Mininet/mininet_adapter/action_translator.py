@@ -71,6 +71,6 @@ class BlueActionTranslator(ActionTranslator):
             print("Decoy")
             print(target_host)
             action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Tutorial/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
-            target = mininet_host_to_ip_map[target_host]
+            target = mininet_host_to_ip_map.get(target_host, 'lan1h1')
             cmd = f'{target_host} timeout {timeout} {action} {target}'
         return cmd
