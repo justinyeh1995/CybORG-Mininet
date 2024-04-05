@@ -99,6 +99,9 @@ class CybORG(CybORGLogger):
         if self.env == 'emu':
             from CybORG.Emulator.SimulationController import SimulationController
             return SimulationController(self.scenario_generator, agents, self.np_random)
+        if self.env == 'mininet':
+            from CybORG.Tutorial.Mininet.SimulationController import SimulationController
+            return SimulationController(self.scenario_generator, agents, self.np_random)
         raise NotImplementedError(
             f"Unsupported environment '{self.env}'. Currently supported "
             f"environments are: {self.supported_envs}"
