@@ -25,6 +25,7 @@ def get_routers_info(cyborg, cyborg_to_mininet_name_map) -> List:
 
 def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
     lans_info = []
+    counter = 0
     # Create LANs based on the networks
     for lan_name, network in cyborg.get_cidr_map().items():
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
@@ -38,10 +39,12 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
             'router_ip': router_ip,
             'subnet': str(network),
             'hosts': len(hosts),
-            'hosts_info': hosts_info
+            'hosts_info': hosts_info,
+            'nat': f'nat{counter}'
         })
-        
-    lans_info[-1]['nat'] = 'nat0' # bad design, mimic adding nat to the last LAN, e.g., LAN3 here
+
+        counter += 1
+    # lans_info[-1]['nat'] = 'nat0' # bad design, mimic adding nat to the last LAN, e.g., LAN3 here
     return lans_info
 
 
@@ -117,7 +120,7 @@ def generate_routing_rules(topology):
         for entry in entries:
             entry_str = f"{entry['to']} via {entry['via']} dev {entry['dev']}"
             router_rules["entries"].append(entry_str)
-        if i == len(routes)-1: # To-Do: Hard coding is always bad
+        # if i == len(routes)-1: # To-Do: Hard coding is always bad
             ip_prefix, prefix_len, last_octet = cu.IP_components (routers_cidr[router])
 
             router_rules["entries"].append(f"default via {ip_prefix + str(int (last_octet) + 2)} dev {router}-eth0")
