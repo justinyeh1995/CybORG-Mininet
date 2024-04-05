@@ -8,13 +8,13 @@ from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
 
 from pprint import pprint
 
-
 class ActionTranslator:
     def __init__(self):
         self.path = str(inspect.getfile(CybORG))[:-7]
 
     def translate(self, action):
         raise NotImplementedError
+
 
 class RedActionTranslator(ActionTranslator):
     def __init__(self):
@@ -49,11 +49,11 @@ class RedActionTranslator(ActionTranslator):
         
         return cmd
 
+
 class BlueActionTranslator(ActionTranslator):
     def __init__(self):
         super().__init__()  # Correctly calls the __init__ method of ActionTranslator
         self.decoy_bin_path = self.path + f'/Emulator/Velociraptor/Executables/Decoy'
-
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         host = cyborg_to_mininet_host_map['Defender'] # red host is always user0

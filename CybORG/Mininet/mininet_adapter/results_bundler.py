@@ -34,7 +34,17 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
         })    
     res[ip] = ports    
     return res
+
+def parse_exploit_action(ssh_action_output, mapper):
+    pass
+
+def parse_escalate_action(escalate_action_output, mapper):
+    pass
+
+def parse_decoy_action(decoy_action_output, mapper):
+    pass
     
+
 class ResultsBundler:
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict:
         # @To-Do
