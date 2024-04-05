@@ -240,14 +240,49 @@ class CustomTopology (Topo):
   def startSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
-        host = lan['name'] + host_name
-        info (f"Create a temporary ssh_config file on {host}\n")
-        net[host].cmd(f'cp /etc/ssh/ssh_config /tmp/sshd_config_mininet_{host}')
-        info (f"Configure ssh config to allow passwd auth on {host}\n")
-        net[host].cmd(f'echo "    PasswordAuthentication yes" | sudo tee -a /tmp/sshd_config_mininet_{host} > /dev/null')
-        info (f"Start ssh server on {host}\n")
-        net[host].cmd(f'/usr/sbin/sshd -D -f /tmp/sshd_config_mininet_{host} &')
+        # host = lan['name'] + host_name
+        # info (f"Create a temporary ssh_config file on {host}\n")
+        # net[host].cmd(f'cp /etc/ssh/ssh_config /tmp/sshd_config_mininet_{host}')
+        # info (f"Configure ssh config to allow passwd auth on {host}\n")
+        # net[host].cmd(f'echo "    PasswordAuthentication yes" | sudo tee -a /tmp/sshd_config_mininet_{host} > /dev/null')
+        # info (f"Start ssh server on {host}\n")
+        # net[host].cmd(f'/usr/sbin/sshd -D -f /tmp/sshd_config_mininet_{host} &')
 
+        host = lan['name'] + host_name
+        temp_config_file = f'/tmp/sshd_config_mininet_{host}'
+        info(f"Create and configure a minimal sshd_config on {host}\n")
+        # Start with a basic configuration enabling only password authentication
+        basic_config = (
+            "UsePAM yes\n"
+            "PermitRootLogin yes\n"
+            "PasswordAuthentication yes\n"
+            "ChallengeResponseAuthentication no\n"
+            "UseDNS yes\n"
+        )
+        # Write this configuration to the temporary file
+        net[host].cmd(f'echo "{basic_config}" > {temp_config_file}')
+        info(f"Start ssh server on {host} with custom config\n")
+        net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
+
+  def configureHostsDNS(self, net, dns='8.8.8.8'):
+    """
+    Configure the DNS server for all hosts in the network.
+    """
+    for host in net.hosts:
+      info(f"Append nameserver {dns} to /etc/resolv.conf \n")
+      host.cmd('echo "nameserver %s" >> /etc/resolv.conf' % dns)
+      dns_config = host.cmd('cat /etc/resolv.conf')
+      info(f"DNS settings:\n{dns_config}\n")
+      break
+
+  def removeSpecificDNS(self, net, dns='8.8.8.8'):
+    """
+    Remove a specific DNS entry (nameserver 8.8.8.8) from /etc/resolv.conf for all hosts.
+    """
+    for host in net.hosts:
+      # This command uses sed to search for the line containing 'nameserver 8.8.8.8' and delete it
+      host.cmd(f"sed -i '/nameserver {dns}/d' /etc/resolv.conf")
+        
   def stopSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():

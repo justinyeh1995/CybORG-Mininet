@@ -108,8 +108,7 @@ class CustomLAN ():
       info ("Host " + self.name+"h"+str(i+1) + " with IP: " + ip_prefix + str (next_num) + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
       h = self.topo.addHost (name=self.name+"h"+str(i+1),
                              ip=ip_prefix + str (next_num) + prefix_len,
-                             # ip=self.hosts_info["h"+str(i+1)],
-                             defaultRoute = " via " + self.router_ip) #
+                             defaultRoute = " via " + self.router_ip) 
         
       # save this host (in case we need it)
       self.hosts.append (h)

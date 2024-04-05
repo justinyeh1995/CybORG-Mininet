@@ -60,7 +60,7 @@ def main ():
   # building various parts of the topology
   info ("Create a net\n")
   net = Mininet (topo=topo)
-
+    
   # fix some of the nonsensical routes
   #info ("Fix mininet-created routes at hosts that might be wrong\n")
   # Maybe it is doing things correctly and it is us who were wrong.
@@ -73,7 +73,7 @@ def main ():
   # Now add the iptable rules in the nat nodes
   info ("Add additional iptable rules per subnet that needs NAT access\n")
   topo.add_nat_rules (net)
-
+    
   # Add passwd on every host
   info ("Add passwd on every host\n")
   topo.setPassword (net)
@@ -81,14 +81,19 @@ def main ():
   # Now start ssh server
   info ("Start SSH server on every host\n")
   topo.startSSHServer (net)
-    
+
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
+    
+  info ("Configure DNS on every host\n")
+  topo.configureHostsDNS (net, dns="8.8.8.8")
+
+    
   CLI (net)   # this gives us mininet prompt
     
   info ("Cleanup additional NAT rules\n")
   topo.cleanup_nat_rules (net)  # cleanup the additional nat rules
-
+    
   info ("Stop SSH server on every host")
   topo.stopSSHServer (net)
 
