@@ -1,5 +1,6 @@
 import collections
 from pprint import pprint
+import json
 import re
 import traceback 
 from typing import List, Dict
@@ -29,7 +30,7 @@ class CybORGMininetMapper:
         
     def init_mapping(self, cyborg) -> None: 
         self.ip_map = cyborg.get_ip_map()
-        self.cidr_map = cyborg.get_cidr_map()
+        self.cidr_map = {lan_name: str(ip) for lan_name, ip in cyborg.get_cidr_map().items()}
         self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()}
         self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
         
@@ -82,18 +83,22 @@ class CybORGMininetMapper:
     
     def __repr__(self):
         # For a more detailed, developer-focused representation
-        return (f"CybORGMininetMapper(\n"
-        f"  ip_map={self.ip_map},\n"
-        f"  cidr_map={self.cidr_map},\n"
-        f"  cyborg_ip_to_host_map={self.cyborg_ip_to_host_map},\n"
-        f"  cyborg_host_to_ip_map={self.cyborg_host_to_ip_map},\n"
-        f"  mininet_host_to_ip_map={self.mininet_host_to_ip_map},\n"
-        f"  mininet_ip_to_host_map={self.mininet_ip_to_host_map},\n"
-        f"  cyborg_to_mininet_name_map={self.cyborg_to_mininet_name_map},\n"
-        f"  mininet_host_to_cyborg_ip_map={self.mininet_host_to_cyborg_ip_map},\n"
-        f"  cyborg_ip_to_mininet_host_map={self.cyborg_ip_to_mininet_host_map},\n"
-        f"  cyborg_to_mininet_host_map={self.cyborg_to_mininet_host_map},\n"
-        f"  mininet_to_cyborg_host_map={self.mininet_to_cyborg_host_map},\n"
-        f"  cyborg_ip_to_mininet_ip_map={self.cyborg_ip_to_mininet_ip_map},\n"
-        f"  mininet_ip_to_cyborg_ip_map={self.mininet_ip_to_cyborg_ip_map}\n"
-        f")")
+        # Convert the relevant attributes to a dictionary
+        mapper_dict = {
+            'cidr_map': self.cidr_map,
+            'cyborg_ip_to_host_map': self.cyborg_ip_to_host_map,
+            'cyborg_host_to_ip_map': self.cyborg_host_to_ip_map,
+            'mininet_host_to_ip_map': self.mininet_host_to_ip_map,
+            'mininet_ip_to_host_map': self.mininet_ip_to_host_map,
+            'cyborg_to_mininet_name_map': self.cyborg_to_mininet_name_map,
+            'mininet_host_to_cyborg_ip_map': self.mininet_host_to_cyborg_ip_map,
+            'cyborg_ip_to_mininet_host_map': self.cyborg_ip_to_mininet_host_map,
+            'cyborg_to_mininet_host_map': self.cyborg_to_mininet_host_map,
+            'mininet_to_cyborg_host_map': self.mininet_to_cyborg_host_map,
+            'cyborg_ip_to_mininet_ip_map': self.cyborg_ip_to_mininet_ip_map,
+            'mininet_ip_to_cyborg_ip_map': self.mininet_ip_to_cyborg_ip_map
+        }
+        # pprint(mapper_dict)
+        # Use json.dumps for pretty printing
+        return f"CybORGMininetMapper(\n{json.dumps(mapper_dict, indent=2)}\n)"
+        
