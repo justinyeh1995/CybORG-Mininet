@@ -114,7 +114,7 @@ class SSHConnectionServer:
         marker_position = shell_output_text.find(marker)
         shell_output_text = shell_output_text[:marker_position]
         prompt_position = shell_output_text.rfind(prompt)
-        shell_output_text = shell_output_text[2:prompt_position]
+        shell_output_text = shell_output_text[:prompt_position]
 
         return shell_output_text
 
@@ -157,6 +157,11 @@ class SSHConnectionServer:
             shell_output_bytes += self.interactive_shell.recv(4096)
             marker1_match = marker1_regex.search(shell_output_bytes.decode())
 
+    @staticmethod
+    def send_response(response, socket):
+        response_json_string = json.dumps(response, indent=4, sort_keys=True)
+        socket.send_string(response_json_string)
+
     def run(self):
 
         if self.socket_path.exists():
@@ -183,16 +188,12 @@ class SSHConnectionServer:
                     f"Received input \"{json_input}\" incurred an error on parse: {str(e)}.  Ignoring",
                     file=sys.stderr
                 )
-                response = "ERROR"
-                response_json_string = json.dumps(response, indent=4, sort_keys=True)
-                socket.send_string(response_json_string)
+                self.send_response("ERROR", socket)
                 continue
 
             if json_data == "CLOSE":
                 self.ssh_session.close()
-                response = "CLOSED"
-                response_json_string = json.dumps(response, indent=4, sort_keys=True)
-                socket.send_string(response_json_string)
+                self.send_response("CLOSED", socket)
                 socket.close()
                 self.socket_path.unlink()
                 return
@@ -201,9 +202,9 @@ class SSHConnectionServer:
 
             try:
                 command_output = self.get_command_output(command)
-                response = {
+                self.send_response({
                     'output': command_output
-                }
+                }, socket)
 
             except Exception as e:
                 try:
@@ -212,10 +213,7 @@ class SSHConnectionServer:
                     pass
 
                 self.establish_ssh_session()
-                response = "RECONNECT"
-
-            response_json_string = json.dumps(response, indent=4, sort_keys=True)
-            socket.send_string(response_json_string)
+                self.send_response("RECONNECT", socket)
 
 
 if __name__ == "__main__":
