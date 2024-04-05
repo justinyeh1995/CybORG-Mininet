@@ -34,11 +34,10 @@ class RedActionTranslator(ActionTranslator):
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
-            action = "ssh"
-            target = f"cpswtjustin@{mininet_host_to_ip_map[target_host]}" # dummy
-            # sshAction = SshAction(mininet_host_to_ip_map[target_host], "root", "1234", 22)
+            # action = "ssh"
+            # target = f"cpswtjustin@{mininet_host_to_ip_map[target_host]}" # dummy
             action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Tutorial/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
-            target = mininet_host_to_ip_map[target_host]
+            target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         # elif action_type == "PrivilegeEscalate":
         #     action = "ping -c 1" # dummy
         #     target = "nat0" # dummy
@@ -57,6 +56,7 @@ class BlueActionTranslator(ActionTranslator):
 
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
+        host = cyborg_to_mininet_host_map['Defender'] # red host is always user0
         timeout = 10
         # @To-Do code smells
         # blue host is undecided at the moment
@@ -68,9 +68,8 @@ class BlueActionTranslator(ActionTranslator):
         elif action_type == "Monitor":
             print("Blue Monitor")
         elif action_type.startswith("Decoy"):
-            print("Decoy")
-            print(target_host)
+            print("Blue Decoy")
             action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Tutorial/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
-            target = mininet_host_to_ip_map.get(target_host, 'lan1h1')
-            cmd = f'{target_host} timeout {timeout} {action} {target}'
+            target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
+            cmd = f'{host} timeout {timeout} {action} {target}'
         return cmd
