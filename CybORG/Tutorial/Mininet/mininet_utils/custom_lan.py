@@ -66,7 +66,8 @@ class CustomLAN ():
     #
     # Note, this logic will totally fall apart if we have multiple routers connected
     # to the same LAN. Is this even valid? Maybe, for redundancy purposes.
-    next_num = int (last_octet) + 1  # should result in a 1
+    next_num = int (last_octet) + 1  # should result in a 1 (deprecated)
+    next_num = int(self.router_ip.split(".")[-1]) + 1 # @To-Do: Tightly-coupled with generate_routing_rules at utils @@Bad
     
     # now construct a switch
     info ("LAN::build_lan - add switch for lan: " + self.name + "\n")
@@ -83,7 +84,7 @@ class CustomLAN ():
     # check if there is a NAT node in this LAN and handle it so it always gets
     # the second address in this LAN
     if self.nat_node:
-      next_num += 1
+      next_num += 1 # @To-Do: Tightly-coupled with generate_routing_rules at utils @@Bad
       # create the NAT node # @To-do this line set the wrong default route to router 
       info ("NAT " + self.nat_node + " with IP: " + ip_prefix + str (next_num) + " and default route = " + "via " + self.router_ip + "\n")
       h = self.topo.addHost (self.nat_node,  # name

@@ -120,12 +120,9 @@ def generate_routing_rules(topology):
         for entry in entries:
             entry_str = f"{entry['to']} via {entry['via']} dev {entry['dev']}"
             router_rules["entries"].append(entry_str)
-        # if i == len(routes)-1: # To-Do: Hard coding is always bad
             ip_prefix, prefix_len, last_octet = cu.IP_components (routers_cidr[router])
-
-            router_rules["entries"].append(f"default via {ip_prefix + str(int (last_octet) + 2)} dev {router}-eth0")
-        # else:
-        #     router_rules["entries"].append(f"default via {entries[-1]['via']} dev {entries[-1]['dev']}")
+            # @To-Do: Tightly-coupled with build_lan at custom_lan @@Bad
+            router_rules["entries"].append(f"default via {ip_prefix + str(int (routers_ip[router].split('.')[-1]) + 2)} dev {router}-eth0") 
 
         routing_rules.append(router_rules)
 

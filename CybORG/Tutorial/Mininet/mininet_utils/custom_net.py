@@ -84,10 +84,10 @@ def main ():
 
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
-    
+
+  # @To-Do: Got flushed by DHCP
   info ("Configure DNS on every host\n")
   topo.configureHostsDNS (net, dns="8.8.8.8")
-
     
   CLI (net)   # this gives us mininet prompt
     
