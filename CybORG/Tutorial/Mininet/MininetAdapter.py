@@ -38,6 +38,8 @@ class MininetAdapter:
     
     def _parse_last_action(self, agent_type):
         action_str = self.cyborg.get_last_action(agent_type).__str__()
+
+        print(action_str)
         
         target_host, action_type, isSuccess = parse_action(self.cyborg, 
                                                 action_str, 
@@ -48,6 +50,7 @@ class MininetAdapter:
     
     
     def reset(self):
+        print("===Resetting===")
         self.clean()
 
         self.mapper.init_mapping(self.cyborg)
@@ -64,6 +67,8 @@ class MininetAdapter:
 
         self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
 
+        expect_text = self.command_interface.send_command('echo "nameserver 8.8.8.8" >> /etc/resolv.conf')
+        # pprint(repr(self.mapper))
 
     def perform_emulation(self) -> Dict:
         # Example of performing emulation
@@ -72,7 +77,7 @@ class MininetAdapter:
         obs = {}
         for type in ['Blue', 'Red']:
             target, cyborg_action, isSuccess = self._parse_last_action(type)
-
+            
             if type == "Blue":
                 mininet_command = self.blue_action_translator.translate(cyborg_action, 
                                                                     target, 
@@ -83,14 +88,18 @@ class MininetAdapter:
                                                                     target,
                                                                     self.mapper.cyborg_to_mininet_host_map,
                                                                     self.mapper.mininet_host_to_ip_map)
-                
+            print("===Success===")
+            print(isSuccess)
             mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
             
+            print("===Mininet Cli Text====")
             print(mininet_cli_text)
             
             mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
-
+            
+            print("===Obs===")
             pprint(mininet_obs)
+            
             obs[type] = mininet_obs
         
         return obs
