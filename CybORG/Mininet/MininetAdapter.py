@@ -47,7 +47,21 @@ class MininetAdapter:
                                                 self.mapper.cyborg_ip_to_host_map)
         
         return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSuccess 
+
     
+    def parse_action(self, agent_type):
+        action_str = self.cyborg.get_last_action(agent_type).__str__()
+
+        print(action_str)
+
+        # @To-Do this parse_action from util probably won't work 
+        target_host, action_type, isSuccess = parse_action(self.cyborg, 
+                                                action_str, 
+                                                agent_type, 
+                                                self.mapper.cyborg_ip_to_host_map)
+        
+        return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSuccess 
+
     
     def reset(self):
         print("===Resetting===")
@@ -75,6 +89,7 @@ class MininetAdapter:
         print(expect_text)
         # pprint(repr(self.mapper))
 
+    
     def perform_emulation(self) -> Dict:
         # Example of performing emulation
         # Translate CybORG action to Mininet command and send it
@@ -107,6 +122,40 @@ class MininetAdapter:
             
             obs[type] = mininet_obs
         
+        return obs
+
+    
+    def perform_emulation_in_wrapper(self, action_string: str, agent_type: str) -> Dict:
+        # Example of performing emulation
+        # Translate CybORG action to Mininet command and send it
+        # @To-Do: Has to be test with cage-2-cardiff/game_coordinator.py
+        obs = {}
+        target, cyborg_action, isSuccess = self.parse_action(type)
+        
+        if agent_type == "blue":
+            mininet_command = self.blue_action_translator.translate(cyborg_action, 
+                                                                target, 
+                                                                self.mapper.cyborg_to_mininet_host_map,
+                                                                self.mapper.mininet_host_to_ip_map)  
+        elif agent_type == "red":
+            mininet_command = self.red_action_translator.translate(cyborg_action, 
+                                                                target,
+                                                                self.mapper.cyborg_to_mininet_host_map,
+                                                                self.mapper.mininet_host_to_ip_map)
+        print("===Success===")
+        print(isSuccess)
+        mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
+        
+        print("===Mininet Cli Text====")
+        print(mininet_cli_text)
+        
+        mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
+        
+        print("===Obs===")
+        pprint(mininet_obs)
+        
+        obs[type] = mininet_obs
+    
         return obs
 
     
