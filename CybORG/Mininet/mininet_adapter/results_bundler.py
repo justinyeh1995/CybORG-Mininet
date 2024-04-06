@@ -3,6 +3,8 @@ import traceback
 from pprint import pprint
 from typing import List, Dict
 
+from CybORG.Shared import Observation
+
 def parse_nmap_network_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
     subnet = target
@@ -35,21 +37,22 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res[ip] = ports    
     return res
 
-def parse_exploit_action(ssh_action_output, mapper):
-    pass
+def parse_ssh_action(ssh_action_output):
+    # To-Do: The parsing logic
+    return Observation(True)
 
 def parse_escalate_action(escalate_action_output, mapper):
     pass
 
-def parse_decoy_action(decoy_action_output, mapper):
-    pass
+def parse_decoy_action(decoy_action_output):
+    # To-Do: The parsing logic
+    return Observation(True)
     
 
 class ResultsBundler:
-    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict:
-        # @To-Do
+    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict: # @ To-Do Should return Observation object instead
         if not isSuccess:
-            return {'success': False}
+            return {'success': False} # Observation(False)
         
         if cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_network_scan(mininet_cli_str, target, mapper)
@@ -58,10 +61,10 @@ class ResultsBundler:
             return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
         elif cyborg_action == "ExploitRemoteService":
-            return mininet_cli_str
+            return parse_ssh_action(mininet_cli_str)
 
         elif cyborg_action.startswith("Decoy"):
-            return mininet_cli_str
+            return parse_decoy_action(mininet_cli_str)
 
-        return {'success': True}
+        return {'success': True} # Observation(True)
         
