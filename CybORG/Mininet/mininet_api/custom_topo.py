@@ -240,14 +240,6 @@ class CustomTopology (Topo):
   def startSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
-        # host = lan['name'] + host_name
-        # info (f"Create a temporary ssh_config file on {host}\n")
-        # net[host].cmd(f'cp /etc/ssh/ssh_config /tmp/sshd_config_mininet_{host}')
-        # info (f"Configure ssh config to allow passwd auth on {host}\n")
-        # net[host].cmd(f'echo "    PasswordAuthentication yes" | sudo tee -a /tmp/sshd_config_mininet_{host} > /dev/null')
-        # info (f"Start ssh server on {host}\n")
-        # net[host].cmd(f'/usr/sbin/sshd -D -f /tmp/sshd_config_mininet_{host} &')
-
         host = lan['name'] + host_name
         temp_config_file = f'/tmp/sshd_config_mininet_{host}'
         info(f"Create and configure a minimal sshd_config on {host}\n")
@@ -257,7 +249,8 @@ class CustomTopology (Topo):
             "PermitRootLogin yes\n"
             "PasswordAuthentication yes\n"
             "ChallengeResponseAuthentication no\n"
-            "UseDNS yes\n"
+            "UseDNS no\n"  
+            "Subsystem sftp /usr/lib/openssh/sftp-server\n"  
         )
         # Write this configuration to the temporary file
         net[host].cmd(f'echo "{basic_config}" > {temp_config_file}')
