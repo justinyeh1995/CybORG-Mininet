@@ -39,6 +39,16 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
 
 def parse_ssh_action(ssh_action_output):
     # To-Do: The parsing logic
+    pattern = r"{'success': <TrinaryEnum\.(TRUE|FALSE)"
+
+    # Use re.search to find a match
+    match = re.search(pattern, ssh_action_output)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = match.group(1) if match else None
+    
+    print(success_status)
+    
     return Observation(True)
 
 def parse_escalate_action(escalate_action_output, mapper):
@@ -46,6 +56,16 @@ def parse_escalate_action(escalate_action_output, mapper):
 
 def parse_decoy_action(decoy_action_output):
     # To-Do: The parsing logic
+    pattern = r"{'success': <TrinaryEnum\.(TRUE|FALSE)"
+
+    # Use re.search to find a match
+    match = re.search(pattern, decoy_action_output)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = match.group(1) if match else None
+    
+    print(success_status)
+    
     return Observation(True)
     
 

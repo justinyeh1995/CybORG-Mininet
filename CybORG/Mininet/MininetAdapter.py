@@ -119,6 +119,7 @@ class MininetAdapter:
             
             print("===Obs===")
             pprint(mininet_obs)
+            # pprint(mininet_obs.data)
             
             obs[type] = mininet_obs
         
