@@ -9,7 +9,7 @@ from CybORG.Emulator.Actions.Velociraptor.VelociraptorAction import Velociraptor
 
 class NetstatAction(VelociraptorAction):
 
-    artifact_name = "Custom.Linux.Network.Netstat"
+    artifact_name = "Linux.Network.Netstat"
 
     def __init__(self, credentials_file, hostname, state_regex=None):
 
