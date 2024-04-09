@@ -81,10 +81,10 @@ class MininetAdapter:
 
         self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
 
-        expect_text = self.command_interface.send_command('lan1h1 echo "nameserver 8.8.8.8" >> /etc/resolv.conf') # @To-Do hard coded
-        print(expect_text)
-        expect_text = self.command_interface.send_command('lan1h1 cat /etc/resolv.conf')
-        print(expect_text)
+        # expect_text = self.command_interface.send_command('lan1h1 echo "nameserver 8.8.8.8" >> /etc/resolv.conf') # @To-Do hard coded
+        # print(expect_text)
+        # expect_text = self.command_interface.send_command('lan1h1 cat /etc/resolv.conf')
+        # print(expect_text)
         expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
         print(expect_text)
         # pprint(repr(self.mapper))
