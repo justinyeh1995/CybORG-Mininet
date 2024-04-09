@@ -39,40 +39,40 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
 
 def parse_ssh_action(ssh_action_output):
     # To-Do: The parsing logic
-    pattern = r"'success': <TrinaryEnum\.(TRUE|FALSE)"
+    pattern = re.compile(r'TrinaryEnum.TRUE')
 
     # Use re.search to find a match
-    match = re.search(pattern, ssh_action_output)
+    match = pattern.search(ssh_action_output)
     
     # Extract the 'TRUE' or 'FALSE' part if found
-    success_status = match.group(1) if match else None
+    success_status = True if match else False
     
-    print(success_status)
+    print(f"Match is: {match} \n")
     
-    return Observation(True).data
+    return Observation(success_status).data
 
 def parse_escalate_action(escalate_action_output, mapper):
     pass
 
 def parse_decoy_action(decoy_action_output):
     # To-Do: The parsing logic
-    pattern = r"'success': <TrinaryEnum\.(TRUE|FALSE)"
+    pattern = re.compile(r'TrinaryEnum.TRUE')
 
     # Use re.search to find a match
-    match = re.search(pattern, decoy_action_output)
+    match = pattern.search(decoy_action_output)
     
     # Extract the 'TRUE' or 'FALSE' part if found
-    success_status = match.group(1) if match else None
+    success_status = True if match else False
     
-    print(success_status)
+    print(f"Match is: {match} \n")
     
-    return Observation(True).data
+    return Observation(success_status).data
     
 
 class ResultsBundler:
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict: # @ To-Do Should return Observation object instead
         if not isSuccess:
-            return {'success': False} # Observation(False)
+            return Observation(False).data 
         
         if cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_network_scan(mininet_cli_str, target, mapper)
@@ -86,5 +86,5 @@ class ResultsBundler:
         elif cyborg_action.startswith("Decoy"):
             return parse_decoy_action(mininet_cli_str)
 
-        return {'success': True} # Observation(True)
+        return Observation(False).data
         
