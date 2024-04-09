@@ -5,6 +5,14 @@ from typing import List, Dict
 
 from CybORG.Shared import Observation
 
+def enum_to_boolean(enum_value):
+    if enum_value == 'TRUE':
+        return True
+    elif enum_value == 'FALSE':
+        return False
+    else:
+        return None
+
 def parse_nmap_network_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
     subnet = target
@@ -38,14 +46,13 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     return res
 
 def parse_ssh_action(ssh_action_output):
-    # To-Do: The parsing logic
-    pattern = re.compile(r'TrinaryEnum.TRUE')
+    pattern = re.compile(r'TRUE|FALSE')
 
     # Use re.search to find a match
     match = pattern.search(ssh_action_output)
     
     # Extract the 'TRUE' or 'FALSE' part if found
-    success_status = True if match else False
+    success_status = enum_to_boolean(match.group()) if match else None
     
     print(f"Match is: {match} \n")
     
@@ -55,14 +62,13 @@ def parse_escalate_action(escalate_action_output, mapper):
     pass
 
 def parse_decoy_action(decoy_action_output):
-    # To-Do: The parsing logic
-    pattern = re.compile(r'TrinaryEnum.TRUE')
+    pattern = re.compile(r'TRUE|FALSE')
 
     # Use re.search to find a match
     match = pattern.search(decoy_action_output)
     
     # Extract the 'TRUE' or 'FALSE' part if found
-    success_status = True if match else False
+    success_status = enum_to_boolean(match.group()) if match else None
     
     print(f"Match is: {match} \n")
     
