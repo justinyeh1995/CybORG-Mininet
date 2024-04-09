@@ -34,9 +34,7 @@ class RedActionTranslator(ActionTranslator):
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
-            # action = "ssh"
-            # target = f"cpswtjustin@{mininet_host_to_ip_map[target_host]}" # dummy
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         # elif action_type == "PrivilegeEscalate":
         #     action = "ping -c 1" # dummy
@@ -54,7 +52,15 @@ class BlueActionTranslator(ActionTranslator):
     def __init__(self):
         super().__init__()  # Correctly calls the __init__ method of ActionTranslator
         self.decoy_bin_path = self.path + f'/Emulator/Velociraptor/Executables/Decoy'
-
+        self.decoy_service_name_to_port = {
+            'DecoyApache': 80, 
+            'DecoySSHD': 22, 
+            'DecoyVsftpd': 21, 
+            'DecoyFemitter': 21, 
+            'DecoyTomcat': 443, 
+            'DecoyHarakaSMPT': 25
+        }
+        
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         host = cyborg_to_mininet_host_map['Defender'] # red host is always user0
         timeout = 60
@@ -69,7 +75,8 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Monitor")
         elif action_type.startswith("Decoy"):
             print("Blue Decoy")
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-            cmd = f"{host} echo 'nameserver 8.8.8.8' >> /etc/resolv.conf && timeout {timeout} {action} {target}"
+            port = self.decoy_service_name_to_port.get(action_type, 80)
+            cmd = f"{host} echo 'nameserver 8.8.8.8' >> /etc/resolv.conf && timeout {timeout} {action} {target} --port {port}"
         return cmd
