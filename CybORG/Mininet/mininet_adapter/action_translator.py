@@ -36,9 +36,9 @@ class RedActionTranslator(ActionTranslator):
             print("Red Exploit Network Services")
             action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        # elif action_type == "PrivilegeEscalate":
-        #     action = "ping -c 1" # dummy
-        #     target = "nat0" # dummy
+        elif action_type == "PrivilegeEscalate":
+            print("Red Privilege Escalate")
+            # @To-Do Not Implemented as of now
         else:
             action = "sleep 1" # dummy
             target = "" # dummy
@@ -77,6 +77,6 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Decoy")
             action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-            port = self.decoy_service_name_to_port.get(action_type, 80)
+            port = self.decoy_service_name_to_port.get(action_type, 80
             cmd = f"{host} echo 'nameserver 8.8.8.8' >> /etc/resolv.conf && timeout {timeout} {action} {target} --port {port}"
         return cmd
