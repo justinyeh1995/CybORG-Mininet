@@ -56,7 +56,7 @@ class BlueActionTranslator(ActionTranslator):
         super().__init__()  # Correctly calls the __init__ method of ActionTranslator
         self.decoy_bin_path = self.path + f'/Emulator/Velociraptor/Executables/Decoy'
         self.decoy_service_name_to_port = {
-            'DecoyApache': 81, 
+            'DecoyApache': 80, 
             'DecoySSHD': 22, 
             'DecoyVsftpd': 21, 
             'DecoyFemitter': 21, 
