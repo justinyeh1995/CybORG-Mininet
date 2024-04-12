@@ -26,11 +26,11 @@ class RedActionTranslator(ActionTranslator):
         # @To-Do code smells
         if action_type == "DiscoverRemoteSystems":
             print("Red Discover Remote Systems")
-            action = "nmap -sn"
+            action = "nmap -sn" # "nmap -oX - -sn"
             target = target_host
         elif action_type == "DiscoverNetworkServices":
             print("Red Discover Network Services")
-            action = "nmap -sV"
+            action = "nmap -sV" # "nmap -oX - -sV"
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
