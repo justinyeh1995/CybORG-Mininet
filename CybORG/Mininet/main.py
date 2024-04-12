@@ -15,6 +15,8 @@ from typing import List, Dict
 
 from CybORG import CybORG, CYBORG_VERSION
 
+from CybORG.Shared import Observation
+
 from CybORG.Agents import B_lineAgent, BlueReactRestoreAgent, BlueReactRemoveAgent, \
     RandomAgent, RedMeanderAgent, SleepAgent
 from CybORG.Agents import BaseAgent
@@ -141,17 +143,13 @@ def main(agent_type: str, cyborg_type: str) -> None:
                 
                 # cyborg.env.env.tracker.render()
                 for j in range(num_steps):
-                    mininet_observation = wrapped_cyborg.observation_change('Blue', mininet_observation["Blue"].data)
-                    print(f"Mininet Observation is: {mininet_observation}")
-                    mininet_observation = np.array(mininet_observation, dtype=np.float32)
-                    action = agent.get_action(mininet_observation, action_space)
-                    # blue_action_space = cyborg.get_action_space('Blue')
-                    # blue_obs = cyborg.get_observation('Blue') # get the newest observation
-                    # blue_action = agent.get_action(blue_obs, blue_action_space)
-                    # # pprint(blue_action)
+                    blue_observation = mininet_observation["Blue"]
+                    blue_observation = wrapped_cyborg.env.env.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
+                    blue_observation = np.array(blue_observation, dtype=np.float32)
+                    action = agent.get_action(blue_observation, action_space)
                         
                     # result = cyborg.step('Blue', blue_action, skip_valid_action_check=False)
-                    observation, rew, done, info = wrapped_cyborg.step(action)
+                    # observation, rew, done, info = wrapped_cyborg.step(action) # needed in plotting only 
                     
                     # create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot()

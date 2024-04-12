@@ -118,8 +118,8 @@ class MininetAdapter:
             mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
             
             print("===Obs===")
-            pprint(mininet_obs)
-            # pprint(mininet_obs.data)
+            # pprint(mininet_obs)
+            pprint(mininet_obs.data)
             print("*********")
             
             obs[type] = mininet_obs
