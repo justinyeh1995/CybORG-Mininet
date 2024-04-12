@@ -87,7 +87,7 @@ def parse_decoy_action(decoy_action_output) -> Observation:
 class ResultsBundler:
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation: # @ To-Do Should return Observation object instead
         if not isSuccess:
-            return Observation(False)
+            return Observation(False)#.data
         
         if cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_network_scan(mininet_cli_str, target, mapper)
