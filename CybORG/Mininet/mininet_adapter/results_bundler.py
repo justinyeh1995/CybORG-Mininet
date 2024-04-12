@@ -4,6 +4,7 @@ from pprint import pprint
 from typing import List, Dict
 
 from CybORG.Shared import Observation
+from CybORG.Emulator.Observations.Velociraptor.DiscoverNetworkServicesObservation import DiscoverNetworkServicesObservation
 
 def enum_to_boolean(enum_value):
     if enum_value == 'TRUE':
@@ -13,13 +14,16 @@ def enum_to_boolean(enum_value):
     else:
         return None
 
-def parse_nmap_network_scan(nmap_output, target, mapper) -> List:
-    res = {'success': True}
+def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     subnet = target
     mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', nmap_output)
     cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
-    res[subnet] = cyborg_ip_addresses
-    return res
+
+    obs = Observation()
+    obs.set_success(True)
+    for ip_addr in cyborg_ip_addresses:
+        obs.add_interface_info(hostid=str(ip_addr), ip_address=ip_addr, subnet=subnet)
+    return obs#.data
     
 def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
@@ -33,19 +37,24 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     matches = port_info_regex.findall(nmap_output)
     
     # Process matches
-    ports = []
+    processes = []
     for match in matches:
         port_number, protocol, service_name, version = match
-        ports.append({
+        processes.append({
             'port': port_number,
             'protocol': protocol,
             'service': service_name,
             'version': version.strip()
         })    
-    res[ip] = ports    
-    return res
+    res[ip] = processes
 
-def parse_ssh_action(ssh_action_output):
+    obs = Observation()
+    obs.set_success(True)
+    for proc in processes:
+        obs.add_process(hostid=str(ip), local_port=proc["port"], local_address=ip)
+    return obs#.data
+
+def parse_ssh_action(ssh_action_output) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')
 
     # Use re.search to find a match
@@ -56,12 +65,12 @@ def parse_ssh_action(ssh_action_output):
     
     print(f"Match is: {match} \n")
     
-    return Observation(success_status).data
+    return Observation(success_status)#.data
 
-def parse_escalate_action(escalate_action_output, mapper):
-    pass
+def parse_escalate_action(escalate_action_output, mapper) -> Observation:
+    return Observation(False)#.data
 
-def parse_decoy_action(decoy_action_output):
+def parse_decoy_action(decoy_action_output) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')
 
     # Use re.search to find a match
@@ -72,13 +81,13 @@ def parse_decoy_action(decoy_action_output):
     
     print(f"Match is: {match} \n")
     
-    return Observation(success_status).data
+    return Observation(success_status)#.data
     
 
 class ResultsBundler:
-    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Dict: # @ To-Do Should return Observation object instead
+    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation: # @ To-Do Should return Observation object instead
         if not isSuccess:
-            return Observation(False).data 
+            return Observation(False)
         
         if cyborg_action == "DiscoverRemoteSystems":
             return parse_nmap_network_scan(mininet_cli_str, target, mapper)
@@ -92,5 +101,5 @@ class ResultsBundler:
         elif cyborg_action.startswith("Decoy"):
             return parse_decoy_action(mininet_cli_str)
 
-        return Observation(False).data
+        return Observation(False)#.data
         
