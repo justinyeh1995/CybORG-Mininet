@@ -8,13 +8,10 @@ import collections
 import traceback 
 from pprint import pprint
 
-# import matplotlib.pyplot as plt
-# import networkx as nx
-# from networkx import connected_components
-# import plotly.graph_objects as go
-# import plotly.express as px
+import numpy as np
 import pandas as pd
 from dataclasses import dataclass
+from typing import List, Dict
 
 from CybORG import CybORG, CYBORG_VERSION
 
@@ -25,15 +22,14 @@ from CybORG.Agents.MainAgent import MainAgent
 from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
-from CybORG.Agents.Wrappers.ChallengeWrapper2 import ChallengeWrapper2
 from CybORG.Agents.Wrappers import EnumActionWrapper
 from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
 from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
-from CybORG.Tutorial.Visualizers import NetworkVisualizer
-from CybORG.Tutorial.GameStateManager import GameStateManager
+from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
+from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
 from CybORG.Mininet.MininetAdapter import MininetAdapter
 
 MAX_EPS = 1
@@ -62,10 +58,9 @@ class CybORGFactory:
     file_name: str = "Scenario2_cyborg--"
     
     def wrap(self, env):
-        # return ChallengeWrapper2(env=env, agent_name='Blue')
         return ChallengeWrapper(env=env, agent_name='Blue')
     
-    def create(self, type: str, red_agent) -> BaseAgent:
+    def create(self, type: str, red_agent) -> Dict:
         red_agent = red_agent()
         path = str(inspect.getfile(CybORG))
         path = path[:-7] + f'/Simulator/Scenarios/scenario_files/{self.file_name}.yaml'
@@ -73,9 +68,9 @@ class CybORGFactory:
         cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
         
         if type == "wrap":
-            return self.wrap(cyborg)
+            return {"wrapped": self.wrap(cyborg), "unwrapped": cyborg}
             
-        return cyborg
+        return {"wrapped": None, "unwrapped": cyborg} 
 
 def wrap(env):
     # return ChallengeWrapper2(env=env, agent_name='Blue')
@@ -109,7 +104,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
     # game manager initialization
-    game_state_manager = GameStateManager()
+    game_state_manager = GameStateCollector()
     # mininet adapter initialization
     mininet_adapter = MininetAdapter()
 
@@ -117,9 +112,10 @@ def main(agent_type: str, cyborg_type: str) -> None:
     for num_steps in [10]:
         for red_agent in [B_lineAgent]:
             
-            cyborg = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
-
-            observation = cyborg.reset()
+            cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
+            wrapped_cyborg, cyborg = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"]
+            
+            observation = wrapped_cyborg.reset() if wrapped_cyborg else cyborg.reset()
             # print('observation is:',observation)
             
             # Rest set up game_state_manager
@@ -133,7 +129,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
             # Reset mininet adapter 
             mininet_adapter.set_environment(cyborg=cyborg)
             mininet_adapter.reset()
-            
+            mininet_observation = {"Blue": observation}
             
             action_space = cyborg.get_action_space(agent_name)
 
@@ -145,21 +141,27 @@ def main(agent_type: str, cyborg_type: str) -> None:
                 
                 # cyborg.env.env.tracker.render()
                 for j in range(num_steps):
-                    blue_action_space = cyborg.get_action_space('Blue')
-                    blue_obs = cyborg.get_observation('Blue') # get the newest observation
-                    blue_action = agent.get_action(blue_obs, blue_action_space)
-                    # pprint(blue_action)
+                    mininet_observation = wrapped_cyborg.observation_change('Blue', mininet_observation["Blue"].data)
+                    print(f"Mininet Observation is: {mininet_observation}")
+                    mininet_observation = np.array(mininet_observation, dtype=np.float32)
+                    action = agent.get_action(mininet_observation, action_space)
+                    # blue_action_space = cyborg.get_action_space('Blue')
+                    # blue_obs = cyborg.get_observation('Blue') # get the newest observation
+                    # blue_action = agent.get_action(blue_obs, blue_action_space)
+                    # # pprint(blue_action)
                         
-                    result = cyborg.step('Blue', blue_action, skip_valid_action_check=False)
+                    # result = cyborg.step('Blue', blue_action, skip_valid_action_check=False)
+                    observation, rew, done, info = wrapped_cyborg.step(action)
                     
                     # create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot()
                     # The adapter should pass the action as a param
-                    mininet_adapter.perform_emulation()
+                    mininet_observation = mininet_adapter.perform_emulation()
                     # pprint(mininet_adapter)
-                    # game_state_manager.update_state_snapshot(mininet_adapter)
-                    # game manager store state
+                    state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, mininet_observation)
+                    
                     game_state_manager.store_state(state_snapshot, i, j)
+                    print(f"===Step {j} is over===")
                     
                 # game manager reset
                 agent.end_episode()
@@ -178,8 +180,8 @@ def main(agent_type: str, cyborg_type: str) -> None:
 
 
 if __name__ == "__main__":
-    game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
-    # game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap")
+    # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap")
 
 
     
