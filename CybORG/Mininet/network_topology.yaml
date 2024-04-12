@@ -1,45 +1,45 @@
 topo:
   routers:
   - router: r1
-    ip: 10.0.192.213
+    ip: 10.0.189.193
   - router: r2
-    ip: 10.0.229.197
+    ip: 10.0.86.229
   - router: r3
-    ip: 10.0.16.97
+    ip: 10.0.54.162
   lans:
   - name: lan1
     router: r1
-    router_ip: 10.0.192.213
-    subnet: 10.0.192.208/28
+    router_ip: 10.0.189.193
+    subnet: 10.0.189.192/28
     hosts: 4
     hosts_info:
-      h1: 10.0.192.221
-      h2: 10.0.192.220
-      h3: 10.0.192.222
-      h4: 10.0.192.219
+      h1: 10.0.189.201
+      h2: 10.0.189.194
+      h3: 10.0.189.202
+      h4: 10.0.189.198
     nat: nat0
   - name: lan2
     router: r2
-    router_ip: 10.0.229.197
-    subnet: 10.0.229.192/28
+    router_ip: 10.0.86.229
+    subnet: 10.0.86.224/28
     hosts: 4
     hosts_info:
-      h1: 10.0.229.203
-      h2: 10.0.229.204
-      h3: 10.0.229.202
-      h4: 10.0.229.195
+      h1: 10.0.86.234
+      h2: 10.0.86.227
+      h3: 10.0.86.231
+      h4: 10.0.86.233
     nat: nat1
   - name: lan3
     router: r3
-    router_ip: 10.0.16.97
-    subnet: 10.0.16.96/28
+    router_ip: 10.0.54.162
+    subnet: 10.0.54.160/28
     hosts: 5
     hosts_info:
-      h1: 10.0.16.102
-      h2: 10.0.16.109
-      h3: 10.0.16.106
-      h4: 10.0.16.100
-      h5: 10.0.16.104
+      h1: 10.0.54.167
+      h2: 10.0.54.171
+      h3: 10.0.54.169
+      h4: 10.0.54.163
+      h5: 10.0.54.164
     nat: nat2
   links:
   - ep1-router: r1
@@ -54,38 +54,38 @@ topo:
   routes:
   - router: r1
     entries:
-    - 10.0.229.192/28 via 10.50.1.2 dev r1-eth1
-    - default via 10.0.192.215 dev r1-eth0
-    - 10.0.16.96/28 via 10.100.1.2 dev r1-eth2
-    - default via 10.0.192.215 dev r1-eth0
+    - 10.0.86.224/28 via 10.50.1.2 dev r1-eth1
+    - default via 10.0.189.195 dev r1-eth0
+    - 10.0.54.160/28 via 10.100.1.2 dev r1-eth2
+    - default via 10.0.189.195 dev r1-eth0
   - router: r2
     entries:
-    - 10.0.192.208/28 via 10.50.1.1 dev r2-eth1
-    - default via 10.0.229.199 dev r2-eth0
-    - 10.0.16.96/28 via 10.150.1.2 dev r2-eth2
-    - default via 10.0.229.199 dev r2-eth0
+    - 10.0.189.192/28 via 10.50.1.1 dev r2-eth1
+    - default via 10.0.86.231 dev r2-eth0
+    - 10.0.54.160/28 via 10.150.1.2 dev r2-eth2
+    - default via 10.0.86.231 dev r2-eth0
   - router: r3
     entries:
-    - 10.0.192.208/28 via 10.100.1.1 dev r3-eth1
-    - default via 10.0.16.99 dev r3-eth0
-    - 10.0.229.192/28 via 10.150.1.1 dev r3-eth2
-    - default via 10.0.16.99 dev r3-eth0
+    - 10.0.189.192/28 via 10.100.1.1 dev r3-eth1
+    - default via 10.0.54.164 dev r3-eth0
+    - 10.0.86.224/28 via 10.150.1.1 dev r3-eth2
+    - default via 10.0.54.164 dev r3-eth0
   nats:
   - name: nat0
     subnets:
-    - 10.0.192.208/28
-    - 10.0.229.192/28
-    - 10.0.16.96/28
+    - 10.0.189.192/28
+    - 10.0.86.224/28
+    - 10.0.54.160/28
     router: r1
   - name: nat1
     subnets:
-    - 10.0.192.208/28
-    - 10.0.229.192/28
-    - 10.0.16.96/28
+    - 10.0.189.192/28
+    - 10.0.86.224/28
+    - 10.0.54.160/28
     router: r2
   - name: nat2
     subnets:
-    - 10.0.192.208/28
-    - 10.0.229.192/28
-    - 10.0.16.96/28
+    - 10.0.189.192/28
+    - 10.0.86.224/28
+    - 10.0.54.160/28
     router: r3
