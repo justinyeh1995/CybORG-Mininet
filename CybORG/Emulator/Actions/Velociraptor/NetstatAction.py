@@ -9,7 +9,7 @@ from CybORG.Emulator.Actions.Velociraptor.VelociraptorAction import Velociraptor
 
 class NetstatAction(VelociraptorAction):
 
-    artifact_name = "Linux.Network.Netstat"
+    artifact_name = "Custom.Linux.Network.Netstat"
 
     def __init__(self, credentials_file, hostname, state_regex=None):
 
@@ -23,6 +23,8 @@ class NetstatAction(VelociraptorAction):
     def execute(self, state: Union[State, None]) -> Observation:
 
         velociraptor_interface = self.get_velociraptor_interface()
+
+#        velociraptor_interface.get_server_glob()
 
         client_id = velociraptor_interface.get_client_id_from_hostname(self.hostname)
 
