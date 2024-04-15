@@ -22,7 +22,8 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     obs = Observation()
     obs.set_success(True)
     for ip_addr in cyborg_ip_addresses:
-        obs.add_interface_info(hostid=str(ip_addr), ip_address=ip_addr, subnet=subnet)
+        hostid = mapper.cyborg_ip_to_host_map[str(ip_addr)]
+        obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
     return obs#.data
     
 def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
@@ -51,7 +52,8 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     obs = Observation()
     obs.set_success(True)
     for proc in processes:
-        obs.add_process(hostid=str(ip), local_port=proc["port"], local_address=ip)
+        hostid = mapper.cyborg_ip_to_host_map[str(ip)]
+        obs.add_process(hostid=hostid, local_port=proc["port"], local_address=ip)
     return obs#.data
 
 def parse_ssh_action(ssh_action_output) -> Observation:
