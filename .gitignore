@@ -11,6 +11,8 @@ data/
 profiles/
 venv/*
 venv
+castle.new.venv/
+castle.old.venv/
 .idea/
 CybORG\.egg-info/
 
