@@ -1,11 +1,7 @@
 pytest
+paramiko
 pyyaml
 numpy
-gym==0.23.1
+gym
 prettytable
 docutils
-pettingzoo
-networkx
-matplotlib
-paramiko
-pygame
