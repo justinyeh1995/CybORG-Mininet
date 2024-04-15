@@ -34,7 +34,7 @@ class RedActionTranslator(ActionTranslator):
             target = target_host
         elif action_type == "ExploitRemoteService":
             print("Red Exploit Network Services")
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         elif action_type == "PrivilegeEscalate":
             print("Red Privilege Escalate")
@@ -78,7 +78,7 @@ class BlueActionTranslator(ActionTranslator):
             print("Blue Monitor")
         elif action_type.startswith("Decoy"):
             print("Blue Decoy")
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/castle.new.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
+            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
             target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
             port = self.decoy_service_name_to_port.get(action_type, 80)
             cmd = f"{host} {action} {target} --port {port}"
