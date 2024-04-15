@@ -1,0 +1,91 @@
+topo:
+  routers:
+  - router: r1
+    ip: 10.0.97.230
+  - router: r2
+    ip: 10.0.220.155
+  - router: r3
+    ip: 10.0.116.234
+  lans:
+  - name: lan1
+    router: r1
+    router_ip: 10.0.97.230
+    subnet: 10.0.97.224/28
+    hosts: 4
+    hosts_info:
+      h1: 10.0.97.227
+      h2: 10.0.97.234
+      h3: 10.0.97.229
+      h4: 10.0.97.231
+    nat: nat0
+  - name: lan2
+    router: r2
+    router_ip: 10.0.220.155
+    subnet: 10.0.220.144/28
+    hosts: 4
+    hosts_info:
+      h1: 10.0.220.156
+      h2: 10.0.220.148
+      h3: 10.0.220.145
+      h4: 10.0.220.147
+    nat: nat1
+  - name: lan3
+    router: r3
+    router_ip: 10.0.116.234
+    subnet: 10.0.116.224/28
+    hosts: 5
+    hosts_info:
+      h1: 10.0.116.229
+      h2: 10.0.116.231
+      h3: 10.0.116.228
+      h4: 10.0.116.238
+      h5: 10.0.116.233
+    nat: nat2
+  links:
+  - ep1-router: r1
+    ep2-router: r2
+    subnet: 10.50.1.0/28
+  - ep1-router: r1
+    ep2-router: r3
+    subnet: 10.100.1.0/28
+  - ep1-router: r2
+    ep2-router: r3
+    subnet: 10.150.1.0/28
+  routes:
+  - router: r1
+    entries:
+    - 10.0.220.144/28 via 10.50.1.2 dev r1-eth1
+    - default via 10.0.97.232 dev r1-eth0
+    - 10.0.116.224/28 via 10.100.1.2 dev r1-eth2
+    - default via 10.0.97.232 dev r1-eth0
+  - router: r2
+    entries:
+    - 10.0.97.224/28 via 10.50.1.1 dev r2-eth1
+    - default via 10.0.220.157 dev r2-eth0
+    - 10.0.116.224/28 via 10.150.1.2 dev r2-eth2
+    - default via 10.0.220.157 dev r2-eth0
+  - router: r3
+    entries:
+    - 10.0.97.224/28 via 10.100.1.1 dev r3-eth1
+    - default via 10.0.116.236 dev r3-eth0
+    - 10.0.220.144/28 via 10.150.1.1 dev r3-eth2
+    - default via 10.0.116.236 dev r3-eth0
+  nats:
+  - name: nat0
+    subnets:
+    - 10.0.97.224/28
+    - 10.0.220.144/28
+    - 10.0.116.224/28
+    router: r1
+  - name: nat1
+    subnets:
+    - 10.0.97.224/28
+    - 10.0.220.144/28
+    - 10.0.116.224/28
+    router: r2
+  - name: nat2
+    subnets:
+    - 10.0.97.224/28
+    - 10.0.220.144/28
+    - 10.0.116.224/28
+    router: r3
