@@ -58,7 +58,6 @@ class OperatingSystemPatch(enum.Enum):
             return cls.KB4500331
         elif patch_string.lower() == "kb4499149":
             return cls.KB4499149
-            return cls.KB4499149
         elif patch_string.lower() == "kb4499180":
             return cls.KB4499180
         elif patch_string.lower() == "kb4499164":
@@ -122,7 +121,6 @@ class OperatingSystemDistribution(enum.Enum):
     WINDOWS_SVR_2008SP1 = enum.auto()
     WINDOWS_SVR_2008R2 = enum.auto()
     WINDOWS_7SP1 = enum.auto()
-    DRONE_LINUX = enum.auto()  # TODO find correct distro
 
     @classmethod
     def parse_string(cls, os_string):
@@ -153,8 +151,6 @@ class OperatingSystemDistribution(enum.Enum):
             return cls.WINDOWS_SVR_2008R2
         elif "7sp1" in os_string and "window" in os_string:
             return cls.WINDOWS_7SP1
-        elif 'dronelinux' in os_string:
-            return cls.DRONE_LINUX
         else:
             return cls.UNKNOWN
 
@@ -200,9 +196,9 @@ class OperatingSystemVersion(enum.Enum):
             return cls.U18_04
         elif os_string == "8.04":
             return cls.U8_04
-        elif os_string == "2019.1" or os_string == "k2019_1":
+        elif os_string == "2019.1":
             return cls.K2019_1
-        elif os_string == "2019.2" or os_string == "k2019_2":
+        elif os_string == "2019.2":
             return cls.K2019_2
         elif "4.19.0-kali4" in os_string or os_string == "k2019_4":
             return cls.K2019_4
@@ -479,8 +475,6 @@ class SessionType(enum.Enum):
     RED_ABSTRACT_SESSION = enum.auto()
     RED_REVERSE_SHELL = enum.auto()
     GREY_SESSION = enum.auto()
-    BLUE_DRONE_SESSION = enum.auto()
-    RED_DRONE_SESSION = enum.auto()
 
     @classmethod
     def parse_string(cls, service_string):
@@ -507,10 +501,6 @@ class SessionType(enum.Enum):
             return cls.LOCAL_SHELL
         elif service_string == "green_session":
             return cls.GREY_SESSION
-        elif service_string == "blue_drone_session":
-            return cls.BLUE_DRONE_SESSION
-        elif service_string == "red_drone_session":
-            return cls.RED_DRONE_SESSION
         else:
             return cls.UNKNOWN
 

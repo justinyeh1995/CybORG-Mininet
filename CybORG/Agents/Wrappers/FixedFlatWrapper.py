@@ -1,16 +1,19 @@
-import random
 from datetime import datetime
 
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
+from CybORG.Shared import Observation
+from CybORG.Shared.Actions import ShellSleep
 from CybORG.Shared.Enums import OperatingSystemType, SessionType, ProcessName, Path, ProcessType, ProcessVersion, \
     AppProtocol, FileType, ProcessState, Vulnerability, Vendor, PasswordHashType, BuiltInGroups, \
     OperatingSystemDistribution, OperatingSystemVersion, OperatingSystemKernelVersion, Architecture, \
     OperatingSystemPatch, FileVersion
 
+import inspect, random
+
 
 class FixedFlatWrapper(BaseWrapper):
-    def __init__(self, env: BaseWrapper = None):
-        super().__init__(env)
+    def __init__(self, env: BaseWrapper=None, agent=None):
+        super().__init__(env, agent)
         self.MAX_HOSTS = 5
         self.MAX_PROCESSES = 100
         self.MAX_CONNECTIONS = 2
@@ -31,6 +34,22 @@ class FixedFlatWrapper(BaseWrapper):
         self.password_hash = {}
         self.file = {}
 
+    def get_action(self, observation, action_space):
+
+        action = self.agent.get_action(self.observation_change(observation), self.action_space_change(action_space))
+
+        action_class = action['action']
+        params = {}
+        for p in inspect.signature(action_class).parameters:
+            if p in action:
+                params[p] = action[p]
+            else:
+                action_class = ShellSleep
+                params = {}
+                break
+        action = action_class(**params)
+        return action
+
     # def action_space_change(self, action_space: dict) -> dict:
     #     action_space.pop('process')
     #     action_space['session'] = {0: True}
@@ -41,13 +60,11 @@ class FixedFlatWrapper(BaseWrapper):
     #     action_space['port'] = {22: action_space['port'][22]}
     #     return action_space
 
-    def observation_change(self, agent, obs: dict) -> list:
-        if'message' in obs:
-            obs.pop('message')
+    def observation_change(self, obs: dict) -> list:
         numeric_obs = obs
         flat_obs = []
         while len(numeric_obs) < self.MAX_HOSTS:
-            hostid = str(random.randint(0, self.MAX_HOSTS + 1))
+            hostid = str(random.randint(0, self.MAX_HOSTS+1))
             if hostid not in numeric_obs.keys():
                 numeric_obs[hostid] = {}
 
@@ -57,7 +74,7 @@ class FixedFlatWrapper(BaseWrapper):
 
         for key_name, host in numeric_obs.items():
             if key_name == 'success':
-                flat_obs.append(float(host.value) / 3)
+                flat_obs.append(float(host.value)/3)
             elif not isinstance(host, dict):
                 raise ValueError('Host data must be a dict')
             else:
@@ -66,27 +83,26 @@ class FixedFlatWrapper(BaseWrapper):
                         element = host["System info"]["Hostname"]
                         if element not in self.hostname:
                             self.hostname[element] = len(self.hostname)
-                        element = self.hostname[element] / self.MAX_HOSTS
+                        element = self.hostname[element]/self.MAX_HOSTS
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
                     if "OSType" in host["System info"]:
                         if host["System info"]["OSType"] != -1:
-                            element = host["System info"]["OSType"].value / len(OperatingSystemType.__members__)
+                            element = host["System info"]["OSType"].value/len(OperatingSystemType.__members__)
                         else:
                             element = -1
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
 
                     if "OSDistribution" in host["System info"]:
                         if host["System info"]["OSDistribution"] != -1:
-                            element = host["System info"]["OSDistribution"].value / len(
-                                OperatingSystemDistribution.__members__)
+                            element = host["System info"]["OSDistribution"].value / len(OperatingSystemDistribution.__members__)
                         else:
                             element = -1
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -96,18 +112,17 @@ class FixedFlatWrapper(BaseWrapper):
                             element = host["System info"]["OSVersion"].value / len(OperatingSystemVersion.__members__)
                         else:
                             element = -1
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
 
                     if "OSKernelVersion" in host["System info"]:
                         if host["System info"]["OSKernelVersion"] != -1:
-                            element = host["System info"]["OSKernelVersion"].value / len(
-                                OperatingSystemKernelVersion.__members__)
+                            element = host["System info"]["OSKernelVersion"].value / len(OperatingSystemKernelVersion.__members__)
                         else:
                             element = -1
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -117,14 +132,14 @@ class FixedFlatWrapper(BaseWrapper):
                             element = host["System info"]["Architecture"].value / len(Architecture.__members__)
                         else:
                             element = -1
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
 
                     if 'Local Time' in host["System info"]:
                         element = (host["System info"]['Local Time'] - datetime(2020, 1, 1)).total_seconds()
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -141,7 +156,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = patch.value / len(OperatingSystemPatch.__members__)
                         else:
                             element = patch
-
+                        
                         flat_obs.append(float(element))
                 else:
                     flat_obs.append(-1.0)
@@ -164,14 +179,14 @@ class FixedFlatWrapper(BaseWrapper):
 
                 for proc_idx, process in enumerate(host['Processes']):
                     if "PID" in process:
-                        flat_obs.append(float(process["PID"]) / 32768)
+                        flat_obs.append(float(process["PID"])/32768)
                     else:
                         flat_obs.append(-1.0)
 
                     if "PPID" in process:
-                        flat_obs.append(float(process["PPID"]) / 32768)
+                        flat_obs.append(float(process["PPID"])/32768)
                     else:
-                        flat_obs.append(-1.0)
+                            flat_obs.append(-1.0)
 
                     if "Process Name" in process:
                         element = process["Process Name"]
@@ -205,7 +220,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = process["Known Process"].value / len(ProcessName.__members__)
                         else:
                             element = -1.0
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -215,7 +230,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = process["Known Path"].value / len(Path.__members__)
                         else:
                             element = -1.0
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -225,7 +240,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = process["Process Type"].value / len(ProcessType.__members__)
                         else:
                             element = -1.0
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -246,24 +261,24 @@ class FixedFlatWrapper(BaseWrapper):
 
                     for conn_idx, connection in enumerate(process["Connections"]):
                         if "local_port" in connection:
-                            flat_obs.append(float(connection["local_port"]) / 65535)
+                            flat_obs.append(float(connection["local_port"])/65535)
                         else:
                             flat_obs.append(-1.0)
 
                         if "remote_port" in connection:
-                            flat_obs.append(float(connection["remote_port"]) / 65535)
+                            flat_obs.append(float(connection["remote_port"])/65535)
                         else:
                             flat_obs.append(-1.0)
 
                         if "local_address" in connection:
                             element = int(connection["local_address"])
-                            flat_obs.append(float(element) / 4294967296)
+                            flat_obs.append(float(element)/4294967296)
                         else:
                             flat_obs.append(-1.0)
 
                         if "Remote Address" in connection:
                             element = int(connection["Remote Address"])
-                            flat_obs.append(float(element) / 4294967296)
+                            flat_obs.append(float(element)/4294967296)
                         else:
                             flat_obs.append(-1.0)
 
@@ -283,7 +298,7 @@ class FixedFlatWrapper(BaseWrapper):
                                 element = -1.0
                             flat_obs.append(float(element))
                         else:
-                            flat_obs.append(-1.0)
+                                flat_obs.append(-1.0)
 
                     if "Vulnerability" in process:
                         for idx, element in enumerate(process["Vulnerability"]):
@@ -337,7 +352,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = -1.0
                         flat_obs.append(float(element))
                     else:
-                        flat_obs.append(-1.0)
+                            flat_obs.append(-1.0)
 
                     if "Type" in file:
                         if file["Type"] != -1:
@@ -353,7 +368,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = file["Vendor"].value / len(Vendor.__members__)
                         else:
                             element = -1.0
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -363,7 +378,7 @@ class FixedFlatWrapper(BaseWrapper):
                             element = file["Version"].value / len(FileVersion.__members__)
                         else:
                             element = -1.0
-
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
@@ -387,28 +402,28 @@ class FixedFlatWrapper(BaseWrapper):
                         flat_obs.append(-1.0)
 
                     if "Last Modified Time" in file:
-                        # TODO work out how to normalise this value
-                        element = -1  # (file["Last Modified Time"] - datetime(2020, 1, 1)).total_seconds()
-
+                        #TODO work out how to normalise this value
+                        element = -1 #(file["Last Modified Time"] - datetime(2020, 1, 1)).total_seconds()
+                        
                         flat_obs.append(float(element))
                     else:
                         flat_obs.append(-1.0)
 
                     if "User Permissions" in file:
                         element = file["User Permissions"]
-                        flat_obs.append(float(element) / 7)
+                        flat_obs.append(float(element)/7)
                     else:
                         flat_obs.append(-1.0)
 
                     if "Group Permissions" in file:
                         element = file["Group Permissions"]
-                        flat_obs.append(float(element) / 7)
+                        flat_obs.append(float(element)/7)
                     else:
                         flat_obs.append(-1.0)
 
                     if "Default Permissions" in file:
                         element = file["Default Permissions"]
-                        flat_obs.append(float(element) / 7)
+                        flat_obs.append(float(element)/7)
                     else:
                         flat_obs.append(-1.0)
 
@@ -518,7 +533,7 @@ class FixedFlatWrapper(BaseWrapper):
 
                     if "Type" in session:
                         if session["Type"] != -1:
-                            element = session["Type"].value / len(SessionType.__members__)
+                            element = session["Type"].value/len(SessionType.__members__)
                         else:
                             element = -1.0
                         flat_obs.append(float(element))
@@ -526,17 +541,17 @@ class FixedFlatWrapper(BaseWrapper):
                         flat_obs.append(-1.0)
 
                     if "ID" in session:
-                        flat_obs.append(float(session["ID"]) / 20)
+                        flat_obs.append(float(session["ID"])/20)
                     else:
                         flat_obs.append(-1.0)
 
                     if "Timeout" in session:
                         flat_obs.append(float(session["Timeout"]))
                     else:
-                        flat_obs.append(-1.0)
+                         flat_obs.append(-1.0)
 
                     if "PID" in session:
-                        flat_obs.append(float(session["PID"]) / 32768)
+                        flat_obs.append(float(session["PID"])/32768)
                     else:
                         flat_obs.append(-1.0)
 
@@ -556,29 +571,29 @@ class FixedFlatWrapper(BaseWrapper):
                                 self.interface_name[element] = len(self.interface_name)
                             element = self.interface_name[element]
                             flat_obs.append(float(
-                                element))
+                                    element))
                         else:
-                            flat_obs.append(-1.0)
+                             flat_obs.append(-1.0)
 
                         if "Subnet" in interface:
                             element = interface["Subnet"]
-                            flat_obs.append(float(int(element.network_address)) / 4294967296)
-                            flat_obs.append(float(int(element.prefixlen)) / 4294967296)
+                            flat_obs.append(float(int(element.network_address))/4294967296)
+                            flat_obs.append(float(int(element.prefixlen))/4294967296)
                         else:
-                            flat_obs.append(-1.0)
-                            flat_obs.append(-1.0)
+                             flat_obs.append(-1.0)
+                             flat_obs.append(-1.0)
 
                         if "IP Address" in interface:
                             element = int(interface["IP Address"])
-                            flat_obs.append(float(element) / 4294967296)
+                            flat_obs.append(float(element)/4294967296)
                         else:
-                            flat_obs.append(-1.0)
+                             flat_obs.append(-1.0)
 
         return flat_obs
 
-    def get_attr(self, attribute: str):
+    def get_attr(self,attribute:str):
         return self.env.get_attr(attribute)
 
     def get_observation(self, agent: str):
         obs = self.get_attr('get_observation')(agent)
-        return self.observation_change(agent, obs)
+        return self.observation_change(obs)

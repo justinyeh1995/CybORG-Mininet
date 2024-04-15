@@ -16,7 +16,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.join(os.path.dirname(path), os.pardir)
 
 # file path to available actions list
-AVAIL_ACTIONS_PATH = os.path.join(path, '../Simulator/Actions', 'Actions.yaml')
+AVAIL_ACTIONS_PATH = os.path.join(path, 'Actions', 'Actions.yaml')
 
 # file path to available images list
 AVAIL_IMAGES_PATH = os.path.join(path, 'Images', 'Images.yaml')

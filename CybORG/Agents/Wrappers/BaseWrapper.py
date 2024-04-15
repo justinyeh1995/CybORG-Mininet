@@ -6,43 +6,60 @@ from CybORG.Shared import Results
 
 
 class BaseWrapper:
-    def __init__(self, env: CybORG = None):
+    def __init__(self, env: CybORG = None, agent: BaseAgent = None):
         # wrapper allows changes to be made to the interface between external agents via specification of the env
         self.env = env
+        # wrapper allows changes to be made to the interface between internal agents via specification of the agent
+        self.agent = agent
 
     def step(self, agent=None, action=None) -> Results:
         result = self.env.step(agent, action)
-        result.observation = self.observation_change(agent, result.observation)
+        result.observation = self.observation_change(result.observation)
         result.action_space = self.action_space_change(result.action_space)
+        #print('from Basewrapper, action is:', action)
+        #print('\n ^^^from Basewrapper, observation is:', result.observation)
+        #print('\n from basewrapper action_space is:',result.action_space)
         return result
 
-    def reset(self, agent=None, seed = None):
-        result = self.env.reset(agent, seed)
-        result.action_space = self.action_space_change(result.action_space)
-        result.observation = self.observation_change(agent, result.observation)
+    def reset(self, agent=None):
+        result = self.env.reset(agent)
+        result.action_space = self.action_space_change(result.action_space,agent)
+        result.observation = self.observation_change(result.observation)
         return result
 
-    def observation_change(self, agent: str, observation: dict):
+    def get_action(self, observation: dict, action_space: dict):
+        return self.agent.get_action(self.observation_change(observation), self.action_space_change(action_space))
+
+    def train(self, result: Results):
+        """Trains an agent with the new tuple from the environment"""
+        result.action_space = self.action_space_change(result.action_space)
+        result.observation = self.observation_change(result.observation)
+        self.agent.train(result)
+
+    def set_initial_values(self, observation: dict, action_space: dict):
+        self.agent.set_initial_values(action_space, observation)
+
+    def observation_change(self, observation: dict) -> dict:
         return observation
 
     def action_space_change(self, action_space: dict) -> dict:
         return action_space
 
+    def end_episode(self):
+        self.agent.end_episode()
+
     def get_action_space(self, agent: str) -> dict:
+        #print("\n from basewrapper,Agent is:",agent)
         return self.action_space_change(self.env.get_action_space(agent))
 
     def get_observation(self, agent: str):
-        return self.observation_change(agent, self.env.get_observation(agent))
+        return self.observation_change(self.env.get_observation(agent))
 
     def get_last_action(self, agent: str):
         return self.env.get_last_action(agent=agent)
 
     def set_seed(self, seed: int):
         self.env.set_seed(seed)
-
-    @property
-    def active_agents(self) -> list:
-        return self.env.active_agents
 
     def shutdown(self, **kwargs) -> bool:
         """Shutdown CybORG
@@ -78,14 +95,3 @@ class BaseWrapper:
             return self.__getattribute__(attribute)
         else:
             return self.env.get_attr(attribute)
-
-    def render(self, mode):
-        return self.env.render(mode)
-
-    @property
-    def agents(self):
-        return self.env.agents
-
-    @property
-    def unwrapped(self):
-        return self.env.unwrapped

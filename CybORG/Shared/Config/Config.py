@@ -8,9 +8,9 @@ from CybORG.Shared import CybORGLogger
 import CybORG.Shared.Config.ConfigHelper as ch
 
 
-class CybORGConfig(CybORGLogger):
+class CybORGConfig:
 
-    def __init__(self, config: ConfigParser, test: bool = False, teardown: bool = True):
+    def __init__(self, config: ConfigParser, test: bool = False):
         """
         Parameters
         ----------
@@ -18,17 +18,13 @@ class CybORGConfig(CybORGLogger):
             the configuration object
         test : bool, optional
             if true uses test configuration (default=False)
-        teardown : bool, optional
-            if true will shut down Emulator instances (default=False)
         """
         self.config = config
         self.test = test
-        self.teardown = teardown
 
     @staticmethod
     def load_and_setup_logger(config_file_path: str = None,
-                              test: bool = False,
-                              teardown: bool = True):
+                              test: bool = False):
         """Load configuration from file, handling case of invalid
         configuration and also setup logger.
 
@@ -40,62 +36,51 @@ class CybORGConfig(CybORGLogger):
         test : bool, optional
             if true uses test configuration (default=False)
 
-        teardown : bool, optional
-            if true shuts down Emulator instances (default=True)
-
         Returns
         -------
         CybORGConfig
             loaded configuration object
         """
-        cyborg_config = CybORGConfig.load(config_file_path, test, teardown)
+        cyborg_config = CybORGConfig.load(config_file_path, test)
         CybORGLogger.setup(cyborg_config)
         return cyborg_config
 
     @staticmethod
-    def load(config_file_path: str = None, test: bool = False, teardown: bool = True):
+    def load(config_file_path: str = None, test: bool = False):
         """Load configuration from file, handling case of invalid configuration.
 
-        Parameters
+        Parametersy
         ----------
         config_file_path : str
             path to configuration file, if None will use default
         test : bool, optional
             if true uses test configuration (default=False)
-        teardown : bool, optional
-            if true shuts down Emulator instances (default=True)
 
         Returns
         -------
         CybORGConfig
             loaded configuration object
         """
-
         if config_file_path is None:
             config_file_path = ch.DEFAULT_CONFIG_FILE_PATH
-            CybORGLogger.info(f"Using default value for Shared config file path ({config_file_path})")
 
         if not ch.config_file_valid(config_file_path, ch.SECTION_MAP):
-            CybORGLogger.error(f"Error with  config_file_valid ({config_file_path} {ch.SECTION_MAP})")
             # Interactively create a config file
             config_gui = ch.ConfigHelperGUI()
             config_valid, config_file_path = config_gui.run_helper_gui()
             if not config_valid:
-                CybORGLogger.error("Can't run CybORG. Please create config file and/or check paths and permissions.")
+                print("Can't run CybORG. Please create config file "
+                      "and/or check paths and permissions.")
                 sys.exit(-1)
-        config_parse = ConfigParser(comment_prefixes=(';','#'))
+        config_parse = ConfigParser()
         config_parse.read(config_file_path)
-        return CybORGConfig(config_parse, test, teardown)
+        return CybORGConfig(config_parse, test)
 
     def get_property(self, section, property_name):
         if property_name not in self.config[section]:
-            raise AttributeError(f"Config missing property '{property_name}' in section '{section}'")
+            raise AttributeError(f"Config missing property '{property_name}'"
+                                 "in section '{section}'")
         return self.config[section][property_name]
-
-    def set_property(self, section, property_name, value):
-        if property_name not in self.config[section]:
-            raise AttributeError(f"Config missing property '{property_name}' in section '{section}'")
-        self.config[section][property_name] = value
 
     @property
     def cyborg_base_dir(self):
@@ -134,23 +119,11 @@ class CybORGConfig(CybORGLogger):
     def logging_date_format(self):
         return "%m-%d %H:%M:%S"
 
-    def __str__(self):
-        output = f"{self.__class__.__name__}:"
-        s = "    "
-        for section in self.config.sections():
-            output += f"\n{s}{section}:"
-            for var_name, var_val in self.config[section].items():
-                output += f"\n{s}{s}{var_name}: {var_val}"
-        return output
-
     def __repr__(self):
-        output = f"{self.__class__.__name__}:"
+        output = f"{self.__class__}:"
         s = "    "
         for section in self.config.sections():
             output += f"\n{s}{section}:"
             for var_name, var_val in self.config[section].items():
                 output += f"\n{s}{s}{var_name}: {var_val}"
         return output
-
-    def _format_log_msg(self, msg):
-        return f"{self.__class__.__name__} : {msg} "
