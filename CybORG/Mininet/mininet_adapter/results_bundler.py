@@ -47,13 +47,13 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
             'service': service_name,
             'version': version.strip()
         })    
-    res[ip] = processes
 
     obs = Observation()
     obs.set_success(True)
     for proc in processes:
         hostid = mapper.cyborg_ip_to_host_map[str(ip)]
         obs.add_process(hostid=hostid, local_port=proc["port"], local_address=ip)
+        
     return obs#.data
 
 def parse_ssh_action(ssh_action_output) -> Observation:
@@ -66,7 +66,23 @@ def parse_ssh_action(ssh_action_output) -> Observation:
     success_status = enum_to_boolean(match.group()) if match else None
     
     print(f"Match is: {match} \n")
-    
+
+    pattern2 = re.compile(
+        r"Token: (?P<token>\w+)\n"
+        r"Available Exploit: (?P<exploit>[\w]+)\n"
+        r"Local Socket Info: (?P<local_socket>\([\d\.]+, \d+\))\n"
+        r"Remote Socket Info: (?P<remote_socket>\([\d\.]+, \d+\))\n"
+        r"PID: (?P<pid>\d+)")
+    match2 = pattern2.search(ssh_action_output)
+
+    print(f"Info: {match2} \n")
+    if match2:
+        token = match2.group("token")
+        exploit = match2.group("exploit")
+        local_socket = match2.group("local_socket")
+        remote_socket = match2.group("remote_socket")
+        pid = match2.group("pid")
+        
     return Observation(success_status)#.data
 
 def parse_escalate_action(escalate_action_output, mapper) -> Observation:
@@ -103,5 +119,11 @@ class ResultsBundler:
         elif cyborg_action.startswith("Decoy"):
             return parse_decoy_action(mininet_cli_str)
 
+        elif cyborg_action == "Remove":
+            return Observation(True)
+
+        elif cyborg_action == "Restore":
+            return Observation(True)
+            
         return Observation(False)#.data
         
