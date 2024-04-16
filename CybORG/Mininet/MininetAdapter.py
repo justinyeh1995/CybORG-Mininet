@@ -70,11 +70,10 @@ class MininetAdapter:
 
         print("--> in MininetAdapter parse_action_string")
         print(action_string)
-
         action_str_split = action_string.split(" ")
         action_type = action_str_split[0]
         n = len(action_str_split)
-        target_host = action_str_split[-1] if n > 1 else target_host
+        target_host = action_str_split[-1] if n > 1 else ""
         # Update target host if it's an IP address to get the hostname
         target_host = self.mapper.cyborg_ip_to_host_map.get(target_host, target_host)
                 
