@@ -66,6 +66,19 @@ class MininetAdapter:
         
         return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSuccess 
 
+    def parse_action_string(self, action_string):
+
+        print("--> in MininetAdapter parse_action_string")
+        print(action_string)
+
+        action_str_split = action_string.split(" ")
+        action_type = action_str_split[0]
+        n = len(action_str_split)
+        target_host = action_str_split[-1] if n > 1 else target_host
+        # Update target host if it's an IP address to get the hostname
+        target_host = self.mapper.cyborg_ip_to_host_map.get(target_host, target_host)
+                
+        return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type 
     
     def reset(self):
         print("===Resetting===")
@@ -136,7 +149,8 @@ class MininetAdapter:
         # Translate CybORG action to Mininet command and send it
         # @To-Do: Has to be test with cage-2-cardiff/game_coordinator.py
         print(f"---> in MininetAdapter {agent_type} step")
-        target, cyborg_action, isSuccess = self.parse_action(agent_type)
+        target, cyborg_action = self.parse_action_string(action_string)
+        isSuccess = True # Always True man..
         
         if agent_type == "Blue":
             mininet_command = self.blue_action_translator.translate(cyborg_action, 
@@ -148,9 +162,9 @@ class MininetAdapter:
                                                                 target,
                                                                 self.mapper.cyborg_to_mininet_host_map,
                                                                 self.mapper.mininet_host_to_ip_map)
-        print("===Success===")
-        print(isSuccess)
-        mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
+        # print("===Success===")
+        # print(isSuccess)
+        mininet_cli_text = self.command_interface.send_command(mininet_command) #if isSuccess else ""
         
         print("===Mininet Cli Text====")
         print(mininet_cli_text)
