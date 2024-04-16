@@ -24,5 +24,10 @@ if __name__ == "__main__":
     observation = sshAction.execute(None)
 
     print(observation)
+    print(f"Token: {observation.token}")
+    print(f"Available Exploit: {observation.available_exploit}")
+    print(f"Local Socket Info: {observation.local_socket_info}")
+    print(f"Remote Socket Info: {observation.remote_socket_info}")
+    print(f"PID: {observation.pid}")
     
     print("foo")
