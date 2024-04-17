@@ -73,14 +73,14 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     if not success_status:
         return obs
         
-    pattern = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\r\nLocal Port: (\d+)\r\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\r\nRemote Port: (\d+)"
+    pattern = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\r\nLocal Port: (\d+)\r\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\r\nRemote Port: (\d+)\r\r\nPID: (\d+)"
     
     # Use re.findall() to extract the values
     matches = re.findall(pattern, ssh_action_output)
 
     data = {}
     if matches:
-        local_ip, port, remote_ip, port_for_reverse_shell = matches[0]
+        local_ip, port, remote_ip, port_for_reverse_shell, pid = matches[0]
         
         alt_name = mapper.mininet_ip_to_cyborg_ip_map.get(remote_ip)
         host_name = mapper.cyborg_ip_to_host_map.get(alt_name)
@@ -113,7 +113,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
                }
             ],
             'Interface': [{'IP Address': IPv4Address(alt_name)}],
-            'Sessions': [{'ID': 1, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
+            'Sessions': [{'Username':'root', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
             'System info': {'Hostname': host_name, 'OSType': 'OperatingSystemType.WINDOWS'}
         }
             
