@@ -7,6 +7,7 @@ import re
 import traceback 
 from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
+import configparser # for configuration parsing
 
 from CybORG.Shared import Observation
 
@@ -15,7 +16,8 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
                                     RedActionTranslator, BlueActionTranslator, \
-                                    ResultsBundler
+                                    ResultsBundler, \
+                                    RewardCalculator
 from CybORG.Mininet.utils.util import parse_action, parse_mininet_ip, \
                             set_name_map, get_routers_info, get_lans_info, get_links_info, \
                             translate_discover_remote_systems, \
@@ -32,6 +34,10 @@ class MininetAdapter:
         self.blue_action_translator = BlueActionTranslator()
         self.red_action_translator = RedActionTranslator()
         self.results_bundler = ResultsBundler()
+        
+        config = configparser.ConfigParser ()
+        config.read ('config.ini')
+        self.reward_calculator = RewardCalculator(config["SCENARIO"]["FILE_PATH"])
 
     
     def set_environment(self, cyborg):
@@ -172,9 +178,14 @@ class MininetAdapter:
         
         print("===Obs===")
         pprint(mininet_obs.data)
+
+        reward = self.reward_calculator.reward(mininet_obs.data)
+
+        print("===Rewards===")
+        print(reward)
         print("*********")
-    
-        return mininet_obs
+
+        return mininet_obs, reward
 
     
     def clean(self):
