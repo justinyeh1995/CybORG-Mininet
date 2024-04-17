@@ -177,9 +177,9 @@ def main(agent_type: str, cyborg_type: str) -> None:
                     state_snapshot = game_state_manager.create_state_snapshot()
                     # Game manager store state
                     # mininet_observation = mininet_adapter.perform_emulation()
-                    mininet_red_observation = mininet_adapter.step(str(red_action), agent_type='Red')
+                    mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
  
-                    mininet_blue_observation = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
+                    mininet_blue_observation, blue_reward = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
 
 
                     # pprint(mininet_adapter)
