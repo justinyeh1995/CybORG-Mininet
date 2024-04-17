@@ -31,10 +31,10 @@ if __name__ == "__main__":
     print(f"Local Port: {local_socket_info[1]}")
     print(f"Remote IP: {remote_socket_info[0]}")
     print(f"Remote Port: {remote_socket_info[1]}")
-    
+    print(f"PID: {observation.pid}")
+
     # print(f"Local Socket Info: {observation.local_socket_info}")
     # print(f"Remote Socket Info: {observation.remote_socket_info}")
     # print(f"Token: {observation.token}")
-    # print(f"PID: {observation.pid}")
     
     print("foo")
