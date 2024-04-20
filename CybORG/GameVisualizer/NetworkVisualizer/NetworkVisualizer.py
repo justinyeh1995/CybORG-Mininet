@@ -93,8 +93,8 @@ class NetworkVisualizer:
         node_borders = state['node_borders']
         action_info = state['action_info']
         host_map = state['host_map']
-        sim_obs = state['sim_obs']
-        mininet_obs = state['mininet_obs']
+        obs = state['obs']
+        # mininet_obs = state['mininet_obs']
         reward = self._convert_reward_format(state['reward'])
         accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
 
@@ -179,14 +179,14 @@ class NetworkVisualizer:
         # Create annotations for agent actions, initially invisible
         vertical_padding = 0.05
         # for idx, action_info in enumerate(action_info):
-        simulation_obs = dict(
+        observations = dict(
             xref='paper', yref='paper',
             x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
             text=f"""
                 <br>🎯{agent} Action: {action_info['action']}
-                <br>✅Success: {action_info['success']}
                 <br>👀Observations: 
-                <br>{format_dict_for_display(sim_obs)}
+                <br>✅Success: {action_info['success']}
+                <br>{format_dict_for_display(obs)}
                 <br>💰Reward: {reward}
                 """,
             showarrow=False,
@@ -201,29 +201,30 @@ class NetworkVisualizer:
             borderwidth=2  # Border width
             )
         
-        emulation_obs = dict(
-            xref='paper', yref='paper',
-            x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
-            text=f"""<br>🎯{agent} Action: {action_info['action']}
-                    <br>✅Success: {action_info['success']}
-                    <br>👀Observations:
-                    <br>{mininet_obs}                    
-                    <br>💰Reward: {reward}
-                """,
-            showarrow=False,
-            visible=True,  
-            align="left",  # Ensure text is aligned for both agents
-            font=dict(
-                size=7,
-                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
-                ),
-            bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
-            bordercolor="black",  # Black border color
-            borderwidth=2  # Border width
-            )
+        # emulation_obs = dict(
+        #     xref='paper', yref='paper',
+        #     x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+        #     text=f"""<br>🎯{agent} Action: {action_info['action']}
+        #             <br>✅Success: {action_info['success']}
+        #             <br>👀Observations:
+        #             <br>{mininet_obs}                    
+        #             <br>💰Reward: {reward}
+        #         """,
+        #     showarrow=False,
+        #     visible=True,  
+        #     align="left",  # Ensure text is aligned for both agents
+        #     font=dict(
+        #         size=7,
+        #         family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
+        #         ),
+        #     bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
+        #     bordercolor="black",  # Black border color
+        #     borderwidth=2  # Border width
+        #     )
         
-        observations_annotations = [simulation_obs, emulation_obs]
-        
+        # observations_annotations = [simulation_obs, emulation_obs]
+        observations_annotations = [observations]
+
         # Prepare and plot the figure
         fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
         self._setup_annotations_and_buttons(fig, observations_annotations)
@@ -245,10 +246,10 @@ class NetworkVisualizer:
                     buttons=[
                         dict(label="Show Observations",
                              method="relayout",
-                             args=[{"annotations": [annotations[0]]}]),  # Assuming annotations[0] is for simulation
-                        dict(label="Show Emulation Observations",
-                             method="relayout",
-                             args=[{"annotations": [annotations[1]]}]),  # Assuming annotations[1] is for emulation
+                             args=[{"annotations": [annotations[0]]}]), 
+                        # dict(label="Show Emulation Observations",
+                        #      method="relayout",
+                        #      args=[{"annotations": [annotations[1]]}]),  # Assuming annotations[1] is for emulation
                         dict(label="Hide Observations",
                              method="relayout",
                              args=[{"annotations": []}]),  # This should hide all annotations
