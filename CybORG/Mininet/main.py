@@ -106,7 +106,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
     # game manager initialization
-    game_state_manager = GameStateCollector()
+    game_state_manager = GameStateCollector(environment='emu')
     # mininet adapter initialization
     mininet_adapter = MininetAdapter()
 
@@ -141,7 +141,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
             action_space = cyborg.get_action_space(agent_name)
 
             total_reward = []
-            actions = []
+            actions_list = []
             for i in range(MAX_EPS):
                 r = []
                 a = []
@@ -173,8 +173,6 @@ def main(agent_type: str, cyborg_type: str) -> None:
                     # r.append(result.reward)
                     # a.append((str(cyborg.get_last_action('Blue')), str(cyborg.get_last_action('Red'))))
                     
-                    # Create state for this step
-                    state_snapshot = game_state_manager.create_state_snapshot()
                     # Game manager store state
                     # mininet_observation = mininet_adapter.perform_emulation()
                     mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
@@ -183,8 +181,12 @@ def main(agent_type: str, cyborg_type: str) -> None:
 
 
                     # pprint(mininet_adapter)
+                    actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
                     observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
-                    state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, observations)
+                    
+                    # state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, observations)
+                    # Create state for this step
+                    state_snapshot = game_state_manager.create_state_snapshot(actions, observations)
                     
                     game_state_manager.store_state(state_snapshot, i, j)
                     print(f"===Step {j} is over===")
@@ -192,7 +194,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
                 # game manager reset
                 agent.end_episode()
                 total_reward.append(sum(r))
-                actions.append(a)
+                actions_list.append(a)
                 # observation = cyborg.reset().observation
                 observation = cyborg.reset()
                 # game state manager reset
