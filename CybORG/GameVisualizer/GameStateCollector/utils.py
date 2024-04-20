@@ -48,10 +48,8 @@ def get_node_color(node: str, discovered_subnets: set, discovered_systems: set, 
     
     return color
 
-def get_node_border(node, target_host=None, reset_host=None) -> dict:
+def get_node_border(node, target_host=None) -> dict:
     if target_host and node in target_host:
-        border = dict(width=2, color='black')
-    elif reset_host and node in reset_host:
         border = dict(width=2, color='black')
     else:
         border = dict(width=0, color='white')

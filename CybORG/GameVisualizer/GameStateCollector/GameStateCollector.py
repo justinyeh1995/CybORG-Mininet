@@ -236,8 +236,8 @@ class GameStateCollector:
         return target_host, action_type, isSuccess
         
     def update_hosts(self, target_host, action_type, host_map, ip_map, host_type='Red'):
-        target_host, discovered_subnet, discovered_system, exploited_host, escalated_host = None, None, None, None, None
-        reset_host, remove_host, restore_host = None, None, None
+        discovered_subnet, discovered_system, exploited_host, escalated_host = None, None, None, None
+        remove_host, restore_host = None, None
 
         if host_type == 'Red':
             # Check Red's actions
@@ -257,11 +257,11 @@ class GameStateCollector:
                     
         elif host_type == 'Blue':
             # Check Blue's actions
-            if reset_host:
+            if target_host:
                 if 'Remove' in action_type:
-                    remove_host = reset_host
+                    remove_host = target_host
                 elif 'Restore' in action_type:
-                    restore_host = reset_host
+                    restore_host = target_host
         
         if discovered_subnet:
             self.discovered_subnets.add(discovered_subnet)
@@ -282,24 +282,23 @@ class GameStateCollector:
             self.escalated_hosts.discard(restore_host)
             self.compromised_hosts.discard(restore_host)
             
-        return target_host, reset_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
+        return target_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
 
     
     def generate_state_snapshot(self, action, observation, host_type: str):
 
-        target_host, action_type, isSucess = self.parse_observation(action, observation, self.host_map, self.ip_map)
+        target_host, action_type, isSuccess = self.parse_observation(action, observation, self.host_map, self.ip_map)
         true_obs = {}
         
         link_diagram = self.cyborg.environment_controller.state.link_diagram
         
         action_info = {
             "action": action, 
-            "success": isSucess
+            "success": isSuccess
         }
         
         (
             target_host,
-            reset_host,
             discovered_subnet, 
             discovered_system,
             exploited_host,
@@ -314,10 +313,7 @@ class GameStateCollector:
                                       self.escalated_hosts, 
                                       self.exploited_hosts) for node in link_diagram.nodes]
         
-        node_borders = [get_node_border(node, 
-                                        target_host=target_host, 
-                                        reset_host=reset_host) 
-                        for node in link_diagram.nodes]
+        node_borders = [get_node_border(node, target_host=target_host) for node in link_diagram.nodes]
 
         host_info = [get_host_info(node, true_obs) for node in link_diagram.nodes]
 
@@ -339,7 +335,7 @@ class GameStateCollector:
             'host_info': host_info,
             'action_info': action_info,
             'host_map': self.host_map,
-            'sim_obs': observation,
+            'obs': observation,
             'reward': reward,
             'accumulate_reward': accu_reward,
         }
