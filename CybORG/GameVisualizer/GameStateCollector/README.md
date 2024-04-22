@@ -1,7 +1,7 @@
 
 ## Initialize  GameStateCollector
 ```python
-game_state_manager = GameStateCollector(environment='emu') # or sim
+game_state_manager = GameStateCollector(environment='sim') # or 'emu' or anything you defined
 ```
 
 ## Set up GameStateCollector environment at the start of your episode
