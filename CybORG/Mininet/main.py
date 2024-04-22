@@ -75,11 +75,10 @@ class CybORGFactory:
         return {"wrapped": None, "unwrapped": cyborg, 'Red':red_agent} 
 
 def wrap(env):
-    # return ChallengeWrapper2(env=env, agent_name='Blue')
     return ChallengeWrapper(env=env, agent_name='Blue')
 
-
-def main(agent_type: str, cyborg_type: str) -> None:
+def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
+    environment = environment
     cyborg_version = CYBORG_VERSION
     scenario = 'Scenario2_cyborg--'
     # commit_hash = get_git_revision_hash()
@@ -106,7 +105,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
     # game manager initialization
-    game_state_manager = GameStateCollector(environment='emu')
+    game_state_manager = GameStateCollector(environment=environment)
     # mininet adapter initialization
     mininet_adapter = MininetAdapter()
 
@@ -123,6 +122,7 @@ def main(agent_type: str, cyborg_type: str) -> None:
             # Getting intial red_observation
             red_observation=cyborg.get_observation('Red')
             red_action_space= cyborg.get_action_space('Red')
+            
             # Rest set up game_state_manager
             game_state_manager.set_environment(cyborg=cyborg,
                                                red_agent=red_agent,
@@ -131,15 +131,14 @@ def main(agent_type: str, cyborg_type: str) -> None:
             game_state_manager.reset()
 
 
-            # Reset mininet adapter 
-            mininet_adapter.set_environment(cyborg=cyborg)
-            mininet_adapter.reset()
-
-            mininet_blue_observation = blue_observation
-            mininet_red_observation = red_observation
+            if environment == "emu":
+                # Reset mininet adapter 
+                mininet_adapter.set_environment(cyborg=cyborg)
+                mininet_adapter.reset()
+    
+                mininet_blue_observation = blue_observation
+                mininet_red_observation = red_observation
             
-            action_space = cyborg.get_action_space(agent_name)
-
             total_reward = []
             actions_list = []
             for i in range(MAX_EPS):
@@ -148,43 +147,42 @@ def main(agent_type: str, cyborg_type: str) -> None:
                 
                 # cyborg.env.env.tracker.render()
                 for j in range(num_steps):
-                    ########
-                    # Blue #
-                    ######## 
-                    blue_observation = mininet_blue_observation
-                    blue_observation = wrapped_cyborg.env.env.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
-                    blue_observation = np.array(blue_observation, dtype=np.float32)
+                    if environment == "emu":
+                        ########
+                        # Blue #
+                        ######## 
+                        blue_observation = mininet_blue_observation
+                        blue_observation = wrapped_cyborg.env.env.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
+                        blue_observation = np.array(blue_observation, dtype=np.float32)
+                        
+                        blue_action = agent.get_action(blue_observation, blue_action_space)
+                        blue_possible_actions = wrapped_cyborg.env.possible_actions[blue_action]
+                        print("--> In main loop: Blue action using mininet_observation")
+                        print(blue_possible_actions)
+                        #######
+                        # Red #
+                        ####### 
+                        red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
+                        red_action=red_agent.get_action(red_observation, red_action_space)
+                        print("--> In main loop: Red action using mininet_observation")
+                        print(red_action)
+                        
+                        # Mininet takes step
+                        mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
+                        mininet_blue_observation, blue_reward = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
+    
+                        # Serialize actions & observations
+                        actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
+                        observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
                     
-                    blue_action = agent.get_action(blue_observation, blue_action_space)
-                    blue_possible_actions = wrapped_cyborg.env.possible_actions[blue_action]
-                    print("--> In main loop: Blue action using mininet_observation")
-                    print(blue_possible_actions)
-                    #######
-                    # Red #
-                    ####### 
-                    red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
-                    red_action=red_agent.get_action(red_observation, red_action_space)
-                    print("--> In main loop: Red action using mininet_observation")
-                    print(red_action)
-                    
-                    # observation, rew, done, info = wrapped_cyborg.step(blue_action) # needed in plotting
-                    
-                    # r.append(rew)
-                    # r.append(result.reward)
-                    # a.append((str(cyborg.get_last_action('Blue')), str(cyborg.get_last_action('Red'))))
-                    
-                    # Game manager store state
-                    # mininet_observation = mininet_adapter.perform_emulation()
-                    mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
- 
-                    mininet_blue_observation, blue_reward = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
+                    elif environment == "sim":
+                        blue_action = agent.get_action(blue_observation, blue_action_space)
+                        blue_observation, rew, done, info = wrapped_cyborg.step(blue_action)
 
-
-                    # pprint(mininet_adapter)
-                    actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
-                    observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
-                    
-                    # state_snapshot = game_state_manager.update_state_snapshot(state_snapshot, observations)
+                        actions = {"Red":str(cyborg.get_last_action('Red')), "Blue": str(cyborg.get_last_action('Blue'))}
+                        observations = {"Red": cyborg.get_observation('Red'), "Blue": cyborg.get_observation('Blue')}
+                        pprint(actions)
+                        pprint(observations)
                     # Create state for this step
                     state_snapshot = game_state_manager.create_state_snapshot(actions, observations)
                     
@@ -200,7 +198,8 @@ def main(agent_type: str, cyborg_type: str) -> None:
                 # game state manager reset
                 game_state_manager.reset()
                 # mininet adapter reset
-                mininet_adapter.reset()
+                if environment == "emu":
+                    mininet_adapter.reset()
         
         mininet_adapter.clean()
 
@@ -209,5 +208,5 @@ def main(agent_type: str, cyborg_type: str) -> None:
 
 if __name__ == "__main__":
     # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
-    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap")
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment="sim")
 
