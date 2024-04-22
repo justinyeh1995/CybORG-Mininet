@@ -21,8 +21,8 @@ class RewardTracker:
 class GameStateCollector:
     def __init__(self, environment='sim'):
         self.environment = environment
-        self.blue_agent = None
-        self.red_agent = None
+        self.blue_agent_name: str = ""
+        self.red_agent_name: str = ""
         self.cyborg = None
         self.num_steps = None
         self.ip_map = None
@@ -38,10 +38,10 @@ class GameStateCollector:
         self.discovered_subnets = set()
         self.discovered_systems = set()
 
-    def set_environment(self, cyborg=None, red_agent=None, blue_agent=None, num_steps=30):
+    def set_environment(self, cyborg=None, red_agent_name=None, blue_agent_name=None, num_steps=30):
         self.cyborg = cyborg
-        self.blue_agent = blue_agent
-        self.red_agent = red_agent
+        self.blue_agent_name = blue_agent_name
+        self.red_agent_name = red_agent_name
         self.num_steps= num_steps
         self._create_ip_host_maps()
         
@@ -206,7 +206,7 @@ class GameStateCollector:
         self._create_ip_host_maps()
 
     def store_state(self, state_snapshot, episode, step):
-        self.game_states[self.num_steps][self.red_agent.__class__.__name__][episode][step] = state_snapshot.copy()
+        self.game_states[self.num_steps][self.red_agent_name][episode][step] = state_snapshot.copy()
 
     def get_game_state(self):
         return self.game_states

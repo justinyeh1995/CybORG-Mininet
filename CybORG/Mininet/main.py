@@ -122,12 +122,16 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
             # Getting intial red_observation
             red_observation=cyborg.get_observation('Red')
             red_action_space= cyborg.get_action_space('Red')
+
+            red_agent_name: str = red_agent.__class__.__name__
+            blue_agent_name: str = agent.__class__.__name__
             
-            # Rest set up game_state_manager
+            # Set up game_state_manager
             game_state_manager.set_environment(cyborg=cyborg,
-                                               red_agent=red_agent,
-                                               blue_agent=agent,
+                                               red_agent_name=red_agent_name,
+                                               blue_agent_name=blue_agent_name,
                                                num_steps=num_steps)
+            # Reset state
             game_state_manager.reset()
 
 

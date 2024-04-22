@@ -113,10 +113,13 @@ def main(agent_type: str, cyborg_type: str, environment="sim") -> None:
             observation = wrapped_cyborg.reset()
             action_space = wrapped_cyborg.get_action_space(agent_name)
 
-            # Rest set up game_state_manager
+            red_agent_name: str = red_agent.__class__.__name__
+            blue_agent_name: str = agent.__class__.__name__
+            
+            # Set up game_state_manager
             game_state_manager.set_environment(cyborg=cyborg,
-                                               red_agent=red_agent,
-                                               blue_agent=agent,
+                                               red_agent_name=red_agent_name,
+                                               blue_agent_name=blue_agent_name,
                                                num_steps=num_steps)
             game_state_manager.reset()
             
