@@ -213,4 +213,3 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
 if __name__ == "__main__":
     # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
     game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment="sim")
-
