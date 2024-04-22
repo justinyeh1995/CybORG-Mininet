@@ -52,10 +52,6 @@ class GameStateCollector:
     def _get_true_state(self):
         return deepcopy(self.cyborg.get_agent_state('True'))
 
-    def _get_true_state_table(self):
-        self.true_state = self._get_true_state()
-        return true_obs_to_table(self.true_state, self.cyborg)
-
     def _get_last_reward(self, agent_type):
         return self.cyborg.get_rewards()[agent_type]
 
@@ -68,105 +64,50 @@ class GameStateCollector:
 
     def get_rewards(self):
         return {agent: dict(rewards) for agent, rewards in self.accumulated_rewards.items()}
-        
-    def _parse_action(self, cyborg, action_str, agent, host_map, ip_map):
-        action_type = action_str.split(" ")[0]
-        target_host = ""
-        if cyborg.get_observation(agent)['success'].__str__() == 'TRUE':
-            action_str_split = action_str.split(" ")
-            n = len(action_str_split)
-            target_host = action_str_split[-1] if n > 1 else target_host
-            # Update target ho st if it's an IP address to get the hostname
-            target_host = ip_map.get(target_host, target_host) if target_host in ip_map else target_host
-        return target_host, action_type
 
-    def _update_host_status(self, cyborg, action_str, host_map, ip_map, host_type='Red'):
-        target_host, discovered_subnet, discovered_system, exploited_host, escalated_host = None, None, None, None, None
-        reset_host, remove_host, restore_host = None, None, None
+    def create_state_snapshot(self, actions:dict, observations:dict):
+        ############
+        ## fo viz ##
+        ############
 
-        if host_type == 'Red':
-            # Check Red's actions
-            target_host, action_type = self._parse_action(cyborg, action_str, 'Red', host_map, ip_map)
-            if target_host:
-                if 'ExploitRemote' in action_type:
-                    exploited_host = target_host
-                elif 'PrivilegeEscalate' in action_type or 'Impact' in action_type:
-                    escalated_host = target_host
-                elif 'DiscoverRemoteSystems' in action_type:
-                    _cidr = ".".join(target_host.split(".")[:3])
-                    for ip in ip_map:
-                        if _cidr in ip and 'router' in ip_map[ip]:
-                            discovered_subnet = ip_map[ip]
-                            target_host = discovered_subnet
-                elif 'DiscoverNetworkServices' in action_type:
-                    discovered_system = target_host
-                    
-        elif host_type == 'Blue':
-            # Check Blue's actions
-            reset_host, action_type = self._parse_action(cyborg, action_str, 'Blue', host_map, ip_map)
-            if reset_host:
-                if 'Remove' in action_type:
-                    remove_host = reset_host
-                elif 'Restore' in action_type:
-                    restore_host = reset_host
+        state_snapshot = {}
         
-        if discovered_subnet:
-            self.discovered_subnets.add(discovered_subnet)
-
-        if discovered_system:
-            self.discovered_systems.add(discovered_system)
-        
-        if exploited_host:
-            self.exploited_hosts.add(exploited_host)
-            self.compromised_hosts.add(exploited_host)
-        if remove_host:
-            self.exploited_hosts.discard(remove_host)
-            self.compromised_hosts.discard(remove_host)
-        if escalated_host:
-            self.escalated_hosts.add(escalated_host)
-            self.compromised_hosts.add(escalated_host)
-        if restore_host:
-            self.escalated_hosts.discard(restore_host)
-            self.compromised_hosts.discard(restore_host)
+        for host_type in ['Blue', 'Red']:
+            action = actions[host_type]
+            observation = observations[host_type]
             
-        return target_host, reset_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
+            state_snapshot[host_type] = self.generate_state_snapshot(action, observation, host_type)
+                
+        return state_snapshot   
 
-    def _create_action_snapshot(self, action_str, host_type):
+    def generate_state_snapshot(self, action, observation, host_type: str):
+        target_host, action_type, isSuccess = self.parse_observation(action, observation, self.host_map, self.ip_map)
+        true_obs = self._get_true_state() | {}
+        
         link_diagram = self.cyborg.environment_controller.state.link_diagram
-        true_obs = self._get_true_state()
         
         action_info = {
-            "action": action_str, 
-            "success": self.cyborg.get_observation(host_type)['success'].__str__()
+            "action": action, 
+            "success": isSuccess
         }
         
         (
             target_host,
-            reset_host,
             discovered_subnet, 
             discovered_system,
             exploited_host,
             escalated_host,
             remove_host,
             restore_host
-        ) = self._update_host_status(
-            self.cyborg,
-            action_str,
-            self.host_map,
-            self.ip_map,
-            host_type=host_type
-        )
-
+        ) = self.update_hosts(target_host, action_type, self.host_map, self.ip_map, host_type)
+        
         node_colors = [get_node_color(node, 
                                       self.discovered_subnets, 
                                       self.discovered_systems, 
                                       self.escalated_hosts, 
                                       self.exploited_hosts) for node in link_diagram.nodes]
         
-        node_borders = [get_node_border(node, 
-                                        target_host=target_host, 
-                                        reset_host=reset_host) 
-                        for node in link_diagram.nodes]
+        node_borders = [get_node_border(node, target_host=target_host) for node in link_diagram.nodes]
 
         host_info = [get_host_info(node, true_obs) for node in link_diagram.nodes]
 
@@ -176,53 +117,25 @@ class GameStateCollector:
 
         self._update_rewards(host_type, reward)
 
-        sim_obs = {key: value for key, value in self.cyborg.get_observation(host_type).items() \
-                   if key != 'success'}
         accu_reward = self._get_agent_rewards(host_type)
         # print(self.accumulated_rewards)
         
         action_snapshot = {
             # Populate with necessary state information
-            'link_diagram': link_diagram.copy(),  # Assuming link_diagram is a NetworkX graph
-            'node_colors': node_colors.copy(),
-            'node_borders': node_borders.copy(),
-            'compromised_hosts': compromised_hosts.copy(),
-            'host_info': host_info.copy(),
-            'action_info': action_info.copy(),
-            'host_map': self.host_map.copy(),
-            'sim_obs': sim_obs,
+            'link_diagram': link_diagram,  # Assuming link_diagram is a NetworkX graph
+            'node_colors': node_colors,
+            'node_borders': node_borders,
+            'compromised_hosts': compromised_hosts,
+            'host_info': host_info,
+            'action_info': action_info,
+            'host_map': self.host_map,
+            'obs': observation,
             'reward': reward,
             'accumulate_reward': accu_reward,
         }
 
-        return action_snapshot
+        return action_snapshot 
         
-    def create_state_snapshot(self, actions:dict, observations:dict):
-        ############
-        ## fo viz ##
-        ############
-
-        state_snapshot = {}
-        
-        for host_type in ['Blue', 'Red']:
-            if self.environment == 'sim':
-                action_str = self.cyborg.get_last_action(type).__str__()
-                state_snapshot[host_type] = self._create_action_snapshot(action_str, host_type)
-            
-            elif self.environment == 'emu':
-                action = actions[host_type]
-                observation = observations[host_type]
-                state_snapshot[host_type] = self.generate_state_snapshot(action, observation, host_type)
-                
-        return state_snapshot
-
-    def update_state_snapshot(self, state_snapshot, observation):
-        # @To-Do: get mininet observation involed
-        for type in ['Blue', 'Red']:
-            obs = observation[type]
-            state_snapshot[type]['mininet_obs'] = obs
-        return state_snapshot    
-
     def parse_observation(self, action, observation, host_map, ip_map):
         isSuccess = str(observation['success']) == 'TRUE'
         action_str_split = action.split(" ")
@@ -283,65 +196,7 @@ class GameStateCollector:
             self.compromised_hosts.discard(restore_host)
             
         return target_host, discovered_subnet, discovered_system, exploited_host, escalated_host, remove_host, restore_host
-
-    
-    def generate_state_snapshot(self, action, observation, host_type: str):
-
-        target_host, action_type, isSuccess = self.parse_observation(action, observation, self.host_map, self.ip_map)
-        true_obs = {}
-        
-        link_diagram = self.cyborg.environment_controller.state.link_diagram
-        
-        action_info = {
-            "action": action, 
-            "success": isSuccess
-        }
-        
-        (
-            target_host,
-            discovered_subnet, 
-            discovered_system,
-            exploited_host,
-            escalated_host,
-            remove_host,
-            restore_host
-        ) = self.update_hosts(target_host, action_type, self.host_map, self.ip_map, host_type)
-        
-        node_colors = [get_node_color(node, 
-                                      self.discovered_subnets, 
-                                      self.discovered_systems, 
-                                      self.escalated_hosts, 
-                                      self.exploited_hosts) for node in link_diagram.nodes]
-        
-        node_borders = [get_node_border(node, target_host=target_host) for node in link_diagram.nodes]
-
-        host_info = [get_host_info(node, true_obs) for node in link_diagram.nodes]
-
-        compromised_hosts = self.compromised_hosts.copy()
-
-        reward = self._get_last_reward(host_type)
-
-        self._update_rewards(host_type, reward)
-
-        accu_reward = self._get_agent_rewards(host_type)
-        # print(self.accumulated_rewards)
-        
-        action_snapshot = {
-            # Populate with necessary state information
-            'link_diagram': link_diagram,  # Assuming link_diagram is a NetworkX graph
-            'node_colors': node_colors,
-            'node_borders': node_borders,
-            'compromised_hosts': compromised_hosts,
-            'host_info': host_info,
-            'action_info': action_info,
-            'host_map': self.host_map,
-            'obs': observation,
-            'reward': reward,
-            'accumulate_reward': accu_reward,
-        }
-
-        return action_snapshot 
-        
+  
     def reset(self):
         self.compromised_hosts = set(['User0'])
         self.exploited_hosts = set()
