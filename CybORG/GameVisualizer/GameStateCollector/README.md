@@ -1,4 +1,19 @@
-## Gather Actions & Observations
+
+## Initialize  GameStateCollector
+```python
+game_state_manager = GameStateCollector(environment='emu') # or sim
+```
+
+## Set up GameStateCollector environment at the start of your episode
+```python
+game_state_manager.set_environment(cyborg=cyborg,
+                                   red_agent=red_agent,
+                                   blue_agent=agent,
+                                   num_steps=num_steps)
+game_state_manager.reset()
+```
+
+## Gather Actions & Observations Info after every step
 
 ```python
 """
@@ -41,13 +56,13 @@ observations = {'Blue': {'success': <TrinaryEnum.UNKNOWN: 2>},
                          'success': <TrinaryEnum.TRUE: 1>}}
 ```
 
-create a state_snapshot of the current step
+## Create a state_snapshot of the current step
 
 ```python
 state_snapshot = game_state_manager.create_state_snapshot(actions, observations)
 ```
 
-store state_snapshot of the current step
+## Store state_snapshot of the current step
 ```python
 """
 i is the current episode number
@@ -59,4 +74,81 @@ your for loop should taken care of this
 game_state_manager.store_state(state_snapshot, i, j)
 ```
 
+## Reset after every episode ends
+```python
+game_state_manager.reset()
+```
 
+## Full Example
+```python
+def main(agent_type: str, cyborg_type: str, environment="sim") -> None:
+    environment = environment
+    cyborg_version = CYBORG_VERSION
+    scenario = 'Scenario2'
+    # ask for a name for the agent
+    name_of_agent = "PPO + Greedy decoys"
+
+    lines = inspect.getsource(wrap)
+    wrap_line = lines.split('\n')[1].split('return ')[1]
+
+    # Change this line to load your agent
+    agent = MainAgent()
+    
+    path = str(inspect.getfile(CybORG))
+    path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario2.yaml'
+    sg = FileReaderScenarioGenerator(path)
+
+    print(f'using CybORG v{cyborg_version}, {scenario}\n')
+    
+    # game manager initialization
+    game_state_manager = GameStateCollector(environment=environment)
+    
+    for num_steps in [10]:
+        for red_agent in [B_lineAgent]:
+
+            red_agent = red_agent()
+            cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+            wrapped_cyborg = wrap(cyborg)
+
+            observation = wrapped_cyborg.reset()
+            action_space = wrapped_cyborg.get_action_space(agent_name)
+
+            # Rest set up game_state_manager
+            game_state_manager.set_environment(cyborg=cyborg,
+                                               red_agent=red_agent,
+                                               blue_agent=agent,
+                                               num_steps=num_steps)
+            game_state_manager.reset()
+            
+            total_reward = []
+            actions_list = []
+            for i in range(MAX_EPS):
+                r = []
+                a = []
+                
+                for j in range(num_steps):
+                    
+                    if environment == "sim":
+                        action = agent.get_action(observation, action_space)
+                        observation, rew, done, info = wrapped_cyborg.step(action)
+
+                        actions = {"Red":str(cyborg.get_last_action('Red')), "Blue": str(cyborg.get_last_action('Blue'))}
+                        observations = {"Red": cyborg.get_observation('Red'), "Blue": cyborg.get_observation('Blue')}
+                        pprint(actions)
+                        pprint(observations)
+
+                    # Create state for this step
+                    state_snapshot = game_state_manager.create_state_snapshot(actions, observations)
+                    
+                    game_state_manager.store_state(state_snapshot, i, j)
+                    print(f"===Step {j} is over===")
+                    
+                agent.end_episode()
+                total_reward.append(sum(r))
+                actions_list.append(a)
+                observation = cyborg.reset()
+                # game state manager reset
+                game_state_manager.reset()
+
+    return game_state_manager.get_game_state()
+```
