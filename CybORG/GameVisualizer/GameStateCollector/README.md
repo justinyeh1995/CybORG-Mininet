@@ -1,7 +1,7 @@
 
 ## Initialize  GameStateCollector
 ```python
-game_state_manager = GameStateCollector(environment='emu') # or sim
+game_state_manager = GameStateCollector(environment='sim') # or 'emu' or anything you defined
 ```
 
 ## Set up GameStateCollector environment at the start of your episode
@@ -16,7 +16,6 @@ game_state_manager.reset()
 ## Gather Actions & Observations Info after every step
 
 ```python
-"""
 red_action: str 
 blue_action: str
 
@@ -25,7 +24,6 @@ blue_observation: dict
 
 actions = {"Red": red_action, "Blue": blue_action}
 observations = {"Red": red_observation, "Blue": blue_observation}
-"""
 ```
 For example:
 ```python
