@@ -44,7 +44,7 @@ class SshAction(Action):
             return SshObservation(False)
 
         ssh_session = paramiko.SSHClient()
-        
+
         ssh_session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         for ix in range(0, 3):
