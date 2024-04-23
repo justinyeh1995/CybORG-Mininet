@@ -1,39 +1,30 @@
 import cProfile
 import inspect
 
-from gym.utils.seeding import np_random
+from CybORG import CybORG
 
 # for visualisation of code profile:
 # python -m cProfile -o profile.pstats profiler.py
 # gprof2dot -f pstats profile.pstats | dot -Tpng -o output.png && eog output.png
-# or with snakeviz
-# snakeviz profile.pstats
-from CybORG import CybORG
-from CybORG.Agents import RandomAgent
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
+from CybORG.Emulator.AWS import AWSConfig
 
 
-def run(path):
-    aws = False
-    # sg = FileReaderScenarioGenerator(path)
-    sg = DroneSwarmScenarioGenerator()
-    np_rand, seed = np_random(123)
-    def assign_agents(agent_list):
-        return {agent: RandomAgent() for agent in agent_list}
-    c = CybORG(scenario_generator=sg, agents=assign_agents([f"{j}_agent_{i}" for i in range(sg.num_drones) for j in ['red', 'blue']]))
+def run():
+    aws = True
+    if not aws:
+        c = CybORG(path, 'sim')
+    else:
+        c = CybORG(path, 'aws', env_config={"config": AWSConfig.load_and_setup_logger(test=True),"create_tunnel": False})
     try:
-        for i in range(100):
-            for j in range(1000):
-                c.step()
-                if c.environment_controller.done:
-                    break
-            c.reset()
+        for i in range(1):
+            c.start(50)
+            # c.reset()
     finally:
         c.shutdown(teardown=True)
-
-
 path = str(inspect.getfile(CybORG))
-path = path[:-7] + f'/Simulator/Scenarios/scenario_files/Scenario1b.yaml'
+path = path[:-10] + '/Shared/Scenarios/Scenario1.yaml'
 # cProfile.run("run()", sort='cumtime')
-run(path)
+run()
+
+
+

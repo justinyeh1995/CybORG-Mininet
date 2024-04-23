@@ -1,10 +1,9 @@
 # Copyright DST Group. Licensed under the MIT license.
 
-from CybORG.Simulator.Actions.Action import Action
-from CybORG.Shared.Logger import CybORGLogger
+from CybORG.Shared.Actions.Action import Action
 
 
-class RewardCalculator(CybORGLogger):
+class RewardCalculator:
     def __init__(self, agent_name: str):
         self.agent_name = agent_name
         self.init_state = None
@@ -15,13 +14,6 @@ class RewardCalculator(CybORGLogger):
 
         # Should this actually be a time.datetime?
         self.time = 0
-
-    def calculate_simulation_reward(self, env_controller):
-        current_state = env_controller._filter_obs(env_controller.get_true_state(env_controller.INFO_DICT['True'])).data
-        action = env_controller.action
-        agent_observations = env_controller.observation
-        done = env_controller.done
-        return self.calculate_reward(current_state, action, agent_observations, done)
 
     def calculate_reward(self, current_state: dict, action: dict, agent_observations: dict, done: bool) -> float:
         raise NotImplementedError

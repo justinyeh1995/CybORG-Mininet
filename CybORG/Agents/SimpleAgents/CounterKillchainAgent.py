@@ -4,7 +4,7 @@ import math
 
 from ipaddress import IPv4Address
 
-from CybORG.Simulator.Actions import VelociraptorPoll, SSHAccess, VelociraptorPoll, KillProcessLinux, VelociraptorPoll, KillProcessLinux
+from CybORG.Shared.Actions import VelociraptorPoll, SSHAccess, VelociraptorPoll, KillProcessLinux, VelociraptorPoll, KillProcessLinux
 
 
 class CounterKillchainAgent(BaseAgent):

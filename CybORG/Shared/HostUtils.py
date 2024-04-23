@@ -49,7 +49,7 @@ class File:
                  vendor: str = None,
                  version: str = None,
                  user: str = None,
-                 user_permissions: int = None,
+                 user_permissionss: int = None,
                  group: str = None,
                  group_permissions: int = None,
                  default_permissions: int = None,
@@ -60,8 +60,8 @@ class File:
         self.group = group
         self.vendor = vendor
 
-        self.user_permissions = user_permissions
-        if self.user_permissions is None and self.user is not None:
+        self.user_permissionss = user_permissionss
+        if self.user_permissionss is None and self.user is not None:
             self.group_permissions = 7
 
         self.group_permissions = group_permissions
@@ -100,7 +100,7 @@ class File:
             "version": self.version,
             "file_type": self.file_type,
             "user": self.user,
-            "user_permissions": self.user_permissions,
+            "user_permissions": self.user_permissionss,
             "group": self.group,
             "group_permissions": self.group_permissions,
             "default_permissions": self.default_permissions,

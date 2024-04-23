@@ -5,22 +5,16 @@ from CybORG.Shared import Results
 
 
 # this wrapper converts a list into an action object based on the action space
-from CybORG.Simulator.Actions import Sleep
+from CybORG.Shared.Actions import Sleep
 
 
 class IntListToActionWrapper(BaseWrapper):
     def __init__(self, env=None, agent=None):
-        super().__init__(env)
+        super().__init__(env, agent)
         self.action_space = None
         self.action_params = None
         self.param_name = None
         self.selection_mask = None
-
-        self.action_signature = {}
-        self.known_params = {}
-        self.params_to_fix_at_start = ['port']
-        self.fixed_size = {}
-
 
     def step(self, agent=None, action: list = None) -> Results:
         if action is not None:
@@ -36,11 +30,11 @@ class IntListToActionWrapper(BaseWrapper):
         result.action_name = str(action_obj)
         return result
 
-    def reset(self, agent=None, seed=None):
-        result = self.env.reset(agent, seed)
+    def reset(self, agent=None):
+        result = self.env.reset(agent)
         result.action_space, result.selection_masks = self.action_space_change(result.action_space)
         self.selection_mask = result.selection_masks
-        result.observation = self.observation_change(agent, result.observation)
+        result.observation = self.observation_change(result.observation)
         return result
 
     def get_action_space(self, agent: str) -> dict:
@@ -50,34 +44,6 @@ class IntListToActionWrapper(BaseWrapper):
 
     def action_space_change(self, action_space: dict) -> (list, list):
         self.action_space = action_space
-        # first remove old parameters
-        for param in self.params_to_fix_at_start:
-            if param in self.fixed_size:
-                remove_keys = []
-                for p in action_space[param].keys():
-                    if p not in self.fixed_size[param]:
-                        remove_keys.append(p)
-
-                for key in remove_keys:
-                    action_space[param].pop(key)
-                # action_space[param] = self.fixed_size[param]
-            else:
-                self.fixed_size[param] = list(action_space[param].keys())
-        params = ['action']
-        for action in action_space['action']:
-            if action not in self.action_signature:
-                self.action_signature[action] = inspect.signature(action).parameters
-            for p in self.action_signature[action]:
-                if p not in params:
-                    params.append(p)
-        to_remove = []
-        for key, value in action_space.items():
-            if key not in params:
-                to_remove.append(key)
-
-        for p in to_remove:
-            action_space.pop(p)
-
         selection_masks = []
         new_action_space = []
         self.param_name = []

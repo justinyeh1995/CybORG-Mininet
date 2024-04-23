@@ -3,9 +3,9 @@ from CybORG.Agents.Wrappers import BaseWrapper, OpenAIGymWrapper, BlueTableWrapp
 
 
 class ChallengeWrapper(Env,BaseWrapper):
-    def __init__(self, agent_name: str, env,
+    def __init__(self, agent_name: str, env, agent=None,
             reward_threshold=None, max_steps = None):
-        super().__init__(env)
+        super().__init__(env, agent)
         self.agent_name = agent_name
         if agent_name.lower() == 'red':
             table_wrapper = RedTableWrapper
@@ -15,6 +15,7 @@ class ChallengeWrapper(Env,BaseWrapper):
             raise ValueError('Invalid Agent Name')
 
         env = table_wrapper(env, output_mode='vector')
+        env = EnumActionWrapper(env)
         env = OpenAIGymWrapper(agent_name=agent_name, env=env)
 
         self.env = env
@@ -26,7 +27,7 @@ class ChallengeWrapper(Env,BaseWrapper):
 
     def step(self,action=None):
         obs, reward, done, info = self.env.step(action=action)
-
+        
         self.step_counter += 1
         if self.max_steps is not None and self.step_counter >= self.max_steps:
             done = True

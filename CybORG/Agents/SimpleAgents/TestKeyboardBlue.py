@@ -10,7 +10,7 @@ from CybORG.Agents.SimpleAgents.Meander import RedMeanderAgent
 if __name__ == "__main__":
     print("Setup")
     path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Shared/Scenarios/Scenario1b.yaml'
+    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
 
     agents = {'Red': B_lineAgent,'Green': GreenAgent}
     # agents = {'Red': RedMeanderAgent,'Green': GreenAgent}

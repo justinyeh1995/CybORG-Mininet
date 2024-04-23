@@ -1,32 +1,27 @@
 ## The following code contains work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.
 ## Additionally, we waive copyright and related rights in the utilized code worldwide through the CC0 1.0 Universal public domain dedication.
 import copy
-from datetime import datetime
-from ipaddress import IPv4Address
-from math import sqrt
+from datetime import datetime, timedelta
+from ipaddress import IPv4Network, IPv4Address
+from math import log2
+from random import sample, choice
 
-import networkx as nx
-from networkx import connected_components
-
-from CybORG.Shared import Scenario, CybORGLogger
+from CybORG.Shared import Scenario
 from CybORG.Shared.Enums import SessionType
 from CybORG.Shared.Observation import Observation
-from CybORG.Simulator.Drone import Drone
 from CybORG.Simulator.Host import Host
 from CybORG.Simulator.Process import Process
 from CybORG.Simulator.Session import Session
 from CybORG.Simulator.Subnet import Subnet
 
 
-class State(CybORGLogger):
-    """
-	Simulates the Network State.
+class State:
+    """Simulates the Network State.
 
     This class contains all the data for the simulated network, including ips, subnets, hosts and sessions.
     The methods mostly modify the network state, but tend to delegate most of the work to the Host class.
     """
-    def __init__(self, scenario: Scenario, np_random):
-        self.np_random = np_random
+    def __init__(self, scenario):
         self.scenario = scenario
         self.subnet_name_to_cidr = None  # contains mapping of subnet names to subnet cidrs
         self.ip_addresses = None  # contains mapping of ip addresses to hostnames
@@ -35,25 +30,29 @@ class State(CybORGLogger):
         self.sessions = None  # contains mapping of agent names to mapping of session id to session objects
         self.subnets = None  # contains mapping of subnet cidrs to subnet objects
 
-        self.link_diagram = None
-        self.connected_components = None
-
         self.sessions_count = {}  # contains a mapping of agent name to number of sessions
         self._initialise_state(scenario)
         self.step = 0
         self.original_time = datetime(2020, 1, 1, 0, 0)
         self.time = copy.deepcopy(self.original_time)
-
-        # hacky fix to enable operational firewall for Scenario1b and Scenario2
-        self.operational_firewall = scenario.operational_firewall
-        self.blocks = {}
-
+        #print("%%"*76)
+        #print("==> In state, subnet_name_to_cidr ", self.subnet_name_to_cidr)
+        #print('=> in state, ip address are:',self.ip_addresses)
+        #print("=> self.host",self.hosts)
+        #print("=> self.sessions",self.sessions)
+        #print("=> self.subnet",self.subnets)
+        #print("=> self.sessions count",self.sessions_count)
+        #print("%%%"*76)
+        
+        
     def get_true_state(self, info: dict) -> Observation:
         true_obs = Observation()
+        #print('Info from state is:',info)
         if info is None:
             raise ValueError('None is not a valid argument for the get true state function in the State class')
         else:
             for hostname, host in self.hosts.items():
+                #print("In state, host name:",hostname,'Host is:',host)
                 if hostname in info:
                     if 'Processes' in info[hostname]:
                         for process in host.processes:
@@ -92,7 +91,6 @@ class State(CybORGLogger):
                                 true_obs.add_user_info(hostid=hostname, **o)
                     if 'System info' in info[hostname]:
                         true_obs.add_system_info(hostid=hostname, **host.get_state())
-
                     if 'Services' in info[hostname]:
                         if 'All' in info[hostname]['Services']:
                             for service, service_info in host.services.items():
@@ -101,8 +99,12 @@ class State(CybORGLogger):
                             for service_name in info[hostname]['Services']:
                                 if service_name in host.services:
                                     true_obs.add_process(hostid=hostname, service_name=service_name, pid=host.services[service_name]['process'])
-
         return true_obs
+
+    def reset(self):
+        self._initialise_state(self.scenario)
+        self.step = 0
+        self.time = copy.deepcopy(self.original_time)
 
     def _initialise_state(self, scenario: Scenario):
         self.subnet_name_to_cidr = {}  # contains mapping of subnet names to subnet cidrs
@@ -113,42 +115,42 @@ class State(CybORGLogger):
         self.subnets = {}  # contains mapping of subnet cidrs to subnet objects
 
         self.sessions_count = {}  # contains a mapping of agent name to number of sessions
+        hostname_to_interface = {}
 
-        for subnet_name, subnet_info in scenario.subnets.items():
-            subnet_cidr = subnet_info.cidr
+        count = 0
+        # randomly generate subnets cidrs for all subnets in scenario and IP addresses for all hosts in those subnets and create Subnet objects
+        # using fixed size subnets (VLSM maybe viable alternative if required)
+        maximum_subnet_size = max([scenario.get_subnet_size(i) for i in scenario.subnets])
+        subnets_cidrs = sample(
+            list(IPv4Network("10.0.0.0/16").subnets(new_prefix=32 - max(int(log2(maximum_subnet_size + 5)), 4))),
+            len(scenario.subnets))
+        for subnet_name in scenario.subnets:
+            subnet_cidr = choice(list(subnets_cidrs[count].subnets(
+                new_prefix=32 - max(int(log2(scenario.get_subnet_size(subnet_name) + 5)), 4))))
+            count += 1
             self.subnet_name_to_cidr[subnet_name] = subnet_cidr
-            self.subnets[subnet_cidr] = Subnet(
-                cidr=subnet_cidr,
-                ip_addresses=subnet_info.ip_addresses,
-                nacls=scenario.get_subnet_nacls(subnet_name),
-                name=subnet_name
-            )
-
-        for hostname, host_info in scenario.hosts.items():
-            for interface in host_info.interface_info:
-                self.ip_addresses[interface['ip_address']] = hostname
-
-            host_class = Drone if host_info.host_type == 'drone' else Host
-            self.hosts[hostname] = host_class(
-                np_random=self.np_random,
-                system_info=host_info.system_info,
-                processes=host_info.processes,
-                users=host_info.user_info,
-                interfaces=host_info.interface_info,
-                hostname=hostname,
-                info=host_info.info,
-                services=host_info.services,
-                respond_to_ping=host_info.respond_to_ping,
-                starting_position=host_info.starting_position,
-                host_type=host_info.host_type
-            )
-
-            # SET UP AGENT SESSIONS PER HOST
-            for agent in scenario.agents:
-                self.hosts[hostname].sessions[agent] = []
+            ip_address_selection = sample(list(subnet_cidr.hosts()), len(scenario.get_subnet_hosts(subnet_name)))
+            allocated = 0
+            for hostname in scenario.get_subnet_hosts(subnet_name):
+                self.ip_addresses[ip_address_selection[allocated]] = hostname
+                interface = {"ip_address": ip_address_selection[allocated], "subnet": subnet_cidr}
+                if hostname in hostname_to_interface:
+                    hostname_to_interface[hostname].append(interface)
+                else:
+                    hostname_to_interface[hostname] = [interface]
+                allocated += 1
+            self.subnets[subnet_cidr] = Subnet(cidr=subnet_cidr, ip_addresses=ip_address_selection,
+                                               nacls=scenario.get_subnet_nacls(subnet_name), name=subnet_name)
 
         # create host objects for all host names in the scenario
-        for agent, agent_info in scenario.agents.items():
+        for hostname in scenario.hosts:
+            host_info = scenario.get_host(hostname)
+            self.hosts[hostname] = Host(system_info=host_info['System info'], processes=host_info['Processes'],
+                                        users=host_info['User Info'], interfaces=hostname_to_interface[hostname],
+                                        hostname=hostname, info=host_info.get('info'), services=host_info.get('Services'))
+
+        for agent in scenario.agents:
+            agent_info = scenario.get_agent_info(agent)
             self.sessions[agent] = {}
             self.sessions_count[agent] = 0
             # instantiate parentless sessions first
@@ -176,80 +178,25 @@ class State(CybORGLogger):
                         agent=agent,
                         session_type=starting_session.session_type,
                         ident=self.sessions_count[agent],
-                        parent=parent.ident,
+                        parent=parent,
                         name=starting_session.name,
                         artifacts=starting_session.event_artifacts)
-                    parent.children[self.sessions_count[agent]] = self.sessions[agent][self.sessions_count[agent]]
                     self.sessions_count[agent] += 1
 
-        for host in self.hosts.values():
-            host.create_backup()
-
-        # create the link diagram
-        self.link_diagram = nx.Graph()
-        # add hosts to link diagram
-        for hostname in self.hosts.keys():
-            self.link_diagram.add_node(hostname)
-        # add datalink connections between hosts
-        self.setup_data_links()
-
-    def setup_data_links(self):
-        # add datalink connections between hosts
-        for hostname, host_info in self.hosts.items():
-            for interface in host_info.interfaces:
-                if interface.interface_type == 'wired':
-                    for data_link in interface.data_links:
-                        self.link_diagram.add_edge(hostname, data_link)
-        self.update_data_links()
-
-    def set_np_random(self, np_random):
-        self.np_random = np_random
-        for hostname in self.hosts:
-            self.hosts[hostname].np_random = np_random
-
-    @staticmethod
-    def dist(pos_a, pos_b):
-        return sqrt((pos_a[0]-pos_b[0])**2+(pos_a[1]-pos_b[1])**2)
-
-    def update_data_links(self):
-        distances = {hostname: {hostname: 0.} for hostname in self.hosts.keys()}
-        for hostname, host_info in self.hosts.items():
-            for hostname2, host_info2 in self.hosts.items():
-                if hostname2 not in distances[hostname]:
-                    distances[hostname][hostname2] = self.dist(host_info.position, host_info2.position)
-                    distances[hostname2][hostname] = distances[hostname][hostname2]
-
-        for hostname, host_info in self.hosts.items():
-            for interface in host_info.interfaces:
-                if interface.interface_type != 'wired':
-                    old_data_links = interface.data_links
-                    interface.data_links = [other_hostname for other_hostname, other_host_info in self.hosts.items() if distances[hostname][other_hostname] < interface.max_range]
-                    for dl in old_data_links:
-                        if dl not in interface.data_links:
-                            self.link_diagram.remove_edge(hostname, dl)
-                        for interface2 in self.hosts[dl].interfaces:
-                            if hostname in interface2.data_links:
-                                interface2.data_links.remove(hostname)
-                    for dl in interface.data_links:
-                        if dl not in old_data_links:
-                            self.link_diagram.add_edge(hostname, dl)
-        self.connected_components = [i for i in connected_components(self.link_diagram)]
+            for host in self.hosts.values():
+                host.create_backup()
 
     def add_session(self, host: str, user: str, agent: str, parent: int, process=None, session_type: str = "shell",
-            timeout: int = 0, is_escalate_sandbox: bool = False, ident: int = None) -> Session:
+            timeout: int = 0, is_escalate_sandbox: bool = False) -> Session:
         """Adds a session of a selected type to a dict as a selected user"""
-        if ident is None:
-            ident = self.sessions_count[agent]
-        else:
-            if agent in self.sessions and ident in self.sessions[agent]:
-                return self.sessions[agent][ident]
+        ident = self.sessions_count[agent]
+        if parent in self.sessions[agent]:
+            parent = self.sessions[agent][parent]
         self.sessions_count[agent] += 1
         new_session = self.hosts[host].add_session(username=user, ident=ident, timeout=timeout, pid=process,
                                                    session_type=session_type, agent=agent, parent=parent,
                                                    is_escalate_sandbox=is_escalate_sandbox)
         self.sessions[agent][ident] = new_session
-        if parent is not None:
-            self.sessions[agent][parent].children[new_session.ident] = new_session
         return new_session
 
     def add_file(self, host: str, name: str, path: str, user: str = None, user_permissions: str = None,
@@ -284,29 +231,9 @@ class State(CybORGLogger):
     def get_session_from_pid(self, hostname, pid):
         for agent, sessions in self.sessions.items():
             for session in sessions:
-                if self.sessions[agent][session].pid == pid and self.sessions[agent][session].hostname == hostname:
+                if self.sessions[agent][session].pid == pid and self.sessions[agent][session].host == hostname:
                     return agent, session
         return None, None
-
-    def kill_process(self, host: str, pid: int):
-        host = self.hosts[host]
-        process = host.get_process(pid)
-        session, agent = host.get_session(pid=pid)
-        host.processes.remove(process)
-        if pid in [i['process'].pid for i in host.services.values()]:
-            process.pid = None
-            host.add_process(**process.__dict__)
-            service = True
-        else:
-            service = False
-        if session is not None:
-            host.sessions[agent].remove(session)
-            self.sessions[agent].pop(session.ident)
-        if service:
-            session_reloaded = self.add_session(host=host.hostname, user=session.user,
-                                                session_type=session.session_type, agent=session.agent,
-                                                parent=session.parent, timeout=session.timeout)
-
 
     def reboot_host(self, hostname):
         host = self.hosts[hostname]
@@ -319,7 +246,7 @@ class State(CybORGLogger):
         host.sessions = {}
         host.processes = []
         for file in host.files:
-            if file.yaml_file_path == "/tmp/":
+            if file.path == "/tmp/":
                 host.files.remove(file)
 
         # start back up
@@ -351,26 +278,3 @@ class State(CybORGLogger):
             if subnet.contains_ip_address(ip_address):
                 return subnet
         raise ValueError(f"No Subnet contains the ip address {ip_address}")
-
-    def __str__(self):
-
-        #output = f"scenario = {self.scenario}"
-        #output += f"subnet_name_to_cidr = {self.subnet_name_to_cidr}\n"
-
-        output = f"State:\n"
-        output += f"Network:\n"
-        for ip_address in self.subnet_name_to_cidr:
-            output += f"ip_addresses = {ip_address}\n"
-        output += f"Hosts:\n"
-        for host in self.hosts:
-            output += f"host = {host}\n"
-        output += f"Sessions:\n"
-        for session in self.sessions:
-            output += f"session = {session}\n"
-        output += f"Subnets:\n"
-        for subnet in self.subnets:
-            output += f"subnet = {subnet}\n"
-
-        return output
-
-

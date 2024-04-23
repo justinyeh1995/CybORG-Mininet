@@ -1,4 +1,7 @@
 # Copyright DST Group. Licensed under the MIT license.
+import copy
+import random
+import string
 
 from CybORG.Shared.Enums import PasswordHashType
 from CybORG.Simulator.Entity import Entity

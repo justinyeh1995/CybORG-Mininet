@@ -1,7 +1,6 @@
 import os
 import errno
 import os.path as osp
-import sys
 from configparser import ConfigParser
 
 
@@ -71,7 +70,6 @@ def config_file_valid(config_file_path: str, section_map: dict) -> bool:
         True if config file exists and is valid
     """
     if not osp.isfile(config_file_path):
-        print(f"File {config_file_path} not found.")
         return False
 
     try:
@@ -79,18 +77,15 @@ def config_file_valid(config_file_path: str, section_map: dict) -> bool:
         config.read(config_file_path)
 
         if not validate_config_file(config, section_map):
-            print(f"Failed in validate_config_file({config}, section_map={section_map})")
             return False
 
         file_dirs = [config[DIRS][CYBORG_BASE_DIR],
                      config[LOGGING][LOG_DIR_PATH]]
         if not validate_file_dirs(file_dirs):
-            print(f"Failed in validate_file_dirs({config}, section_map={section_map})")
             return False
         return True
 
-    except Exception as ex:
-        print(f"Unknown exception in {sys._getframe(2).f_code.co_name}: {ex}")
+    except Exception:
         return False
 
 
@@ -113,7 +108,8 @@ def validate_config_file(config: ConfigParser, section_map: dict) -> bool:
     for section, config_vars in section_map.items():
         for var in config_vars:
             if var not in config[section]:
-                print(f"Config file invalid, variable '{var}' missing from '{section}' section")
+                print(f"Config file invalid, variable '{var}' missing"
+                      f" from '{section}' section")
                 return False
     return True
 
@@ -133,7 +129,6 @@ def validate_file_dirs(file_dirs: list) -> bool:
     """
     for f in file_dirs:
         if not osp.isdir(f):
-            print(f"File {f} failed isdir({f})")
             return False
     return True
 
@@ -169,7 +164,6 @@ def validate_file_paths(file_paths: list) -> bool:
     """
     for fp in file_paths:
         if not osp.isfile(fp):
-            print(f"File path {fp} failed isfile({fp})")
             return False
     return True
 

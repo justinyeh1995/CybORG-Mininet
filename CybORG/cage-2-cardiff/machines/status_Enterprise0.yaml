@@ -1,0 +1,28 @@
+apache2:
+  local_address: 0.0.0.0
+  local_port: 80
+  path: /usr/sbin
+  pid: 64770
+  process_type: webserver
+  properties: rfi
+haraka:
+  local_address: 0.0.0.0
+  local_port: 25
+  path: /usr/sbin
+  pid: 64007
+  process_type: smtp
+  properties: null
+tomcat:
+  local_address: 0.0.0.0
+  local_port: 443
+  path: null
+  pid: 64036
+  process_type: webserver
+  properties: rfi
+vsftpd:
+  local_address: 0.0.0.0
+  local_port: 80
+  path: /usr/sbin
+  pid: 64366
+  process_type: webserver
+  properties: rfi

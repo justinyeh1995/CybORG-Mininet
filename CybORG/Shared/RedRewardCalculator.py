@@ -2,9 +2,10 @@
 from collections import namedtuple
 
 from CybORG.Shared import Scenario
+from CybORG.Shared.Actions import FindFlag, Impact
+from CybORG.Shared.Actions.Action import Action
 from CybORG.Shared.Enums import OperatingSystemType
 from CybORG.Shared.RewardCalculator import RewardCalculator
-import pprint
 
 WIN_REWARD = 0
 LOSE_REWARD = 0
@@ -45,13 +46,14 @@ class PwnRewardCalculator(RewardCalculator):
                     if session['Agent'] == self.agent_name:
                         # count the number of root sessions
                         if session['Username'] == 'root' and info['System info']['OSType'] == OperatingSystemType.LINUX:
-                            confidentiality_value = self.mapping[self.scenario.get_host(host).get_confidentiality_value('Low')]
+                            confidentiality_value = self.mapping[self.scenario.get_host(host).get('ConfidentialityValue', 'Low')]
+
                             root_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
                         # count the number of SYSTEM sessions
                         if session['Username'] == 'SYSTEM' and info['System info']['OSType'] == OperatingSystemType.WINDOWS:
-                            confidentiality_value = self.mapping[self.scenario.get_host(host).get_confidentiality_value('Low')]
+                            confidentiality_value = self.mapping[self.scenario.get_host(host).get('ConfidentialityValue', 'Low')]
                             system_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
@@ -67,10 +69,6 @@ class DistruptRewardCalculator(RewardCalculator):
     # calculates the reward for disrupting the network
     def __init__(self, agent_name: str, scenario: Scenario):
         super(DistruptRewardCalculator, self).__init__(agent_name)
-        if self.agent_name is None:
-            self._log_warning(f'Setting agent_name to Red in {__class__.__name__} because input was None. Probably Scenario1 running.')
-            self.agent_name = 'Red'
-
         self.scenario = scenario
         self.ots = None
         self.mapping = {'None': 0.0,
@@ -87,7 +85,7 @@ class DistruptRewardCalculator(RewardCalculator):
         self.impacted_hosts = {}
         # currently a single 1 reward is recieved if the Impact action is successful
         # TODO: Add in test to see what required services are up
-
+        agent_action = action[self.agent_name]
         disrupted = []
         if self.ots is None:
             self.ots = []
@@ -98,25 +96,21 @@ class DistruptRewardCalculator(RewardCalculator):
                     for proc in host_info['Processes']:
                         if proc['Process Name'] == 'OTService':
                             self.ots.append(host_info['System info']['Hostname'])
-
-
         for host_info in current_state.values():
             working = False
             if type(host_info) is not dict:
                 continue
-
-            if self.ots:
-                if host_info['System info']['Hostname'] in self.ots:
-                    if 'Processes' in host_info:
-                        for proc in host_info['Processes']:
-                            if proc['Process Name'] == 'OTService':
-                                working = True
-                        if not working:
-                            disrupted.append(host_info['System info']['Hostname'])
+            if host_info['System info']['Hostname'] in self.ots:
+                if 'Processes' in host_info:
+                    for proc in host_info['Processes']:
+                        if proc['Process Name'] == 'OTService':
+                            working = True
+                    if not working:
+                        disrupted.append(host_info['System info']['Hostname'])
         # if type(agent_action) is Impact and agent_observations[self.agent_name].data['success'] == True:
         #     if agent_action.hostname not in disrupted:
         #         disrupted.append(agent_action.hostname)
-        availability_scores = [self.mapping[self.scenario.get_host(i).get_availability_value(default='Low')] for i in disrupted]
+        availability_scores = [self.mapping[self.scenario.get_host(i).get('AvailabilityValue', 'Low')] for i in disrupted]
         self.impacted_hosts = dict(zip(disrupted,availability_scores))
         reward = sum(availability_scores)
         return round(reward, REWARD_MAX_DECIMAL_PLACES)

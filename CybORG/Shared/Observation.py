@@ -11,12 +11,12 @@ import CybORG.Shared.Enums as CyEnums
 
 BROADCAST_ADDRESS = IPv4Address('0.0.0.0')
 
-
 class Observation:
 
     def __init__(self, success:bool = None):
         self.data = {"success": CyEnums.TrinaryEnum.UNKNOWN if success == None else CyEnums.TrinaryEnum.parse_bool(success)}
         self.raw = ''
+        #print('self.data from observation is:',self.data)
 
     def get_dict(self):
         return self.data
@@ -203,7 +203,6 @@ class Observation:
                         os_patches: list = None,
                         architecture: str = None,
                         local_time: datetime = None,
-                        position: tuple = None,
                         **kwargs):
         if hostid is None:
             hostid = str(len(self.data))
@@ -269,15 +268,11 @@ class Observation:
         if local_time is not None:
             sys_info["Local Time"] = local_time
 
-        if position is not None:
-            sys_info['position'] = position
-
     def add_interface_info(self,
                            hostid: str = None,
                            interface_name: str = None,
                            ip_address: Union[str, IPv4Address] = None,
                            subnet: Union[str, IPv4Network] = None,
-                           blocked_ips: list = None,
                            **kwargs):
         if hostid is None:
             hostid = str(len(self.data))
@@ -327,9 +322,6 @@ class Observation:
             if type(subnet) is str:
                 subnet = IPv4Network(subnet)
             new_interface["Subnet"] = subnet
-
-        if blocked_ips is not None:
-            new_interface["blocked_ips"] = blocked_ips
 
         self.data[hostid]["Interface"].append(new_interface)
 
@@ -564,40 +556,31 @@ class Observation:
             self.data[hostid] = {"Sessions": []}
         elif "Sessions" not in self.data[hostid]:
             self.data[hostid]["Sessions"] = []
-        if username is None:
-            username = kwargs.get("Username", None)
-
-        if session_id is None:
-            session_id = kwargs.get("ID", None)
-
-        if timeout is None:
-            timeout = kwargs.get("Timeout", None)
-
-        if pid is None:
-            pid = kwargs.get("PID", None)
-
-        if session_type is None:
-            session_type = kwargs.get("Type", None)
 
         new_session = {}
-        if session_id is not None:
-            potential_sessions = [s for s in self.data[hostid]["Sessions"] if 'ID' in s and s['ID'] == session_id]
-            if len(potential_sessions) > 0:
-                new_session = potential_sessions[0]
-
+        if username is None:
+            username = kwargs.get("Username", None)
         if username is not None:
             new_session["Username"] = username
 
+        if session_id is None:
+            session_id = kwargs.get("ID", None)
         if session_id is not None:
             new_session["ID"] = session_id
 
+        if timeout is None:
+            timeout = kwargs.get("Timeout", None)
         if timeout is not None:
             new_session["Timeout"] = timeout
 
+        if pid is None:
+            pid = kwargs.get("PID", None)
         if pid is not None:
             new_session["PID"] = pid
             self.add_process(hostid=hostid, pid=pid, username=username)
 
+        if session_type is None:
+            session_type = kwargs.get("Type", None)
         if session_type is not None:
             if type(session_type) is str:
                 session_type = CyEnums.SessionType.parse_string(session_type)
@@ -652,7 +635,6 @@ class Observation:
                     self.add_interface_info(hostid=key, **interface)
             if "System info" in info:
                 self.add_system_info(hostid=key, **info["System info"])
-        return self
 
     def add_raw_obs(self, raw_obs):
         self.raw = raw_obs
@@ -706,16 +688,12 @@ class Observation:
             list of session info
         """
         sessions = []
-
         for k, v in self.data.items():
             if not isinstance(v, dict):
-
                 continue
             if "Sessions" not in v:
-                self._log_warning(f"Observation is missing 'Sessions': {v}")
                 continue
             for session_info in v["Sessions"]:
-
                 sessions.append(session_info)
         return sessions
 
@@ -733,7 +711,6 @@ class Observation:
             list of session info
         """
         sessions = []
-
         for session_info in self.get_sessions():
             if "Agent" not in session_info:
                 continue
@@ -769,17 +746,17 @@ class Observation:
         if ips is None:
             ip_set = set()
         else:
-            ip_set = set(ips)
+            ip_set = set([str(ip) for ip in ips])
             if include_localhost:
-                ip_set.add(IPv4Address('127.0.0.1'))
-            ip_set.add(IPv4Address('0.0.0.0'))
+                ip_set.add('127.0.0.1')
+            ip_set.add('0.0.0.0')
 
         if cidrs is None:
             cidr_set = set()
         else:
-            cidr_set = set(cidrs)
+            cidr_set = set([str(c) for c in cidrs])
             if include_localhost:
-                cidr_set.add(IPv4Network('127.0.0.0/8'))
+                cidr_set.add('127.0.0.0/8')
 
         filter_hosts = []
         for obs_k, obs_v in self.data.items():
@@ -800,7 +777,7 @@ class Observation:
                     for proc_k in ["local_address", "remote_address"]:
                         if proc_k in conn:
                             addr_observed = True
-                            if conn[proc_k] in ip_set:
+                            if str(conn[proc_k]) in ip_set:
                                 valid_addr_observed = True
                             elif i not in filter_procs:
                                 filter_procs.append(i)
@@ -817,13 +794,13 @@ class Observation:
             for i, interface in enumerate(obs_v.get("Interface", [])):
                 if "IP Address" in interface:
                     addr_observed = True
-                    if interface["IP Address"] in ip_set:
+                    if str(interface["IP Address"]) in ip_set:
                         valid_addr_observed = True
                     else:
                         filter_interfaces.append(i)
                 if "Subnet" in interface:
                     addr_observed = True
-                    if interface["Subnet"] in cidr_set:
+                    if str(interface["Subnet"]) in cidr_set:
                         valid_addr_observed = True
                     elif i not in filter_interfaces:
                         filter_interfaces.append(i)

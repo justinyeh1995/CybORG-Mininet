@@ -1,6 +1,6 @@
 from CybORG.Agents.SimpleAgents.BaseAgent import BaseAgent
 from CybORG.Shared import Results
-from CybORG.Simulator.Actions import Monitor, Remove, Restore
+from CybORG.Shared.Actions import Monitor, Remove, Restore
 
 
 class BlueReactRemoveAgent(BaseAgent):

@@ -6,20 +6,20 @@ from CybORG.Shared.Enums import TrinaryEnum
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 
 class TrueTableWrapper(BaseWrapper):
-    def __init__(self,env=None, observer_mode=True):
-        super().__init__(env)
+    def __init__(self,env=None,agent=None, observer_mode=True):
+        super().__init__(env,agent)
         self.scanned_ips = set()
         self.step_counter = -1
         self.observer_mode = observer_mode
 
-    def reset(self, agent=None, seed=None):
+    def reset(self, agent=None):        
         self.scanned_ips = set()  
         self.step_counter = -1
         result = self.env.reset(agent)        
-        result.observation = self.observation_change(agent, result.observation)        
+        result.observation = self.observation_change(result.observation)        
         return result      
 
-    def observation_change(self,agent,observation):
+    def observation_change(self,observation):
         self.step_counter +=1
         self._update_scanned()
 
@@ -43,6 +43,7 @@ class TrueTableWrapper(BaseWrapper):
     def _create_true_table(self):
         true_obs = deepcopy(self.env.get_agent_state('True'))
         success = true_obs.pop('success')
+
         table = PrettyTable([
             'Subnet',
             'IP Address',
@@ -53,8 +54,6 @@ class TrueTableWrapper(BaseWrapper):
             ])
 
         for hostid in true_obs:
-            if '_router' in hostid:
-                continue
             host = true_obs[hostid]
             for interface in host['Interface']:
                 ip = interface['IP Address']
@@ -115,4 +114,4 @@ def true_obs_to_table(true_obs,env):
     print('Scanned column likely inaccurate.')
     wrapper = TrueTableWrapper(env,observer_mode=False)
     wrapper.step_counter = 1
-    return wrapper.observation_change(agent=None, observation=true_obs)
+    return wrapper.observation_change(true_obs)

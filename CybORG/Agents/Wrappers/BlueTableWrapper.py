@@ -7,28 +7,30 @@ from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 
 class BlueTableWrapper(BaseWrapper):
-    def __init__(self,env=None, output_mode='table'):
-        super().__init__(env)
-        self.env = TrueTableWrapper(env=env)
+    def __init__(self,env=None,agent=None,output_mode='table'):
+        super().__init__(env,agent)
+        self.env = TrueTableWrapper(env=env, agent=agent)
+        self.agent = agent
 
         self.baseline = None
         self.output_mode = output_mode
         self.blue_info = {}
 
-    def reset(self, agent='Blue', seed=None):        
+    def reset(self, agent='Blue'):        
         result = self.env.reset(agent)
         obs = result.observation
         if agent == 'Blue':
             self._process_initial_obs(obs)
-            obs = self.observation_change(agent, obs, baseline=True)
+            obs = self.observation_change(obs,baseline=True)
         result.observation = obs
         return result
 
     def step(self, agent=None, action=None) -> Results:
         result = self.env.step(agent, action)
         obs = result.observation
+        print("action is:",action,"obs is:",obs)
         if agent == 'Blue':
-            obs = self.observation_change(agent, obs)
+            obs = self.observation_change(obs)
         result.observation = obs
         result.action_space = self.action_space_change(result.action_space)
         return result
@@ -39,7 +41,7 @@ class BlueTableWrapper(BaseWrapper):
         elif output_mode == 'true_table':
             return self.env.get_table()
 
-    def observation_change(self,agent,observation,baseline=False):
+    def observation_change(self,observation,baseline=False):
         obs = observation if type(observation) == dict else observation.data
         obs = deepcopy(observation)
         success = obs['success']
@@ -155,8 +157,9 @@ class BlueTableWrapper(BaseWrapper):
 
     def _interpret_connections(self,activity:list):                
         num_connections = len(activity)
+
         ports = set([item['Connections'][0]['local_port'] \
-            for item in activity if 'Connections' in item and 'local_port' in item['Connections'][0]])
+            for item in activity if 'Connections' in item])
         port_focus = len(ports)
 
         remote_ports = set([item['Connections'][0].get('remote_port') \
@@ -170,6 +173,8 @@ class BlueTableWrapper(BaseWrapper):
             anomaly = 'Exploit'
         elif num_connections >= 3 and port_focus == 1:
             anomaly = 'Exploit'
+        elif 'Service Name' in activity[0]:
+            anomaly = 'None'
         else:
             anomaly = 'Scan'
 
@@ -265,35 +270,3 @@ class BlueTableWrapper(BaseWrapper):
 
     def get_rewards(self):
         return self.get_attr('get_rewards')()
-
-def create_table_from_vector(vector):
-    table = PrettyTable()
-    table.field_names = ['Host name', 'Activity', 'Compromised']
-    for i in range(0, len(vector), 4):
-        host = 'Host' + str(i/4)
-
-        activity_vector = vector[i, i+2]
-        if activity_vector == [0,0]:
-            activity = 'No Activity'
-        elif activity_vector == [1,0]:
-            activity = 'Scan'
-        elif activity_vector == [1,1]:
-            activity = 'Exploit'
-        else:
-            raise ValueError(f'Input Vector has no valid activity component from \
-                    index {i} to {i+1} inclusive.')
-
-        compromised_vector = vector[i+2, i+4]
-        if compromised_vector == [0,0]:
-            compromised = 'Not Compromised'
-        elif compromised == [1,0]:
-            compromised = 'Unknown Compromised Level'
-        elif compromised == [0,1]:
-            compromised = 'User Access'
-        elif compromised == [1,1]:
-            compromised = 'Privileged Access'
-        else:
-            raise ValueError(f'Input Vector has no valid compromised component from \
-                    index {i+2} to {i+3} inclusive.')
-
-        table.add_row([host, activity, compromised])

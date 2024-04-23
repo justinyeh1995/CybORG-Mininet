@@ -9,10 +9,10 @@ HostReward = namedtuple('HostReward','confidentiality availability')
 
 class ConfidentialityRewardCalculator(RewardCalculator):
     # Calculate punishment for defending agent based on compromise of hosts/data
-    def __init__(self, team_name: str, scenario: Scenario, adversary):
+    def __init__(self, agent_name: str, scenario: Scenario):
         self.scenario = scenario
-        self.adversary = adversary
-        super(ConfidentialityRewardCalculator, self).__init__(team_name)
+        self.adversary = scenario.get_agent_info(agent_name).adversary
+        super(ConfidentialityRewardCalculator, self).__init__(agent_name)
         self.infiltrate_rc = PwnRewardCalculator(self.adversary, scenario)
         self.compromised_hosts = {}
 
@@ -32,9 +32,9 @@ class ConfidentialityRewardCalculator(RewardCalculator):
 
 class AvailabilityRewardCalculator(RewardCalculator):
     # Calculate punishment for defending agent based on reduction in availability
-    def __init__(self, team_name: str, scenario: Scenario, adversary):
-        super(AvailabilityRewardCalculator, self).__init__(team_name)
-        self.adversary = adversary
+    def __init__(self, agent_name: str, scenario: Scenario):
+        super(AvailabilityRewardCalculator, self).__init__(agent_name)
+        self.adversary = scenario.get_agent_info(agent_name).adversary
         self.disrupt_rc = DistruptRewardCalculator(self.adversary, scenario)
         self.impacted_hosts = {}
 
@@ -53,10 +53,10 @@ class AvailabilityRewardCalculator(RewardCalculator):
 
 class HybridAvailabilityConfidentialityRewardCalculator(RewardCalculator):
     # Hybrid of availability and confidentiality reward calculator
-    def __init__(self, team_name: str, scenario: Scenario, adversary):
-        super(HybridAvailabilityConfidentialityRewardCalculator, self).__init__(team_name)
-        self.availability_calculator = AvailabilityRewardCalculator(team_name, scenario, adversary)
-        self.confidentiality_calculator = ConfidentialityRewardCalculator(team_name, scenario, adversary)
+    def __init__(self, agent_name: str, scenario: Scenario):
+        super(HybridAvailabilityConfidentialityRewardCalculator, self).__init__(agent_name)
+        self.availability_calculator = AvailabilityRewardCalculator(agent_name, scenario)
+        self.confidentiality_calculator = ConfidentialityRewardCalculator(agent_name, scenario)
 
     def reset(self):
         self.availability_calculator.reset()

@@ -6,7 +6,7 @@ from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
 
 class RewardShape(BaseWrapper):
     def __init__(self, env=None, agent=None):
-        super().__init__(env)
+        super().__init__(env, agent)
         self.action_buffer = deque(maxlen=2)
         self.observation_buffer = deque(maxlen=2)
 
