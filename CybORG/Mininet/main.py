@@ -193,7 +193,6 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                     game_state_manager.store_state(state_snapshot, i, j)
                     print(f"===Step {j} is over===")
                     
-                # game manager reset
                 agent.end_episode()
                 total_reward.append(sum(r))
                 actions_list.append(a)

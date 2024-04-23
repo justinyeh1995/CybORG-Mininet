@@ -8,6 +8,9 @@ import traceback
 from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
 import configparser # for configuration parsing
+import inspect
+
+from CybORG import CybORG, CYBORG_VERSION
 
 from CybORG.Shared import Observation
 
@@ -18,62 +21,32 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     RedActionTranslator, BlueActionTranslator, \
                                     ResultsBundler, \
                                     RewardCalculator
-from CybORG.Mininet.utils.util import parse_action, parse_mininet_ip, \
-                            set_name_map, get_routers_info, get_lans_info, get_links_info, \
-                            translate_discover_remote_systems, \
-                            translate_discover_network_services, \
-                            translate_exploit_network_services, \
-                            translate_restore, translate_remove 
-                       
 
 class MininetAdapter:
     def __init__(self):
-        self.topology_manager = YamlTopologyManager()
-        self.command_interface = MininetCommandInterface()
-        self.mapper = CybORGMininetMapper()
-        self.blue_action_translator = BlueActionTranslator()
-        self.red_action_translator = RedActionTranslator()
-        self.results_bundler = ResultsBundler()
+        self.path = str(inspect.getfile(CybORG))[:-7]
         
         config = configparser.ConfigParser ()
         config.read ('config.ini')
-        self.reward_calculator = RewardCalculator(config["SCENARIO"]["FILE_PATH"])
+
+        self.topology_manager = YamlTopologyManager()
+        self.command_interface = MininetCommandInterface()
+        self.mapper = CybORGMininetMapper()
+        self.blue_action_translator = BlueActionTranslator(path=self.path, 
+                                                           config=config)
+        self.red_action_translator = RedActionTranslator(path=self.path, 
+                                                           config=config)
+        self.results_bundler = ResultsBundler()
+        
+        self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
     
     def set_environment(self, cyborg):
         # Setup based on cyborg environment...
         self.cyborg = cyborg
-
-    
-    def _parse_last_action(self, agent_type):
-        action_str = self.cyborg.get_last_action(agent_type).__str__()
-
-        print(action_str)
-        
-        target_host, action_type, isSuccess = parse_action(self.cyborg, 
-                                                action_str, 
-                                                agent_type, 
-                                                self.mapper.cyborg_ip_to_host_map)
-        
-        return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSuccess 
-
-    
-    def parse_action(self, agent_type):
-        action_str = self.cyborg.get_last_action(agent_type).__str__()
-
-        print("--> in MininetAdapter parse_action")
-        print(action_str)
-
-        # @To-Do this parse_action from util probably won't work 
-        target_host, action_type, isSuccess = parse_action(self.cyborg, 
-                                                action_str, 
-                                                agent_type, 
-                                                self.mapper.cyborg_ip_to_host_map)
-        
-        return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type, isSuccess 
+ 
 
     def parse_action_string(self, action_string):
-
         print("--> in MininetAdapter parse_action_string")
         print(action_string)
         action_str_split = action_string.split(" ")
@@ -84,6 +57,7 @@ class MininetAdapter:
         target_host = self.mapper.cyborg_ip_to_host_map.get(target_host, target_host)
                 
         return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type 
+
     
     def reset(self):
         print("===Resetting===")
@@ -103,50 +77,16 @@ class MininetAdapter:
 
         self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
 
+        ##########################
+        # Test if DNS is working #
+        ##########################
+        
         # expect_text = self.command_interface.send_command('lan1h1 echo "nameserver 8.8.8.8" >> /etc/resolv.conf') # @To-Do hard coded
         # print(expect_text)
         # expect_text = self.command_interface.send_command('lan1h1 cat /etc/resolv.conf')
         # print(expect_text)
         expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
         print(expect_text)
-        # pprint(repr(self.mapper))
-
-    
-    def perform_emulation(self) -> Dict:
-        # Example of performing emulation
-        # Translate CybORG action to Mininet command and send it
-        # @To-Do
-        obs = {}
-        for type in ['Blue', 'Red']:
-            target, cyborg_action, isSuccess = self._parse_last_action(type)
-            
-            if type == "Blue":
-                mininet_command = self.blue_action_translator.translate(cyborg_action, 
-                                                                    target, 
-                                                                    self.mapper.cyborg_to_mininet_host_map,
-                                                                    self.mapper.mininet_host_to_ip_map)  
-            else:
-                mininet_command = self.red_action_translator.translate(cyborg_action, 
-                                                                    target,
-                                                                    self.mapper.cyborg_to_mininet_host_map,
-                                                                    self.mapper.mininet_host_to_ip_map)
-            print("===Success===")
-            print(isSuccess)
-            mininet_cli_text = self.command_interface.send_command(mininet_command) if isSuccess else ""
-            
-            print("===Mininet Cli Text====")
-            print(mininet_cli_text)
-            
-            mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
-            
-            print("===Obs===")
-            # pprint(mininet_obs)
-            pprint(mininet_obs.data)
-            print("*********")
-            
-            obs[type] = mininet_obs
-        
-        return obs
 
     
     def step(self, action_string: str, agent_type: str) -> Observation:
