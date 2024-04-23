@@ -27,7 +27,8 @@ class SSHConnectionServerAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"python3 SSHConnectionServer.py -n {self.connection_key} -m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} > /dev/null 2>&1 &"
+            command=f"python3 /usr/local/scripts/python/SSHConnectionServer.py -n {self.connection_key} " +
+                    f"-m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d"
         )
 
     def execute(self, state: Union[State, None]) -> Observation:
