@@ -2,7 +2,7 @@ import yaml
 import traceback 
 from typing import Dict, List
 
-from CybORG.Mininet.utils.util import get_routers_info, get_lans_info, get_links_info, get_nats_info, \
+from CybORG.Mininet.mininet_adapter.utils.util import get_routers_info, get_lans_info, get_links_info, get_nats_info, \
                                                 generate_routing_rules
 
 class YamlTopologyManager:

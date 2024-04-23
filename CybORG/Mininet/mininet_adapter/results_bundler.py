@@ -26,7 +26,7 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     for ip_addr in cyborg_ip_addresses:
         hostid = mapper.cyborg_ip_to_host_map[str(ip_addr)]
         obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
-    return obs#.data
+    return obs
     
 def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
@@ -56,7 +56,7 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
         hostid = mapper.cyborg_ip_to_host_map[str(ip)]
         obs.add_process(hostid=hostid, local_port=proc["port"], local_address=ip)
         
-    return obs#.data
+    return obs
 
 
 def parse_ssh_action(ssh_action_output, mapper) -> Observation:
@@ -134,7 +134,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
 
     obs.data.update(data)
 
-    return obs#.data
+    return obs
 
 def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     return Observation(False)#.data
@@ -150,11 +150,11 @@ def parse_decoy_action(decoy_action_output) -> Observation:
     
     print(f"Match is: {match} \n")
     
-    return Observation(success_status)#.data
+    return Observation(success_status)
     
 
 class ResultsBundler:
-    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation: # @ To-Do Should return Observation object instead
+    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation:
         if not isSuccess:
             return Observation(False)#.data
         
@@ -176,5 +176,5 @@ class ResultsBundler:
         elif cyborg_action == "Restore":
             return Observation(True)
             
-        return Observation(False)#.data
+        return Observation(False)
         

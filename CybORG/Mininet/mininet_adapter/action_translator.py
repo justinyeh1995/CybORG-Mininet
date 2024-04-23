@@ -1,6 +1,5 @@
 import traceback 
-import inspect
-from CybORG import CybORG, CYBORG_VERSION
+
 from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
 from CybORG.Emulator.Actions.SshAction import SshAction
@@ -9,52 +8,63 @@ from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
 from pprint import pprint
 
 class ActionTranslator:
-    def __init__(self):
-        self.path = str(inspect.getfile(CybORG))[:-7]
+    def __init__(self, path: str, config):
+        self.path = path
+        self.python_exe = config["PYTHON"]["FILE_PATH"]
+        self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
 
     def translate(self, action):
         raise NotImplementedError
 
 
 class RedActionTranslator(ActionTranslator):
-    def __init__(self):
-        super().__init__()  # Correctly calls the __init__ method of ActionTranslator
-        
+    def __init__(self, path: str, config):
+        super().__init__(path, config)  # Correctly calls the __init__ method of ActionTranslator
+        self.action_map = {
+            "DiscoverRemoteSystems": self.discover_remote_systems,
+            "DiscoverNetworkServices": self.discover_network_services,
+            "ExploitRemoteService": self.exploit_remote_service,
+            "PrivilegeEscalate": self.privilege_escalate
+        }
+
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
-        host = cyborg_to_mininet_host_map['User0'] # red host is always user0
-        timeout = 60
-        # @To-Do code smells
-        if action_type == "DiscoverRemoteSystems":
-            print("Red Discover Remote Systems")
-            action = "nmap -sn" # "nmap -oX - -sn"
-            target = target_host
-        elif action_type == "DiscoverNetworkServices":
-            print("Red Discover Network Services")
-            action = "nmap -sV" # "nmap -oX - -sV"
-            target = target_host
-        elif action_type == "ExploitRemoteService":
-            print("Red Exploit Network Services")
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 {self.path}/Mininet/utils/ssh_action.py --ip" # @To-Do needs to be configurable in the future
-            target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        elif action_type == "PrivilegeEscalate":
-            print("Red Privilege Escalate")
-            # @To-Do Not Implemented as of now
-            action = "sleep 1" # dummy
-            target = "" # dummy
+        action_method = self.action_map.get(action_type)
+        if action_method:
+            return action_method(target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map)
         else:
             print("Not Implemented Action...\nSleep for a sec")
-            action = "sleep 1" # dummy
-            target = "" # dummy
-            
-        cmd = f'{host} timeout {timeout} {action} {target}'
-        
-        return cmd
+            return "sleep 1"
+
+    def discover_remote_systems(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Red Discover Remote Systems")
+        host = cyborg_to_mininet_host_map['User0']
+        action = "nmap -sn"
+        target = target_host
+        return f'{host} timeout 60 {action} {target}'
+
+    def discover_network_services(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Red Discover Network Services")
+        host = cyborg_to_mininet_host_map['User0']
+        action = "nmap -sV"
+        target = target_host
+        return f'{host} timeout 60 {action} {target}'
+
+    def exploit_remote_service(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Red Exploit Network Services")
+        host = cyborg_to_mininet_host_map['User0']
+        action = f"{self.python_exe} {self.action_folder_path}/ssh_action.py --ip"
+        target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
+        return f'{host} timeout 60 {action} {target}'
+
+    def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Red Privilege Escalate")
+        # @To-Do Not Implemented as of now
+        return "sleep 1"
 
 
 class BlueActionTranslator(ActionTranslator):
-    def __init__(self):
-        super().__init__()  # Correctly calls the __init__ method of ActionTranslator
-        self.decoy_bin_path = self.path + f'/Emulator/Velociraptor/Executables/Decoy'
+    def __init__(self, path: str, config):
+        super().__init__(path, config)  # Correctly calls the __init__ method of ActionTranslator
         self.decoy_service_name_to_port = {
             'DecoyApache': 80, 
             'DecoySSHD': 22, 
@@ -64,22 +74,42 @@ class BlueActionTranslator(ActionTranslator):
             'DecoyHarakaSMPT': 25
         }
         
+        self.action_map = {
+            "Remove": self.remove,
+            "Restore": self.restore,
+            "Monitor": self.monitor,
+            "Decoy": self.deploy_decoy
+        }
+
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
-        host = cyborg_to_mininet_host_map['Defender'] # blue host is always defender
-        timeout = 360
-        # @To-Do code smells
-        # blue host is undecided at the moment
-        cmd = 'lan1h1 ping -c 1 lan2h2'
-        if action_type == "Remove":
-            print("Blue Remove")
-        elif action_type == "Restore":
-            print("Blue Restore")
-        elif action_type == "Monitor":
-            print("Blue Monitor")
-        elif action_type.startswith("Decoy"):
-            print("Blue Decoy")
-            action = f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 {self.path}/Mininet/utils/deploy_decoy_action.py --ip" # @To-Do needs to be configurable in the future
-            target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-            port = self.decoy_service_name_to_port.get(action_type, 80)
-            cmd = f"{host} {action} {target} --port {port}"
-        return cmd
+        if action_type.startswith("Decoy"):
+            action_type = "Decoy"
+        action_method = self.action_map.get(action_type) # @To-Do slick logic here, needs to be better
+        if action_method:
+            return action_method(action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map)
+        else:
+            print("Not Implemented Action...\nSleep for a sec")
+            return "sleep 1"
+
+    def remove(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Blue Remove")
+        # @To-Do Not Implemented as of now
+        return "sleep 1"
+
+    def restore(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Blue Restore")
+        # @To-Do Not Implemented as of now
+        return "sleep 1"
+
+    def monitor(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Blue Monitor")
+        # @To-Do Not Implemented as of now
+        return "sleep 1"
+
+    def deploy_decoy(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        print("Blue Decoy")
+        host = cyborg_to_mininet_host_map['Defender']
+        action = f"{self.python_exe} {self.action_folder_path}/deploy_decoy_action.py --ip"
+        target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
+        port = self.decoy_service_name_to_port.get(action_type, 80)
+        return f"{host} {action} {target} --port {port}"

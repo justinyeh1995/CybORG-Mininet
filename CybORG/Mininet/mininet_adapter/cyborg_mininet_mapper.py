@@ -4,7 +4,7 @@ import json
 import re
 import traceback 
 from typing import List, Dict
-from CybORG.Mininet.utils.util import set_name_map, parse_mininet_ip, \
+from CybORG.Mininet.mininet_adapter.utils.util import set_name_map, parse_mininet_ip, \
                             build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map
 
 class CybORGMininetMapper:
