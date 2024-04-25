@@ -6,8 +6,8 @@ def parseCmdLineArgs ():
     parser = argparse.ArgumentParser ()
 
     # add optional arguments
-    parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
-    parser.add_argument ("-host", "--hostname", default="", help="Hostname")
+    # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
+    parser.add_argument ("-host", "--hostname", default="cpswtjustin", help="Hostname, use hostname to figure out hostname")
     parser.add_argument ("-remote", "--remote", default="0.0.0.0", help="Remote IP Address")
 
     # parse the args
@@ -19,15 +19,15 @@ if __name__ == "__main__":
   
     parsed_args = parseCmdLineArgs ()
     
-    ip = parsed_args.ip
+    # ip = parsed_args.ip
     hostname = parsed_args.hostname
     remote_ip = parsed_args.remote
     
-    print(f"At IP Address: {ip}")
+    # print(f"At IP Address: {ip}")
     print(f"Attacker Hostname: {hostname}")
     print(f"Remote IP Address: {remote_ip}")
 
-    credentials_file = "prog_client.yaml"
+    credentials_file = "/etc/velociraptor/prog_client.yaml"
     
     ssh_connection_server_action = SSHConnectionServerAction(
         credentials_file=credentials_file,
