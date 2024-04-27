@@ -1,3 +1,5 @@
+import argparse
+
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionServerAction import SSHConnectionServerAction
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionClientAction import SSHConnectionClientAction
 
