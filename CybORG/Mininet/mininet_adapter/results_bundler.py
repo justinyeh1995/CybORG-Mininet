@@ -114,7 +114,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
             ],
             'Interface': [{'IP Address': IPv4Address(alt_name)}],
             'Sessions': [{'Username':'root', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
-            'System info': {'Hostname': host_name, 'OSType': 'OperatingSystemType.WINDOWS'}
+            'System info': {'Hostname': host_name, 'OSType': 'LINUX'}
         }
             
         data[attacker_node]={
