@@ -27,6 +27,10 @@ from mininet.util import irange, natural, naturalSeq
 
 # our utility methods
 import custom_utils as cu
+
+# from ipaddress import IPv4Address, IPv4Network
+import ipaddress
+
 ##########################################
 # The LAN class that keeps details of our LAN
 ##########################################
@@ -46,6 +50,7 @@ class CustomLAN ():
     self.hosts = []  # this will be a list of all created hosts
     if 'nat' in lan_spec.keys ():  # check if "nat" is a dictionary key in this LAN or not
       self.nat_node = lan_spec['nat']
+      self.nat_ip = lan_spec['nat_ip']
     else:
       self.nat_node = None
 
@@ -60,15 +65,6 @@ class CustomLAN ():
     # retrieve the diff parts of the CIDR-erized IP address
     ip_prefix, prefix_len, last_octet =cu.IP_components (self.subnet)
     
-    # technically, the 4th octet should be zero and we could have just started with 1
-    # that we will assign to the router rather than such an addition but we still
-    # do it this way.
-    #
-    # Note, this logic will totally fall apart if we have multiple routers connected
-    # to the same LAN. Is this even valid? Maybe, for redundancy purposes.
-    next_num = int (last_octet) + 1  # should result in a 1 (deprecated)
-    next_num = int(self.router_ip.split(".")[-1]) + 1 # @To-Do: Tightly-coupled with generate_routing_rules at utils @@Bad
-    
     # now construct a switch
     info ("LAN::build_lan - add switch for lan: " + self.name + "\n")
     s = self.topo.addSwitch (self.name + "s")
@@ -80,35 +76,15 @@ class CustomLAN ():
                        s,
                        intfName1=self.router + "-eth" + str (self.router_intf_num),
                        params1={"ip": self.router_ip + prefix_len})
-    
-    # check if there is a NAT node in this LAN and handle it so it always gets
-    # the second address in this LAN
-    if self.nat_node:
-      next_num += 1 # @To-Do: Tightly-coupled with generate_routing_rules at utils @@Bad
-      # create the NAT node # @To-do this line set the wrong default route to router 
-      info ("NAT " + self.nat_node + " with IP: " + ip_prefix + str (next_num) + " and default route = " + "via " + self.router_ip + "\n")
-      h = self.topo.addHost (self.nat_node,  # name
-                             cls=NAT,  # of type NAT
-                             subnet=self.subnet,  # subnet to which this nat node belongs
-                             ip=ip_prefix + str (next_num) + prefix_len, # IP Address
-                             inNamespace=False)
-
-      # save this NAT host
-      self.hosts.append (h)
-
-      # add link from this NAT to switch
-      info ("Connect this NAT to its switch\n")
-      self.topo.addLink (h, s)
       
     info ("LAN::build_lan - add all the hosts and connect to switch for lan: " + self.name + "\n")
-    
-    for i in range (self.num_hosts):  # create as many hosts as the number we specified
-      next_num += 1  # used in IP address assignment
-      
-      # create the host # @To-do this line set the wrong default route to router 
-      info ("Host " + self.name+"h"+str(i+1) + " with IP: " + ip_prefix + str (next_num) + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
-      h = self.topo.addHost (name=self.name+"h"+str(i+1),
-                             ip=ip_prefix + str (next_num) + prefix_len,
+    for i in range (self.num_hosts):  # create as many hosts as the number we specified      
+      host_ip = ipaddress.ip_address(self.hosts_info["h" + str(i+1)])
+      host_name = self.name + "h" + str(i+1)
+
+      info ("Host " + host_name + " with IP: " + str(host_ip) + prefix_len + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
+      h = self.topo.addHost (name=host_name,
+                             ip=str(host_ip) + prefix_len,
                              defaultRoute = " via " + self.router_ip) 
         
       # save this host (in case we need it)
@@ -118,3 +94,13 @@ class CustomLAN ():
       info ("Connect this host to its switch\n")
       self.topo.addLink (h, s)
 
+    # Assign IP address to the NAT node, if applicable
+    if self.nat_node:
+        info ("NAT " + self.nat_node + " with IP: " + str(self.nat_ip) + prefix_len + " and default route = " + "via " + self.router_ip + "\n")
+        nat_host = self.topo.addHost(self.nat_node,
+                                    cls=NAT,
+                                    subnet=self.subnet,
+                                    ip=str(self.nat_ip) + prefix_len,
+                                    inNamespace=False)
+        self.hosts.append(nat_host)
+        self.topo.addLink(nat_host, s)
