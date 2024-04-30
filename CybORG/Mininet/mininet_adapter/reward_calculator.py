@@ -1,4 +1,6 @@
 import yaml
+import inspect
+from CybORG import CybORG, CYBORG_VERSION
 
 class RewardCalculator():
     # this reward calculator provides a reward to both red and blue due to changes in the number of privileged sessions
@@ -53,9 +55,32 @@ class RewardCalculator():
 
 
 if __name__=='__main__':
-    reward_cal=RewardCalculator('/home/lab_linux/harsh/CAGE_RL/CybORG_wrapper/CybORG/CybORG/Shared/Scenarios/Scenario2.yaml')
-    obs= {"success":"True/False/Unknown", 'Op_Server0':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}}, 'User1':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}},'Enterprise1': {'Interface': [{'IP Address': '10.0.120.158'}]}}
-
+    path = str(inspect.getfile(CybORG))
+    reward_cal=RewardCalculator(path[:-7] +'/Simulator/Scenarios/scenario_files/Scenario2_cyborg--.yaml')
+    # obs= {"success":"True/False/Unknown", 'Op_Server0':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}}, 'User1':{'Sessions':[{'Username':'root', 'ID': 0,'Timeout':0,'PID':2323}],'System info': {'OSType':'LINUX'}},'Enterprise1': {'Interface': [{'IP Address': '10.0.120.158'}]}}
+    obs = {'10.0.67.119': {'Interface': [{'IP Address': '10.0.67.119'}],
+                 'Processes': [{'Connections': [{'local_address': '10.0.67.119',
+                                                 'local_port': '22',
+                                                 'remote_address': '10.0.67.126',
+                                                 'remote_port': 4444}],
+                                'Process Type': 'ProcessType.REVERSE_SESSION'},
+                               {'Connections': [{'Status': 'ProcessState.OPEN',
+                                                 'local_address': '10.0.67.119',
+                                                 'local_port': '52056'}],
+                                'Process Type': 'ProcessType.XXX'}],
+                 'Sessions': [{'Agent': 'Red',
+                               'ID': 1,
+                               'PID': '652249',
+                               'Type': 'SessionType.RED_REVERSE_SHELL',
+                               'Username': 'root'}],
+                 'System info': {'Hostname': 'User1',
+                                 'OSType': 'LINUX'}},
+ '10.0.67.126': {'Processes': [{'Connections': [{'local_address': '10.0.67.126',
+                                                 'local_port': 4444,
+                                                 'remote_address': '10.0.67.119',
+                                                 'remote_port': '22'}],
+                                'Process Type': 'ProcessType.REVERSE_SESSION'}]},
+ 'success': "True"}
     reward=reward_cal.reward(obs)
     print(reward)
     print('Done')
