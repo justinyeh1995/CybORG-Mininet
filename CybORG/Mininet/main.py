@@ -183,6 +183,7 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                         ###############
                         actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
                         observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
+                        rewards = {"Red": red_reward[-1] + blue_reward[-1], "Blue": red_reward[0] + blue_reward[0]}
                     
                     elif environment == "sim":
                         # CybORG takes step
@@ -194,13 +195,14 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                         ###############
                         actions = {"Red":str(cyborg.get_last_action('Red')), "Blue": str(cyborg.get_last_action('Blue'))}
                         observations = {"Red": cyborg.get_observation('Red'), "Blue": cyborg.get_observation('Blue')}
+                        rewards = {"Red": cyborg.get_rewards()['Red'], "Blue": cyborg.get_rewards()('Blue')}
                         pprint(actions)
                         pprint(observations)
-                        
+                        pprint(rewards)
                     ##############################
                     # Create state for this step #
                     ##############################                    
-                    state_snapshot = game_state_manager.create_state_snapshot(actions, observations)
+                    state_snapshot = game_state_manager.create_state_snapshot(actions, observations, rewards)
                     game_state_manager.store_state(state_snapshot, i, j)
                     
                     print(f"===Round {j} is over===")
