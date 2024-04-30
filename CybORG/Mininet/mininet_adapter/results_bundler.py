@@ -20,7 +20,7 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     subnet = target
     mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', nmap_output)
     cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
-
+    
     obs = Observation()
     obs.set_success(True)
     for ip_addr in cyborg_ip_addresses:
