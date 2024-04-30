@@ -153,9 +153,7 @@ def generate_routing_rules(topology):
     routers_cidr: dict = { entry['router']: entry['subnet'] for entry in lans}
     routers_ip: dict = { entry['router']: entry['ip'] for entry in routers}
     routers_2_nat: dict = { entry['router']: entry.get('nat_ip', None) for entry in lans}
-    
-    print(routers_2_nat)
-    
+        
     number_of_routers: int = len(routers_ip)
 
     interface_table: dict = {}
