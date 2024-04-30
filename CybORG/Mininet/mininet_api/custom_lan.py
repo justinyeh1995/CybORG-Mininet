@@ -82,7 +82,7 @@ class CustomLAN ():
       host_ip = ipaddress.ip_address(self.hosts_info["h" + str(i+1)])
       host_name = self.name + "h" + str(i+1)
 
-      info ("Host " + host_name + " with IP: " + str(host_ip) + prefix_len + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
+      info ("Host " + host_name + " with IP: " + str(host_ip) + " and default route = " + "via " + self.router_ip + prefix_len + "\n")
       h = self.topo.addHost (name=host_name,
                              ip=str(host_ip) + prefix_len,
                              defaultRoute = " via " + self.router_ip) 
@@ -96,7 +96,7 @@ class CustomLAN ():
 
     # Assign IP address to the NAT node, if applicable
     if self.nat_node:
-        info ("NAT " + self.nat_node + " with IP: " + str(self.nat_ip) + prefix_len + " and default route = " + "via " + self.router_ip + "\n")
+        info ("NAT " + self.nat_node + " with IP: " + str(self.nat_ip) + " and default route = " + "via " + self.router_ip + "\n")
         nat_host = self.topo.addHost(self.nat_node,
                                     cls=NAT,
                                     subnet=self.subnet,
