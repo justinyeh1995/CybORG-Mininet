@@ -95,9 +95,11 @@ class NetworkVisualizer:
         host_map = state['host_map']
         obs = state['obs']
         # mininet_obs = state['mininet_obs']
-        reward = self._convert_reward_format(state['reward'])
-        accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
-
+        # reward = self._convert_reward_format(state['reward'])
+        # accumulate_reward = self._convert_reward_format(state['accumulate_reward'])
+        reward = state['reward']
+        accumulate_reward = state['accumulate_reward']
+        
         # 'link_diagram' is the NetworkX graph
         pos = nx.spring_layout(link_diagram, seed=self.seed)
         

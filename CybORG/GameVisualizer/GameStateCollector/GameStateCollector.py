@@ -30,6 +30,7 @@ class GameStateCollector:
         self.true_state = None
         self.true_table = None
         self.accumulated_rewards = collections.defaultdict(lambda: collections.defaultdict(float))
+        self.accumulated_rew = collections.defaultdict(float)
         self.game_states = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
         
         self.compromised_hosts = set(['User0'])
@@ -59,13 +60,16 @@ class GameStateCollector:
         for metric, value in reward.items():
             self.accumulated_rewards[agent_type][metric] += value
 
+    def update_rewards(self, agent_type, reward):
+        self.accumulated_rew[agent_type] += reward
+
     def _get_agent_rewards(self, agent_type):
         return {metric: value for metric, value in self.accumulated_rewards[agent_type].items()}
 
     def get_rewards(self):
         return {agent: dict(rewards) for agent, rewards in self.accumulated_rewards.items()}
 
-    def create_state_snapshot(self, actions:dict, observations:dict):
+    def create_state_snapshot(self, actions: dict, observations: dict, rewards: dict):
         ############
         ## fo viz ##
         ############
@@ -75,12 +79,12 @@ class GameStateCollector:
         for host_type in ['Blue', 'Red']:
             action = actions[host_type]
             observation = observations[host_type]
-            
-            state_snapshot[host_type] = self.generate_state_snapshot(action, observation, host_type)
+            reward = rewards[host_type]
+            state_snapshot[host_type] = self.generate_state_snapshot(action, observation, reward, host_type)
                 
         return state_snapshot   
 
-    def generate_state_snapshot(self, action, observation, host_type: str):
+    def generate_state_snapshot(self, action, observation, reward, host_type: str):
         target_host, action_type, isSuccess = self.parse_observation(action, observation, self.host_map, self.ip_map)
         true_obs = self._get_true_state() | {}
         
@@ -113,11 +117,12 @@ class GameStateCollector:
 
         compromised_hosts = self.compromised_hosts.copy()
 
-        reward = self._get_last_reward(host_type)
+        accu_reward = self.accumulated_rew[host_type]
 
-        self._update_rewards(host_type, reward)
+        # self.update_rewards(host_type, reward)
 
-        accu_reward = self._get_agent_rewards(host_type)
+        # accu_reward = self._get_agent_rewards(host_type)
+        
         # print(self.accumulated_rewards)
         
         action_snapshot = {
