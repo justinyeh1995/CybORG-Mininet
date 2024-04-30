@@ -1,12 +1,6 @@
-import subprocess
-import pexpect
-import yaml
-import collections
 from pprint import pprint
-import re
 import traceback 
 from typing import List, Dict
-from ipaddress import IPv4Address, IPv4Network
 import configparser # for configuration parsing
 import inspect
 
@@ -85,6 +79,7 @@ class MininetAdapter:
         # print(expect_text)
         # expect_text = self.command_interface.send_command('lan1h1 cat /etc/resolv.conf')
         # print(expect_text)
+        print("===Ping Test===")
         expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
         print(expect_text)
 
