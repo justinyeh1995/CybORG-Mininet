@@ -25,6 +25,8 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     obs.set_success(True)
     for ip_addr in cyborg_ip_addresses:
         hostid = mapper.cyborg_ip_to_host_map[str(ip_addr)]
+        if "router" in hostid:
+            continue 
         obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
     return obs
     
@@ -73,7 +75,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     if not success_status:
         return obs
         
-    pattern = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\r\nLocal Port: (\d+)\r\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\r\nRemote Port: (\d+)\r\r\nPID: (\d+)"
+    pattern = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\nLocal Port: (\d+)\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\nRemote Port: (\d+)\r\nPID: (\d+)"
     
     # Use re.findall() to extract the values
     matches = re.findall(pattern, ssh_action_output)
