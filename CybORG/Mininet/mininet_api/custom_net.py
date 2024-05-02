@@ -82,6 +82,9 @@ def main ():
   info ("Start SSH server on every host\n")
   topo.startSSHServer (net)
 
+  # start velociraptor server
+  topo.startVelociraptorServer (net)
+
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
 

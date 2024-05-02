@@ -40,6 +40,8 @@ from linux_router import LinuxRouter
 # Support for Yaml
 import yaml
 
+import re
+
 #################################################
 # I don't think there is any simple way to create individual topologies in their own
 # classes and then somehow combine them by picking, say, a switch from the
@@ -256,6 +258,16 @@ class CustomTopology (Topo):
         net[host].cmd(f'echo "{basic_config}" > {temp_config_file}')
         info(f"Start ssh server on {host} with custom config\n")
         net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
+
+  def startVelociraptorServer(self, net):
+    for lan in self.topo_dict['lans']:
+      for host_name, _ in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        info(f"Start velociraptor server on {host}\n")
+        output = net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend -v & echo $!')
+        print(output)
+        print(re.findall(r'\d+', output)[0])
+
 
   def configureHostsDNS(self, net, dns='8.8.8.8'):
     """
