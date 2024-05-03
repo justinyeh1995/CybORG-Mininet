@@ -11,6 +11,7 @@
 
 # Many of the packages that need to be imported. See
 # https://mininet.org/api/index.html
+import collections
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import Node
@@ -260,14 +261,16 @@ class CustomTopology (Topo):
         net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
 
   def startVelociraptorServer(self, net):
+    pids = collections.defaultdict(list)
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
         info(f"Start velociraptor server on {host}\n")
-        output = net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend -v & echo $!')
-        print(output)
-        print(re.findall(r'\d+', output)[0])
+        net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend -v &')
+        pid = net[host].cmd('echo $!')
+        pids[host].append(pid)
 
+    return pids
 
   def configureHostsDNS(self, net, dns='8.8.8.8'):
     """
@@ -298,6 +301,17 @@ class CustomTopology (Topo):
         net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
         # # Kill the SSH daemon process
         # net[host].cmd(f'sudo kill {pid}')
+
+  def stopVelociraptorServer(self, net, pids):
+    for lan in self.topo_dict['lans']:
+      for host_name, _ in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        info(f"Stopping velociraptor server on {host}\n")
+        for pid in pids[host]:
+          output = net[host].cmd(f"sudo kill -9 {pid}")
+          # Wait for the command to complete and retrieve the output
+          output = net[host].waitOutput()
+          info(f"Output of kill command on {host}: {output}\n")
 
   ##########################################
   # The overridden build method
