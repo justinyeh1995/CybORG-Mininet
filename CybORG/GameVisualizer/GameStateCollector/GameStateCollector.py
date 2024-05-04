@@ -117,9 +117,9 @@ class GameStateCollector:
 
         compromised_hosts = self.compromised_hosts.copy()
 
-        accu_reward = self.accumulated_rew[host_type]
+        self.update_rewards(host_type, reward)
 
-        # self.update_rewards(host_type, reward)
+        accu_reward = self.accumulated_rew[host_type]
 
         # accu_reward = self._get_agent_rewards(host_type)
         
