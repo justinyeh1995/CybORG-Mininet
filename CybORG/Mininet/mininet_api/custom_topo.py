@@ -40,8 +40,6 @@ from linux_router import LinuxRouter
 
 # Support for Yaml
 import yaml
-import os
-import re
 
 #################################################
 # I don't think there is any simple way to create individual topologies in their own
@@ -239,7 +237,8 @@ class CustomTopology (Topo):
         info (f"Set password for {username} on {host}\n")
         password_change_command = f'echo "{username}:1234" | sudo chpasswd'
         net[host].cmd(password_change_command)
-          
+
+
   def startSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
@@ -260,27 +259,23 @@ class CustomTopology (Topo):
         info(f"Start ssh server on {host} with custom config\n")
         net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
 
+
   def updateClientConfigFile(self, net):
-
+    '''rewrite server_urls'''
     lan3h1_ip = net['lan3h1'].IP()
-    info(f"IP address of lan3h1 is {lan3h1_ip}\n")
+    info(f"IP address of velociraptor server is {lan3h1_ip}\n")
     # Path to the client config file
-    config_folder = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions"
-    client_config_path = f"{config_folder}/client.config.yaml"
-    server_config_path = f"/etc/velociraptor/server.config.yaml"
-
-    net['lan3h1'].cmd(f'sudo -u velociraptor velociraptor --config {server_config_path} config client > {client_config_path}')
+    client_config_path = f"/etc/velociraptor/client.config.yaml"
     
     # Read, modify, and write the YAML configuration
     with open(client_config_path, 'r') as file:
         config = yaml.load(file)
     
     config['Client']['server_urls'] = [f"https://{lan3h1_ip}:8000/"]
-    print(config)
+
     with open(client_config_path, 'w') as file:
         yaml.dump(config, file, default_flow_style=False)
 
-    net['lan3h1'].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml config api_client --name prog --role administrator prog_client.yaml')
 
   def startVelociraptorServer(self, net):
     pids = collections.defaultdict(list)
@@ -301,11 +296,14 @@ class CustomTopology (Topo):
         if host == 'lan3h1':
           continue
         info(f"Start velociraptor client on {host}\n")
-        net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
+        # net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
+        net[host].cmd('velociraptor --config /etc/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
+
         # net[host].cmd('systemctl start velociraptor_server &')
         pid = net[host].cmd('echo $!')
         pids[host].append(pid)
     return pids
+
 
   def configureHostsDNS(self, net, dns='8.8.8.8'):
     """
@@ -318,6 +316,7 @@ class CustomTopology (Topo):
       info(f"DNS settings:\n{dns_config}\n")
       break
 
+
   def removeSpecificDNS(self, net, dns='8.8.8.8'):
     """
     Remove a specific DNS entry (nameserver 8.8.8.8) from /etc/resolv.conf for all hosts.
@@ -325,7 +324,8 @@ class CustomTopology (Topo):
     for host in net.hosts:
       # This command uses sed to search for the line containing 'nameserver 8.8.8.8' and delete it
       host.cmd(f"sed -i '/nameserver {dns}/d' /etc/resolv.conf")
-        
+
+
   def stopSSHServer(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
@@ -335,18 +335,19 @@ class CustomTopology (Topo):
         net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet_{host}' | awk '{{print $2}}' | xargs -r sudo kill")
         net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
 
+
   def stopVelociraptorServer(self, net, pids):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
         info(f"Stopping velociraptor server on {host}\n")
         # net[host].cmd('systemctl stop velociraptor_server &')
-
         for pid in pids[host]:
           output = net[host].cmd(f"sudo kill -9 {pid}")
           # Wait for the command to complete and retrieve the output
           output = net[host].waitOutput()
           info(f"Output of kill command on {host}: {output}\n")
+
 
   def stopVelociraptorClients(self, net, pids):
     for lan in self.topo_dict['lans']:
@@ -360,6 +361,7 @@ class CustomTopology (Topo):
           # Wait for the command to complete and retrieve the output
           output = net[host].waitOutput()
           info(f"Output of kill command on {host}: {output}\n")
+
 
   ##########################################
   # The overridden build method
