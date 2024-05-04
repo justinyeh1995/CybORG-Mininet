@@ -74,11 +74,20 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     
     if not success_status:
         return obs
-        
-    pattern = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\nLocal Port: (\d+)\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\nRemote Port: (\d+)\r\nPID: (\d+)"
+    
+    print(ssh_action_output)
+
+    pattern1 = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\nLocal Port: (\d+)\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\nRemote Port: (\d+)\r\nPID: (\d+)"
     
     # Use re.findall() to extract the values
-    matches = re.findall(pattern, ssh_action_output)
+    matches1 = re.findall(pattern1, ssh_action_output)
+
+    pattern2 = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\r\nLocal Port: (\d+)\r\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\r\nRemote Port: (\d+)\r\r\nPID: (\d+)"
+    
+    # Use re.findall() to extract the values
+    matches2 = re.findall(pattern2, ssh_action_output)
+
+    matches = matches1 if matches1 else matches2
 
     data = {}
     if matches:

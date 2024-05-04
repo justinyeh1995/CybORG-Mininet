@@ -40,7 +40,7 @@ from linux_router import LinuxRouter
 
 # Support for Yaml
 import yaml
-
+import os
 import re
 
 #################################################
@@ -260,16 +260,51 @@ class CustomTopology (Topo):
         info(f"Start ssh server on {host} with custom config\n")
         net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
 
+  def updateClientConfigFile(self, net):
+
+    lan3h1_ip = net['lan3h1'].IP()
+    info(f"IP address of lan3h1 is {lan3h1_ip}\n")
+    # Path to the client config file
+    config_folder = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions"
+    client_config_path = f"{config_folder}/client.config.yaml"
+    server_config_path = f"{config_folder}/server.config.yaml"
+
+    # net['lan3h1'].cmd(f'sudo -u velociraptor velociraptor --config {server_config_path} config client > client.config.yaml')
+    
+    # # Read, modify, and write the YAML configuration
+    # with open(client_config_path, 'r') as file:
+    #     config = yaml.safe_load(file)
+    
+    # config['Client']['server_urls'] = [f"https://{lan3h1_ip}:8000/"]
+    # print(config)
+    # with open(client_config_path, 'w') as file:
+    #     yaml.dump(config, file, default_flow_style=False)
+
+    net['lan3h1'].cmd('sudo -u velociraptor velociraptor --config server.config.yaml config api_client --name prog --role administrator prog_client.yaml')
+
   def startVelociraptorServer(self, net):
+    pids = collections.defaultdict(list)
+    host = 'lan3h1' # User0
+    info(f"Start velociraptor server on {host}\n")
+    net[host].cmd('sudo -u velociraptor velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/server.config.yaml frontend &')
+    # net[host].cmd('systemctl start velociraptor_server &')
+    pid = net[host].cmd('echo $!')
+    pids[host].append(pid)
+    return pids
+  
+
+  def startVelociraptorClients(self, net):
     pids = collections.defaultdict(list)
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
-        info(f"Start velociraptor server on {host}\n")
-        net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend -v &')
+        if host == 'lan3h1':
+          continue
+        info(f"Start velociraptor client on {host}\n")
+        net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
+        # net[host].cmd('systemctl start velociraptor_server &')
         pid = net[host].cmd('echo $!')
         pids[host].append(pid)
-
     return pids
 
   def configureHostsDNS(self, net, dns='8.8.8.8'):
@@ -299,14 +334,27 @@ class CustomTopology (Topo):
         # Retrieve the PID of the SSH daemonKill the SSH daemon process
         net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet_{host}' | awk '{{print $2}}' | xargs -r sudo kill")
         net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
-        # # Kill the SSH daemon process
-        # net[host].cmd(f'sudo kill {pid}')
 
   def stopVelociraptorServer(self, net, pids):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
         info(f"Stopping velociraptor server on {host}\n")
+        # net[host].cmd('systemctl stop velociraptor_server &')
+
+        for pid in pids[host]:
+          output = net[host].cmd(f"sudo kill -9 {pid}")
+          # Wait for the command to complete and retrieve the output
+          output = net[host].waitOutput()
+          info(f"Output of kill command on {host}: {output}\n")
+
+  def stopVelociraptorClients(self, net, pids):
+    for lan in self.topo_dict['lans']:
+      for host_name, _ in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        info(f"Stopping velociraptor client on {host}\n")
+        # net[host].cmd('systemctl stop velociraptor_server &')
+
         for pid in pids[host]:
           output = net[host].cmd(f"sudo kill -9 {pid}")
           # Wait for the command to complete and retrieve the output

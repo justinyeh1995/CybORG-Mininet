@@ -8,5 +8,5 @@ class SSHConnectionClientAction(RunProcessAction):
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"echo '{command}' | python /usr/local/scripts/python/SSHConnectionClient.py {connection_key}"
+            command=f"echo '{command}' | /home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 /home/ubuntu/justinyeh1995/castle-vm/Scripts/SSHConnectionClient.py {connection_key}"
         )

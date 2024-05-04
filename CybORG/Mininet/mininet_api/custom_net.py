@@ -82,8 +82,13 @@ def main ():
   info ("Start SSH server on every host\n")
   topo.startSSHServer (net)
 
+  info ("Rewrite client.config.yaml")
+  topo.updateClientConfigFile (net)
+  
   # start velociraptor server
-  pids = topo.startVelociraptorServer (net)
+  pids_server = topo.startVelociraptorServer (net)
+
+  pids_client = topo.startVelociraptorClients (net)
 
   info ("Start the net\n")
   net.start ()  # this method must be invoked to start the mininet
@@ -97,9 +102,11 @@ def main ():
   info ("Cleanup additional NAT rules\n")
   topo.cleanup_nat_rules (net)  # cleanup the additional nat rules
     
-  
   info ("Stop Velociraptor server on every host")
-  topo.stopVelociraptorServer(net, pids)
+  topo.stopVelociraptorClients (net, pids_client)
+
+  info ("Stop Velociraptor server on every host")
+  topo.stopVelociraptorServer (net, pids_server)
 
   info ("Stop SSH server on every host")
   topo.stopSSHServer (net)

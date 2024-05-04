@@ -4,8 +4,7 @@ import time
 import os
 from statistics import mean, stdev
 import random
-import collections
-import traceback 
+import argparse 
 from pprint import pprint
 
 import numpy as np
@@ -222,7 +221,27 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
 
     return game_state_manager.get_game_state()
 
+def parseCmdLineArgs ():
+    # parse the command line
+    parser = argparse.ArgumentParser ()
+
+    # add optional arguments
+    # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
+    parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
+    parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
+    parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
+
+    # parse the args
+    args = parser.parse_args ()
+
+    return args
 
 if __name__ == "__main__":
+    parsed_args = parseCmdLineArgs ()
+    
+    # ip = parsed_args.ip
+    env = parsed_args.env
     # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
-    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment="sim")
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env)
+    nv = NetworkVisualizer(game_castle_gym_agent_state)
+    nv.plot(save=False)

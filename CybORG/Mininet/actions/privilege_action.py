@@ -29,15 +29,13 @@ if __name__ == "__main__":
     print(f"Attacker Hostname: {hostname}")
     print(f"Remote IP Address: {remote_ip}")
 
-    credentials_file = "/etc/velociraptor/prog_client.yaml"
-    credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"
-  
+    credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"  
 
     ssh_connection_server_action = SSHConnectionServerAction(
         credentials_file=credentials_file,
         hostname=hostname,
         remote_hostname=remote_ip,
-        remote_username="velociraptor",
+        remote_username="root", # 'velociraptor'
         remote_password="1234",
         client_port=4444
     )
