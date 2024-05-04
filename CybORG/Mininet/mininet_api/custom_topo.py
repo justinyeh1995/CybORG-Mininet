@@ -267,26 +267,26 @@ class CustomTopology (Topo):
     # Path to the client config file
     config_folder = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions"
     client_config_path = f"{config_folder}/client.config.yaml"
-    server_config_path = f"{config_folder}/server.config.yaml"
+    server_config_path = f"/etc/velociraptor/server.config.yaml"
 
-    # net['lan3h1'].cmd(f'sudo -u velociraptor velociraptor --config {server_config_path} config client > client.config.yaml')
+    net['lan3h1'].cmd(f'sudo -u velociraptor velociraptor --config {server_config_path} config client > {client_config_path}')
     
-    # # Read, modify, and write the YAML configuration
-    # with open(client_config_path, 'r') as file:
-    #     config = yaml.safe_load(file)
+    # Read, modify, and write the YAML configuration
+    with open(client_config_path, 'r') as file:
+        config = yaml.load(file)
     
-    # config['Client']['server_urls'] = [f"https://{lan3h1_ip}:8000/"]
-    # print(config)
-    # with open(client_config_path, 'w') as file:
-    #     yaml.dump(config, file, default_flow_style=False)
+    config['Client']['server_urls'] = [f"https://{lan3h1_ip}:8000/"]
+    print(config)
+    with open(client_config_path, 'w') as file:
+        yaml.dump(config, file, default_flow_style=False)
 
-    net['lan3h1'].cmd('sudo -u velociraptor velociraptor --config server.config.yaml config api_client --name prog --role administrator prog_client.yaml')
+    net['lan3h1'].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml config api_client --name prog --role administrator prog_client.yaml')
 
   def startVelociraptorServer(self, net):
     pids = collections.defaultdict(list)
     host = 'lan3h1' # User0
     info(f"Start velociraptor server on {host}\n")
-    net[host].cmd('sudo -u velociraptor velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/server.config.yaml frontend &')
+    net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
     # net[host].cmd('systemctl start velociraptor_server &')
     pid = net[host].cmd('echo $!')
     pids[host].append(pid)

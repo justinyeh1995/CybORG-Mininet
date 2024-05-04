@@ -75,7 +75,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     if not success_status:
         return obs
     
-    print(ssh_action_output)
+    # print(ssh_action_output)
 
     pattern1 = r"Local IP: (\d+\.\d+\.\d+\.\d+)\r\nLocal Port: (\d+)\r\nRemote IP: (\d+\.\d+\.\d+\.\d+)\r\nRemote Port: (\d+)\r\nPID: (\d+)"
     
@@ -148,7 +148,22 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     return obs
 
 def parse_escalate_action(escalate_action_output, mapper) -> Observation:
-    return Observation(False)#.data
+    pattern = re.compile(r'TRUE|FALSE')
+
+    # Use re.search to find a match
+    match = pattern.search(escalate_action_output)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = enum_to_boolean(match.group()) if match else None
+    
+    obs = Observation(success_status)
+    
+    if not success_status:
+        return obs
+    
+    # @To-Do
+    return obs
+    
 
 def parse_decoy_action(decoy_action_output) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')
@@ -185,6 +200,9 @@ class ResultsBundler:
             return Observation(True)
 
         elif cyborg_action == "Restore":
+            return Observation(True)
+        
+        elif cyborg_action == "Sleep":
             return Observation(True)
             
         return Observation(False)
