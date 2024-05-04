@@ -68,5 +68,5 @@ if __name__ == "__main__":
     )
     
     ssh_connection_client_observation_3 = ssh_connection_client_action_3.execute(None)
-    
+    print(ssh_connection_client_observation_1.data)
     print("foo")
