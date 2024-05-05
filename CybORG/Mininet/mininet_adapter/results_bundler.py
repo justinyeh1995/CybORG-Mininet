@@ -192,6 +192,9 @@ class ResultsBundler:
 
         elif cyborg_action == "ExploitRemoteService":
             return parse_ssh_action(mininet_cli_str, mapper)
+        
+        elif cyborg_action == "PrivilegeEscalate":
+            return parse_escalate_action(mininet_cli_str, mapper)
 
         elif cyborg_action.startswith("Decoy"):
             return parse_decoy_action(mininet_cli_str)
