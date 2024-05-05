@@ -190,7 +190,7 @@ class NetworkVisualizer:
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
-                size=15,
+                size=9,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
                 ),
             bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background

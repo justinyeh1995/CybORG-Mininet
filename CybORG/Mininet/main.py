@@ -192,9 +192,12 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                         ###############
                         # Gather info #
                         ###############
-                        actions = {"Red":str(cyborg.get_last_action('Red')), "Blue": str(cyborg.get_last_action('Blue'))}
-                        observations = {"Red": cyborg.get_observation('Red'), "Blue": cyborg.get_observation('Blue')}
-                        rewards = {"Red": cyborg.get_rewards()['Red'], "Blue": cyborg.get_rewards()('Blue')}
+                        actions = {"Red":str(cyborg.get_last_action('Red')), 
+                                   "Blue": str(cyborg.get_last_action('Blue'))}
+                        observations = {"Red": cyborg.get_observation('Red'), 
+                                        "Blue": cyborg.get_observation('Blue')}
+                        rewards = {"Red": list(cyborg.get_rewards()['Red'].values())[0], 
+                                   "Blue": list(cyborg.get_rewards()['Blue'].values())[0]} # @ To-Do bad design intent to get the first value, {'HybridAvailabilityConfidentiality': 0, 'action_cost': 0}
                         pprint(actions)
                         pprint(observations)
                         pprint(rewards)
