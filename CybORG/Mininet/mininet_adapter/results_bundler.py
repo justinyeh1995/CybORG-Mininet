@@ -162,6 +162,20 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
         return obs
     
     # @To-Do
+    data = {}
+    '''
+    Red Action: PrivilegeEscalate User1
+    ----------------------------------------------------------------------------
+    data = {'Enterprise1': {'Interface': [{'IP Address': IPv4Address('10.0.74.170')}]},
+            'User1': {'Interface': [{'IP Address': IPv4Address('10.0.103.205'),
+                            'Interface Name': 'eth0',
+                            'Subnet': IPv4Network('10.0.103.192/28')}],
+                    'Sessions': [{'Agent': 'Red',
+                            'ID': 1,
+                            'Type': <SessionType.SSH: 2>,
+                            'Username': 'SYSTEM'}]},
+            'success': <TrinaryEnum.TRUE: 1>}
+    '''
     return obs
     
 

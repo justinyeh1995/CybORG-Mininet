@@ -42,6 +42,13 @@ if __name__ == "__main__":
     
     ssh_connection_server_observation = ssh_connection_server_action.execute(None)
     
+    # ssh_connection_client_action_search_enterprise = SSHConnectionClientAction(
+    #     credentials_file=credentials_file,
+    #     hostname=hostname,
+    #     connection_key=ssh_connection_server_observation.connection_key,
+    #     command="ls -l /etc"
+    # )
+    
     ssh_connection_client_action_1 = SSHConnectionClientAction(
         credentials_file=credentials_file,
         hostname=hostname,
