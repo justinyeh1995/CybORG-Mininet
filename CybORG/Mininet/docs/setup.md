@@ -1,5 +1,16 @@
 ## Setting Up Environment
 
+### DNS
+
+I mannually add 
+```
+127.0.0.1 localhost
+104.16.72.101 services.gradle.org
+140.82.112.3 github.com
+```
+to `/etc/hosts` 
+just incase the DNS has issues temporalily.
+
 ### Mininet
 
 ```bash
@@ -22,7 +33,7 @@ mininet/util/install.sh
     Open a terminal or command prompt and navigate to the directory where you extracted Velociraptor.
     Run the following command to generate the server configuration file:
     ```bash
-    ./velociraptor --config server.config.yaml config generate > server.config.yaml
+    ./velociraptor --config server.config.yaml config generate > /etc/velociraptor/server.config.yaml
     ```
     This command generates a default server configuration file named server.config.yaml.
 
@@ -47,7 +58,7 @@ mininet/util/install.sh
 
     Run the following command to start the Velociraptor server:
     ```bash
-    ./velociraptor --config server.config.yaml frontend
+    ./velociraptor --config /etc/velociraptor/server.config.yaml frontend
     ```
     The server will start running and listen for incoming client connections.
 
