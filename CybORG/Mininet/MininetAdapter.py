@@ -74,20 +74,17 @@ class MininetAdapter:
         ##########################
         # Test if DNS is working #
         ##########################
-        
-        # expect_text = self.command_interface.send_command('lan1h1 echo "nameserver 8.8.8.8" >> /etc/resolv.conf') # @To-Do hard coded
-        # print(expect_text)
-        # expect_text = self.command_interface.send_command('lan1h1 cat /etc/resolv.conf')
-        # print(expect_text)
+
         print("===Ping Test===")
         expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
         print(expect_text)
 
     
     def step(self, action_string: str, agent_type: str) -> Observation:
-        # Example of performing emulation
-        # Translate CybORG action to Mininet command and send it
-        # @To-Do: Has to be test with cage-2-cardiff/game_coordinator.py
+        '''Performing emulation
+           Translate CybORG action to Mininet command and send it
+           Retrieve the results and create observations
+        '''
         print(f"---> in MininetAdapter {agent_type} step")
         target, cyborg_action = self.parse_action_string(action_string)
         isSuccess = True # Always True man..
@@ -102,9 +99,8 @@ class MininetAdapter:
                                                                 target,
                                                                 self.mapper.cyborg_to_mininet_host_map,
                                                                 self.mapper.mininet_host_to_ip_map)
-        # print("===Success===")
-        # print(isSuccess)
-        mininet_cli_text = self.command_interface.send_command(mininet_command) #if isSuccess else ""
+
+        mininet_cli_text = self.command_interface.send_command(mininet_command)
         
         print("===Mininet Cli Text====")
         print(mininet_cli_text)

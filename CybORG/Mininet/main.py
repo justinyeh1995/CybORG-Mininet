@@ -1,7 +1,6 @@
 import subprocess
 import inspect
 import time
-import os
 from statistics import mean, stdev
 import random
 import argparse 
@@ -23,17 +22,13 @@ from CybORG.Agents.MainAgent import MainAgent
 from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
-from CybORG.Agents.Wrappers import EnumActionWrapper
-from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
-from CybORG.Agents.Wrappers.IntListToAction import IntListToActionWrapper
-from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
 from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
 from CybORG.Mininet.MininetAdapter import MininetAdapter
 
-MAX_EPS = 1
+MAX_EPS = 50
 agent_name = 'Blue'
 random.seed(0)
 cyborg_version = CYBORG_VERSION
@@ -80,7 +75,8 @@ def wrap(env):
 def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
-def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10) -> None:
+def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10, max_episode: int = 2) -> None:
+    MAX_EPS = max_episode
     environment = environment
     cyborg_version = CYBORG_VERSION
     scenario = 'Scenario2_cyborg--'
@@ -103,12 +99,13 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
     
     print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
 
-    file_name = str(inspect.getfile(CybORG))[:-7] + '/Evaluation/' + time.strftime("%Y%m%d_%H%M%S") + f'_{agent.__class__.__name__}.txt'
+    file_name = str(inspect.getfile(CybORG))[:-7] + '/Evaluation/' + time.strftime("%Y%m%d_%H%M%S") + f'_{agent.__class__.__name__}_{environment}' + '.txt'
     print(f'Saving evaluation results to {file_name}')
     with open(file_name, 'a+') as data:
         data.write(f'CybORG v{cyborg_version}, {scenario}, Commit Hash: {commit_hash}\n')
         data.write(f'author: {name}, team: {team}, technique: {name_of_agent}\n')
         data.write(f"wrappers: {wrap_line}\n")
+        data.write(f"mode: {environment}\n")
 
     cyborg_factory = CybORGFactory()
 
@@ -233,9 +230,9 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
                 if environment == "emu":
                     mininet_adapter.reset()
             
-            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean(total_reward)}')
+            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean(total_reward)}, standard deviation {stdev(total_reward)}')
             with open(file_name, 'a+') as data:
-                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean(total_reward)}\n')
+                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean(total_reward)}, standard deviation {stdev(total_reward)}\n\n')
                 for act, sum_rew in zip(actions_list, total_reward):
                     data.write(f'actions: {act}, total reward: {sum_rew}\n')
 
@@ -248,9 +245,9 @@ def parseCmdLineArgs ():
     parser = argparse.ArgumentParser ()
 
     # add optional arguments
-    # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
     parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
-    parser.add_argument ("-max_step", "--max_step", type=int, default=20, help="max rounds in onr epoisode")
+    parser.add_argument ("-max_step", "--max_step", type=int, default=30, help="max rounds in onr epoisode")
+    parser.add_argument ("-max_episode", "--max_episode", type=int, default=2, help="max episode in onr epoisode")
     parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
 
@@ -265,7 +262,7 @@ if __name__ == "__main__":
     # ip = parsed_args.ip
     env = parsed_args.env
     max_step = parsed_args.max_step
-    # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
-    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step)
-    nv = NetworkVisualizer(game_castle_gym_agent_state)
-    nv.plot(save=False)
+    max_episode = parsed_args.max_episode
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
+    # nv = NetworkVisualizer(game_castle_gym_agent_state)
+    # nv.plot(save=False)
