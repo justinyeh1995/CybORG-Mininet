@@ -26,5 +26,5 @@ FOLDER_PATH=/Emulator/Velociraptor/Executables/Decoy
 
 ```bash
 cd Mininet
-python3 main.py --env <sim/emu> 
+python3 main.py --env <sim | emu> --max_step <step size>
 ```
