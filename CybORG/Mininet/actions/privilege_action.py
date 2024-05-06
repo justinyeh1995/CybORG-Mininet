@@ -42,30 +42,14 @@ if __name__ == "__main__":
     
     ssh_connection_server_observation = ssh_connection_server_action.execute(None)
     
-    # ssh_connection_client_action_search_enterprise = SSHConnectionClientAction(
-    #     credentials_file=credentials_file,
-    #     hostname=hostname,
-    #     connection_key=ssh_connection_server_observation.connection_key,
-    #     command="ls -l /etc"
-    # )
-    
-    ssh_connection_client_action_1 = SSHConnectionClientAction(
+    ssh_connection_client_action_gain_root_access = SSHConnectionClientAction(
         credentials_file=credentials_file,
         hostname=hostname,
         connection_key=ssh_connection_server_observation.connection_key,
-        command="ls -l /etc"
+        command="sudo su -"
     )
     
-    ssh_connection_client_observation_1 = ssh_connection_client_action_1.execute(None)
-    
-    ssh_connection_client_action_2 = SSHConnectionClientAction(
-        credentials_file=credentials_file,
-        hostname=hostname,
-        connection_key=ssh_connection_server_observation.connection_key,
-        command="hostname"
-    )
-    
-    ssh_connection_client_observation_2 = ssh_connection_client_action_2.execute(None)
+    ssh_connection_client_observation_2 = ssh_connection_client_action_gain_root_access.execute(None)
     
     ssh_connection_client_action_3 = SSHConnectionClientAction(
         credentials_file=credentials_file,
@@ -74,6 +58,6 @@ if __name__ == "__main__":
         command="CLOSE"
     )
     
-    ssh_connection_client_observation_3 = ssh_connection_client_action_3.execute(None)
-    print(ssh_connection_client_observation_1.data)
+    # ssh_connection_client_observation_3 = ssh_connection_client_action_3.execute(None)
+    print(ssh_connection_client_observation_2.data)
     print("foo")
