@@ -124,7 +124,7 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
             wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']
 
             blue_observation = wrapped_cyborg.reset() if wrapped_cyborg else cyborg.reset()
-            blue_action_space = wrapped_cyborg.get_action_space('Blue') if wrapped_cyborg else cyborg.reset()
+            blue_action_space = wrapped_cyborg.get_action_space('Blue') if wrapped_cyborg else cyborg.get_action_space('Blue')
 
             # Getting intial red_observation
             red_observation=cyborg.get_observation('Red')
@@ -222,13 +222,22 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
                 agent.end_episode()
                 total_reward.append(sum(r))
                 actions_list.append(a)
-                # observation = cyborg.reset().observation
-                observation = cyborg.reset()
+                
+                # Getting intial blue_observation
+                blue_observation = wrapped_cyborg.reset() if wrapped_cyborg else cyborg.reset()
+                blue_action_space = wrapped_cyborg.get_action_space('Blue') if wrapped_cyborg else cyborg.reset()
+
+                # Getting intial red_observation
+                red_observation= wrapped_cyborg.env.env.env.get_observation('Red') if wrapped_cyborg else cyborg.get_observation('Red')
+                red_action_space= wrapped_cyborg.env.env.env.get_action_space('Red') if wrapped_cyborg else cyborg.get_action_space('Red')
+
                 # game state manager reset
                 game_state_manager.reset()
                 # mininet adapter reset
                 if environment == "emu":
                     mininet_adapter.reset()
+                    mininet_blue_observation = blue_observation
+                    mininet_red_observation = red_observation
             
             print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean(total_reward)}, standard deviation {stdev(total_reward)}')
             with open(file_name, 'a+') as data:
