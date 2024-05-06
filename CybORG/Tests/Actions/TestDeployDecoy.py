@@ -1,6 +1,6 @@
-from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
+from CybORG.Emulator.Actions.DecoyAction import DecoyAction
 
-deploy_decoy = DeployDecoy('172.17.0.2', 'ubuntu', 'ubuntu', 'Tomcat', 443)
+deploy_decoy = DecoyAction('10.0.0.15', 'ubuntu', 'ubuntu', 'Tomcat', 443)
 
 observation = deploy_decoy.execute(None)
 
