@@ -1,6 +1,7 @@
 import collections
 from pprint import pprint
 import json
+from ipaddress import IPv4Address, IPv4Network
 import re
 import traceback 
 from typing import List, Dict
@@ -12,8 +13,10 @@ class CybORGMininetMapper:
         # Inner CybORG lookup
         self.ip_map = {}
         self.cidr_map = {}
-        self.cyborg_ip_to_host_map = {}
+        self.cyborg_ip_to_host_map = {} # @To-Do Add type hint
         self.cyborg_host_to_ip_map = {}
+        self.usable_ip_to_subnet: Dict[str, list] = collections.defaultdict(list) 
+        self.cyborg_ip_to_subnet = {}
 
         # Inner Mininet lookup
         self.mininet_host_to_ip_map = {}
@@ -33,9 +36,15 @@ class CybORGMininetMapper:
         self.cidr_map = {lan_name: str(ip) for lan_name, ip in cyborg.get_cidr_map().items()}
         self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()}
         self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
+
+        self.usable_ip_to_subnet = {str(network): list(network.hosts()) for network in cyborg.get_cidr_map().values()} # Dict[str]: list of IPV4Address
+        for network, usable_ips in self.usable_ip_to_subnet.items():
+            for ip in self.cyborg_ip_to_host_map:
+                if IPv4Address(ip) in usable_ips:
+                    self.cyborg_ip_to_subnet.update({ip: network})
         
         self.cyborg_to_mininet_name_map = set_name_map(cyborg)
-
+        self.mininet_host_to_ip_map = {}
     
     def update_mapping(self, output: str, topology_data: dict) -> None:
         
