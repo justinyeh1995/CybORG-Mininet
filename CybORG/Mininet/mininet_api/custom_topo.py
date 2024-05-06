@@ -229,6 +229,13 @@ class CustomTopology (Topo):
         net[nat_node].cmd( 'iptables -t nat -D POSTROUTING',
                            '-s', subnet, "'!'", '-d', subnet, '-j MASQUERADE' )
 
+
+  def cleanupServices(self, net):
+    host = 'lan3h1' # User0
+    net[host].cmd("pkill -f 'sudo -u velociraptor'")
+    net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{{print $2}}' | xargs -r sudo kill")
+
+
   def setPassword(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
@@ -333,7 +340,7 @@ class CustomTopology (Topo):
         info(f"Stopping ssh server on {host}\n")
         # Retrieve the PID of the SSH daemonKill the SSH daemon process
         net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet_{host}' | awk '{{print $2}}' | xargs -r sudo kill")
-        net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
+        # net[host].cmd(f"rm /tmp/sshd_config_mininet_{host}")
 
 
   def stopVelociraptorServer(self, net, pids):

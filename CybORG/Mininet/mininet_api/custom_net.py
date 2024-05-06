@@ -74,6 +74,9 @@ def main ():
   info ("Add additional iptable rules per subnet that needs NAT access\n")
   topo.add_nat_rules (net)
     
+  # Clean tangling services
+  topo.cleanupServices (net)
+
   # Add passwd on every host
   info ("Add passwd on every host\n")
   topo.setPassword (net)
