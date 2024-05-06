@@ -2,7 +2,6 @@ import re
 import traceback 
 from pprint import pprint
 from typing import List, Dict
-import ipaddress
 from ipaddress import IPv4Address, IPv4Network
 
 from CybORG.Shared import Observation
@@ -161,8 +160,35 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     if not success_status:
         return obs
     
+    
+    # Parse Escalated Host IP
+    pattern1 = r"Remote IP: (\d+\.\d+\.\d+\.\d+)"
+    
+    # Use re.findall() to extract the values
+    matches = re.findall(pattern1, escalate_action_output)
+
     # @To-Do
     data = {}
+    if matches:
+        remote_ip = matches[0]
+        subnet_cidr = mapper.cyborg_ip_to_subnet[remote_ip]
+        remote_hostname = mapper.cyborg_ip_to_host_map[remote_ip]
+        
+        enterprise_hostname = 'Enterprise1' # @To-Do bad design hard coded
+        data[enterprise_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[enterprise_hostname])}]}
+
+        op_hostname = 'Op_Server0' # @To-Do bad design hard coded
+        data[op_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[op_hostname])}]}
+
+        data[remote_hostname] = {'Interface': [{'IP Address': IPv4Address(remote_ip),
+                            'Interface Name': 'eth0',
+                            'Subnet': IPv4Network(subnet_cidr)}],
+                    'Sessions': [{'Agent': 'Red',
+                            'ID': 1,
+                            'Type': 'SessionType.SSH: 2',
+                            'Username': 'SYSTEM'}],
+                    'System info': {'Hostname': remote_hostname, 'OSType': 'WINDOWS'}
+        }
     '''
     Red Action: PrivilegeEscalate User1
     ----------------------------------------------------------------------------
@@ -176,6 +202,7 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
                             'Username': 'SYSTEM'}]},
             'success': <TrinaryEnum.TRUE: 1>}
     '''
+    obs.data.update(data)
     return obs
     
 

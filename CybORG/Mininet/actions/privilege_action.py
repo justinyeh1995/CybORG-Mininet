@@ -27,7 +27,7 @@ if __name__ == "__main__":
     
     # print(f"At IP Address: {ip}")
     print(f"Attacker Hostname: {hostname}")
-    print(f"Remote IP Address: {remote_ip}")
+    print(f"Remote IP: {remote_ip}")
 
     credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"  
 
