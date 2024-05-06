@@ -57,26 +57,30 @@ class CybORGFactory:
     """Class for keeping building agents."""
     type: str = "wrap"
     file_name: str = "Scenario2_cyborg--"
+    red_agent: BaseAgent = None
     
     def wrap(self, env):
         return ChallengeWrapper(env=env, agent_name='Blue')
     
     def create(self, type: str, red_agent) -> Dict:
-        red_agent = red_agent()
+        self.red_agent = red_agent()
         path = str(inspect.getfile(CybORG))
         path = path[:-7] + f'/Simulator/Scenarios/scenario_files/{self.file_name}.yaml'
         sg = FileReaderScenarioGenerator(path)
-        cyborg = CybORG(sg, 'sim', agents={'Red': red_agent})
+        cyborg = CybORG(sg, 'sim', agents={'Red': self.red_agent})
         
         if type == "wrap":
-            return {"wrapped": self.wrap(cyborg), "unwrapped": cyborg, 'Red':red_agent}
+            return {"wrapped": self.wrap(cyborg), "unwrapped": cyborg, 'Red': self.red_agent}
             
-        return {"wrapped": None, "unwrapped": cyborg, 'Red':red_agent} 
+        return {"wrapped": None, "unwrapped": cyborg, 'Red': self.red_agent} 
 
 def wrap(env):
     return ChallengeWrapper(env=env, agent_name='Blue')
 
-def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
+def get_git_revision_hash() -> str:
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10) -> None:
     environment = environment
     cyborg_version = CYBORG_VERSION
     scenario = 'Scenario2_cyborg--'
@@ -99,6 +103,13 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
     
     print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
 
+    file_name = str(inspect.getfile(CybORG))[:-7] + '/Evaluation/' + time.strftime("%Y%m%d_%H%M%S") + f'_{agent.__class__.__name__}.txt'
+    print(f'Saving evaluation results to {file_name}')
+    with open(file_name, 'a+') as data:
+        data.write(f'CybORG v{cyborg_version}, {scenario}, Commit Hash: {commit_hash}\n')
+        data.write(f'author: {name}, team: {team}, technique: {name_of_agent}\n')
+        data.write(f"wrappers: {wrap_line}\n")
+
     cyborg_factory = CybORGFactory()
 
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
@@ -109,7 +120,7 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
     mininet_adapter = MininetAdapter()
 
     
-    for num_steps in [10]:
+    for num_steps in [max_step]:
         for red_agent in [B_lineAgent]:
 
             cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
@@ -206,8 +217,10 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                     ##############################                    
                     state_snapshot = game_state_manager.create_state_snapshot(actions, observations, rewards)
                     game_state_manager.store_state(state_snapshot, i, j)
-                    
-                    print(f"===Round {j} is over===")
+                    r.append(rewards['Blue'])
+                    a.append((actions['Blue'], actions['Red']))
+
+                    print(f"===Round {j+1} is over===")
                     
                 agent.end_episode()
                 total_reward.append(sum(r))
@@ -219,7 +232,13 @@ def main(agent_type: str, cyborg_type: str, environment="emu") -> None:
                 # mininet adapter reset
                 if environment == "emu":
                     mininet_adapter.reset()
-        
+            
+            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean(total_reward)}')
+            with open(file_name, 'a+') as data:
+                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean(total_reward)}\n')
+                for act, sum_rew in zip(actions_list, total_reward):
+                    data.write(f'actions: {act}, total reward: {sum_rew}\n')
+
         mininet_adapter.clean()
 
     return game_state_manager.get_game_state()
@@ -231,6 +250,7 @@ def parseCmdLineArgs ():
     # add optional arguments
     # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
     parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
+    parser.add_argument ("-max_step", "--max_step", type=int, default=20, help="max rounds in onr epoisode")
     parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
 
@@ -244,7 +264,8 @@ if __name__ == "__main__":
     
     # ip = parsed_args.ip
     env = parsed_args.env
+    max_step = parsed_args.max_step
     # game_simple_agent_state = main(agent_type="default", cyborg_type="simple")
-    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env)
+    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step)
     nv = NetworkVisualizer(game_castle_gym_agent_state)
     nv.plot(save=False)
