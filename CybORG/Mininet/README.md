@@ -9,12 +9,12 @@ git clone https://github.com/CASTLEGym/CybORG.git
 cd CybORG
 git checkout mininet
 pip install -e .
+cd CybORG/Mininet
 ```
 
 ## Configuration
 
-Open `config.ini`
-Modify the value based on your system configuration
+Modify the value based on your system configuration in `config.ini`
 
 ```ini
 [SCENARIO]
