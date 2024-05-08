@@ -33,6 +33,5 @@ FOLDER_PATH=/Emulator/Velociraptor/Executables/Decoy
 ## Run the experiment
 
 ```bash
-cd Mininet
 python3 main.py --env <sim | emu> --max_step <step size>
 ```
