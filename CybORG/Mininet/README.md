@@ -3,6 +3,14 @@
 1. setup.md
 2. dev.md
 
+## Demo
+```
+git clone https://github.com/CASTLEGym/CybORG.git
+cd CybORG
+git checkout mininet
+pip install -e .
+```
+
 ## Configuration
 
 Open `config.ini`
