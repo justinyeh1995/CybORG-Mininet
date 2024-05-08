@@ -1,3 +1,5 @@
+rm -rf CollectFiles
+
 mkdir CollectFiles
 
 tar xf collect_files.tgz
@@ -12,3 +14,7 @@ doas netplan apply
 
 doas systemctl enable velociraptor_client
 doas systemctl start velociraptor_client
+
+doas bash -c 'echo -e "ubuntu\nubuntu" | passwd "ubuntu" > /dev/null 2>&1'
+
+rm -rf CollectFiles collect_files.tgz
