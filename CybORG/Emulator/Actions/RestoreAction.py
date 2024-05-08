@@ -1,9 +1,7 @@
-import json
 from typing import Union
 
 from pathlib import Path
 import tempfile
-import time
 
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
@@ -18,6 +16,7 @@ import time
 
 from novaclient import client
 
+from CybORG.Emulator.Observations.RestoreObservation import RestoreObservation
 
 class RestoreAction(Action):
 
