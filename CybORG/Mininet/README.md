@@ -33,5 +33,5 @@ FOLDER_PATH=/Emulator/Velociraptor/Executables/Decoy
 ## Run the experiment
 
 ```bash
-python3 main.py --env <sim | emu> --max_step <step size>
+python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes>
 ```
