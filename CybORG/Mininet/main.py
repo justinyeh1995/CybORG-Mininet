@@ -238,10 +238,11 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
                     mininet_adapter.reset()
                     mininet_blue_observation = blue_observation
                     mininet_red_observation = red_observation
-            
-            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean(total_reward)}, standard deviation {stdev(total_reward)}')
+            mean_val = mean(total_reward)
+            stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
+            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
             with open(file_name, 'a+') as data:
-                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean(total_reward)}, standard deviation {stdev(total_reward)}\n\n')
+                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
                 for act, sum_rew in zip(actions_list, total_reward):
                     data.write(f'actions: {act}, total reward: {sum_rew}\n')
 
@@ -273,5 +274,5 @@ if __name__ == "__main__":
     max_step = parsed_args.max_step
     max_episode = parsed_args.max_episode
     game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
-    # nv = NetworkVisualizer(game_castle_gym_agent_state)
-    # nv.plot(save=False)
+    nv = NetworkVisualizer(game_castle_gym_agent_state)
+    nv.plot(save=False)

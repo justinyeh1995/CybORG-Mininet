@@ -1,27 +1,57 @@
+import re
+import inspect
+from CybORG import CybORG
 import matplotlib.pyplot as plt
 
+def parse_rewards(file_path):
+    rewards = []
+    with open(file_path, 'r') as file:
+        content = file.read()
+        rewards = re.findall(r"total reward: (-?\d+\.\d+)", content)
+        rewards = [round(float(reward), 5) for reward in rewards]
+    return rewards
+
 # Data points for each series
-episodes = list(range(1, 11))
+episodes = list(range(1, 51))
 
-bline_reduced_sim = [-4.103483995, -14.54598851, -20.31694695, -13.94742726, -27.82761236,
-                 -42.55584202, -64.64813699, -69.06542352, -94.3887349, -120.6668253]
-bline_reduced_emu = [-1.291118747, -20.17600479, -42.15899246, 20.21501291, -24.51857925,
-                   -30.25989215, -52.76169124, -80.55656073, -114.6410629, -122.9751975]
+path = str(inspect.getfile(CybORG))[:-7] + "/Evaluation/"
 
+sim_file = path + "20240506_211240_MainAgent_sim.txt"
+emu_file = path + "20240506_222451_MainAgent_emu.txt"
+
+bline_reduced_sim = parse_rewards(sim_file)
+bline_reduced_emu = parse_rewards(emu_file)
 # Create a figure and axis
 fig, ax = plt.subplots(figsize=(10, 6))
 
 # Plot the data series
-ax.plot(episodes, bline_reduced_sim, label='Bline (reduced AS) Sim mode')
-ax.plot(episodes, bline_reduced_emu, label='Bline (reduced AS) Emu mode')
+ax.plot(episodes, bline_reduced_sim, label='Simulation mode')
+ax.plot(episodes, bline_reduced_emu, label='Emulation mode')
 
-# Set labels and title
-ax.set_xlabel('Number of Episodes')
-ax.set_ylabel('Average rewards')
-ax.set_title('Comparison of Average Rewards')
+# Set labels and title with white color
+ax.set_xlabel('Number of Episodes', color='white')
+ax.set_ylabel('Rewards', color='white')
+ax.set_title('Comparison of Rewards', color='white')
 
-# Add legend
-ax.legend()
+# Set the tick and tick label colors
+plt.xticks(color='white')
+plt.yticks(color='white')
+
+# Change the edge color of the plot window
+ax.spines['bottom'].set_color('white')
+ax.spines['top'].set_color('white')
+ax.spines['right'].set_color('white')
+ax.spines['left'].set_color('white')
+
+# Add legend with white text
+ax.legend(facecolor='darkgrey')
+
+# Optional: Change the background color of the plot area if desired
+ax.set_facecolor('black')
+fig.patch.set_facecolor('black')
+
+# Save the figure before showing
+plt.savefig('evaluation.png', transparent=True)
 
 # Display the plot
 plt.show()
