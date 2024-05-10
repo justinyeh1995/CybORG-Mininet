@@ -63,7 +63,7 @@ class RedActionTranslator(ActionTranslator):
         hostname = socket.gethostname()
         action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py --hostname {hostname} --remote"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        return f'{host} timeout 180 {action} {target}'
+        return f'{host} timeout 100 {action} {target}'
 
 
 class BlueActionTranslator(ActionTranslator):
