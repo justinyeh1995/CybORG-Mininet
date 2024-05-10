@@ -81,7 +81,7 @@ class NetworkVisualizer:
                             self._plot_state(num_steps, red_agent_name, episode, step, agent, state[agent])
 
     def _plot_state(self, num_steps, red_agent_name, episode, step, agent, state):
-        
+        mode = state['mode']
         link_diagram = state['link_diagram']
         compromised_hosts = state['compromised_hosts']
         node_colors = state['node_colors']
@@ -157,7 +157,8 @@ class NetworkVisualizer:
 
         # Create layout: Main Structure
         layout=go.Layout(
-                            title=f'<br>Total Number of Steps: {num_steps}\
+                            title=f'<br>Mode: <b>{mode}</b>\
+                                    <br>Total Number of Steps: {num_steps}\
                                     <br>Red Agent Name: {red_agent_name}\
                                     <br>Episode: {episode+1}\
                                     <br>Display <b>{agent}</b> Agent\
@@ -210,6 +211,9 @@ class NetworkVisualizer:
             self._save_figure(fig, red_agent_name, step)
             
         fig.show()
+
+        # After displaying
+        fig.data = None
 
     def _setup_annotations_and_buttons(self, fig, annotations):
         # ... code to set up annotations and buttons ...

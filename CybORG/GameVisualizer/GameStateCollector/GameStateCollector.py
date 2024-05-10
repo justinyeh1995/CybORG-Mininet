@@ -127,6 +127,7 @@ class GameStateCollector:
         
         action_snapshot = {
             # Populate with necessary state information
+            'mode': self.environment,
             'link_diagram': link_diagram,  # Assuming link_diagram is a NetworkX graph
             'node_colors': node_colors,
             'node_borders': node_borders,
