@@ -1,6 +1,16 @@
 import yaml
 import inspect
 from CybORG import CybORG, CYBORG_VERSION
+from CybORG.Mininet.mininet_adapter import CybORGMininetMapper
+
+WIN_REWARD = 0
+LOSE_REWARD = 0
+SESSION_REWARD = 0
+ROOT_SESSION_REWARD = 0
+LOSE_SESSION_REWARD = 0
+LOSE_ROOT_SESSION_REWARD = 0
+
+REWARD_MAX_DECIMAL_PLACES = 1
 
 class RewardCalculator():
     # this reward calculator provides a reward to both red and blue due to changes in the number of privileged sessions
@@ -19,8 +29,10 @@ class RewardCalculator():
     def reset(self):
         self.old_total = 0
 
+    def get_host(self, host_ip:str, mapper: CybORGMininetMapper):
+        return mapper.cyborg_ip_to_host_map.get(host_ip, host_ip) 
 
-    def privilegedrewardcalculator(self,current_state:dict):
+    def privilegedrewardcalculator(self,current_state:dict, mapper):
         root_sessions=0; system_sessions=0
         for host, info in current_state.items():
 
@@ -32,13 +44,19 @@ class RewardCalculator():
                         #if session['Agent'] == self.agent_name:
                         # count the number of root sessions
                         if session['Username'] == 'root' and info['System info']['OSType'] == 'LINUX':
-                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {}).get(host, {}).get('ConfidentialityValue', 'Low')]
+                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {})
+                                                                 .get(self.get_host(host, mapper), {})
+                                                                 .get('ConfidentialityValue', 'Low')]
+                            print(confidentiality_value)
                             root_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
                         # count the number of SYSTEM sessions
                         if session['Username'] == 'SYSTEM' and info['System info']['OSType'] == 'WINDOWS':
-                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {}).get(host, {}).get('ConfidentialityValue', 'Low')]
+                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {})
+                                                                 .get(self.get_host(host, mapper), {})
+                                                                 .get('ConfidentialityValue', 'Low')]
+                            print(confidentiality_value)
                             system_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
@@ -47,10 +65,10 @@ class RewardCalculator():
         total = root_sessions + system_sessions
         reward = total  # - self.old_total
         self.old_total = total
-        return round(reward, 3)
+        return round(reward, REWARD_MAX_DECIMAL_PLACES)
 
-    def reward(self,observation):
-        reward= self.privilegedrewardcalculator(observation)
+    def reward(self,observation, mapper):
+        reward= self.privilegedrewardcalculator(observation, mapper)
         return [-1*reward,reward]   #[Blue reward, red rewards]
 
 
