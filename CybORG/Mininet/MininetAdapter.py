@@ -110,7 +110,7 @@ class MininetAdapter:
         print("===Obs===")
         pprint(mininet_obs.data)
 
-        reward = self.reward_calculator.reward(mininet_obs.data)
+        reward = self.reward_calculator.reward(mininet_obs.data, self.mapper)
 
         print("===Rewards===")
         print(reward)
