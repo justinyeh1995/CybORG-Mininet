@@ -71,15 +71,31 @@ class CybORGFactory:
         return {"wrapped": None, "unwrapped": cyborg, 'Red': self.red_agent} 
 
 class CybORGEnvironment(ABC):
+    def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode):
+        self.cyborg = cyborg
+        self.red_agent = red_agent
+        self.blue_agent = blue_agent
+        self.num_steps = num_steps
+        self.max_episode = max_episode
+        self.red_agent_name: str = red_agent.__class__.__name__
+        self.blue_agent_name: str = blue_agent.__class__.__name__
     @abstractmethod
     def run(self):
         pass
 
 class SimulatedEnvironment(CybORGEnvironment):
-    def __init__(self, cyborg, red_agent, blue_agent, num_steps, game_state_manager, mininet_adapter):
-        super().__init__(cyborg, red_agent, blue_agent, num_steps)
-        self.mininet_adapter = mininet_adapter
+    def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, game_state_manager):
+        super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode)
         self.game_state_manager = game_state_manager
+        red_agent_name: str = red_agent.__class__.__name__
+        blue_agent_name: str = blue_agent.__class__.__name__
+        # Set up game_state_manager
+        self.game_state_manager.set_environment(cyborg=cyborg,
+                                            red_agent_name=self.red_agent_name,
+                                            blue_agent_name=self.blue_agent_name,
+                                            num_steps=num_steps)
+        # Reset state
+        self.game_state_manager.reset()
 
     def run(self):
         blue_observation = self.cyborg.reset()
@@ -88,7 +104,7 @@ class SimulatedEnvironment(CybORGEnvironment):
         actions_list = []
         total_reward = []
 
-        for i in range(MAX_EPS):
+        for i in range(self.max_episode):
             r = []
             a = []
 
@@ -108,7 +124,7 @@ class SimulatedEnvironment(CybORGEnvironment):
                 r.append(rewards['Blue'])
                 a.append((actions['Blue'], actions['Red']))
 
-                print(f"===Round {j + 1} is over===")
+                print(f"===Episode {i+1}, Round {j + 1} is over===")
 
             self.blue_agent.end_episode()
             total_reward.append(sum(r))
@@ -122,16 +138,32 @@ class SimulatedEnvironment(CybORGEnvironment):
         return total_reward, actions_list
 
 class EmulatedEnvironment(CybORGEnvironment):
-    def __init__(self, cyborg, red_agent, blue_agent, num_steps, game_state_manager, mininet_adapter):
-        super().__init__(cyborg, red_agent, blue_agent, num_steps)
-        self.mininet_adapter = mininet_adapter
+    def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, game_state_manager, mininet_adapter):
+        super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode)
         self.game_state_manager = game_state_manager
+        
+        self.openai_gym_cyborg = cyborg.env
+        self.blue_table_cyborg = cyborg.env.env
+        self.true_table_cyborg = cyborg.env.env.env
+        self.unwrapped_cyborg = cyborg.env.env.env.env
+
+        # Set up game_state_manager
+        self.game_state_manager.set_environment(cyborg=self.unwrapped_cyborg,
+                                            red_agent_name=self.red_agent_name,
+                                            blue_agent_name=self.blue_agent_name,
+                                            num_steps=num_steps)
+        # Reset state
+        self.game_state_manager.reset()
+
+        self.mininet_adapter = mininet_adapter
+        self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
+        self.mininet_adapter.reset()
 
     def run(self):
         blue_observation = self.cyborg.reset()
         blue_action_space = self.cyborg.get_action_space('Blue')
-        red_observation = self.cyborg.get_observation('Red')
-        red_action_space = self.cyborg.get_action_space('Red')
+        red_observation = self.unwrapped_cyborg.get_observation('Red')
+        red_action_space = self.unwrapped_cyborg.get_action_space('Red')
 
         mininet_blue_observation = blue_observation
         mininet_red_observation = red_observation
@@ -139,21 +171,27 @@ class EmulatedEnvironment(CybORGEnvironment):
         actions_list = []
         total_reward = []
 
-        for i in range(MAX_EPS):
+        for i in range(max_episode):
             r = []
             a = []
 
             for j in range(self.num_steps):
                 red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
                 red_action = self.red_agent.get_action(red_observation, red_action_space)
+                print("--> In main loop: Red action using mininet_observation")
+                print(red_action)
+                
                 mininet_red_observation, red_reward = self.mininet_adapter.step(str(red_action), agent_type='Red')
 
                 blue_observation = mininet_blue_observation
-                blue_observation = self.cyborg.env.env.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
+                blue_observation = self.blue_table_cyborg.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
                 blue_observation = np.array(blue_observation, dtype=np.float32)
 
                 blue_action = self.blue_agent.get_action(blue_observation, blue_action_space)
-                blue_possible_actions = self.cyborg.env.possible_actions[blue_action]
+                blue_possible_actions = self.openai_gym_cyborg.possible_actions[blue_action]
+                print("--> In main loop: Blue action using mininet_observation")
+                print(blue_possible_actions)
+
                 mininet_blue_observation, blue_reward = self.mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
 
                 actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
@@ -165,7 +203,7 @@ class EmulatedEnvironment(CybORGEnvironment):
                 r.append(rewards['Blue'])
                 a.append((actions['Blue'], actions['Red']))
 
-                print(f"===Round {j + 1} is over===")
+                print(f"===Episode {i+1}, Round {j + 1} is over===")
 
             self.blue_agent.end_episode()
             total_reward.append(sum(r))
@@ -173,13 +211,15 @@ class EmulatedEnvironment(CybORGEnvironment):
 
             blue_observation = self.cyborg.reset()
             blue_action_space = self.cyborg.get_action_space('Blue')
-            red_observation = self.cyborg.env.env.env.get_observation('Red')
-            red_action_space = self.cyborg.env.env.env.get_action_space('Red')
+            red_observation = self.true_table_cyborg.get_observation('Red')
+            red_action_space = self.true_table_cyborg.get_action_space('Red')
 
             self.game_state_manager.reset()
             self.mininet_adapter.reset()
             mininet_blue_observation = blue_observation
             mininet_red_observation = red_observation
+
+        self.mininet_adapter.clean()
 
         return total_reward, actions_list
 
@@ -189,8 +229,7 @@ def wrap(env):
 def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
-def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10, max_episode: int = 2) -> None:
-    MAX_EPS = max_episode
+def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10, max_episode: int = 2) -> None:
     environment = environment
     cyborg_version = CYBORG_VERSION
     scenario = 'Scenario2_cyborg--'
@@ -225,145 +264,38 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
 
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
+    # Single  
     # game manager initialization
     game_state_manager = GameStateCollector(environment=environment)
+    
     # mininet adapter initialization
     mininet_adapter = MininetAdapter()
-
     
     for num_steps in [max_step]:
         for red_agent in [B_lineAgent]:
 
             cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
-            wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']
-
-            blue_observation = wrapped_cyborg.reset() if wrapped_cyborg else cyborg.reset()
-            blue_action_space = wrapped_cyborg.get_action_space('Blue') if wrapped_cyborg else cyborg.get_action_space('Blue')
-
-            # Getting intial red_observation
-            red_observation=cyborg.get_observation('Red')
-            red_action_space= cyborg.get_action_space('Red')
-
-            red_agent_name: str = red_agent.__class__.__name__
-            blue_agent_name: str = agent.__class__.__name__
-            
-            # Set up game_state_manager
-            game_state_manager.set_environment(cyborg=cyborg,
-                                               red_agent_name=red_agent_name,
-                                               blue_agent_name=blue_agent_name,
-                                               num_steps=num_steps)
-            # Reset state
-            game_state_manager.reset()
-
+            wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
 
             if environment == "emu":
-                # Reset mininet adapter 
-                mininet_adapter.set_environment(cyborg=cyborg)
-                mininet_adapter.reset()
-    
-                mininet_blue_observation = blue_observation
-                mininet_red_observation = red_observation
+                env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager, mininet_adapter)
+            elif environment == "sim":
+                env = SimulatedEnvironment(cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
+            else:
+                raise ValueError(f"Invalid environment: {environment}")
+
+            total_reward, actions_list = env.run()
             
-            total_reward = []
-            actions_list = []
-            for i in range(MAX_EPS):
-                r = []
-                a = []
-                
-                # cyborg.env.env.tracker.render()
-                for j in range(num_steps):
-                    if environment == "emu":
-                        #######
-                        # Red #
-                        ####### 
-                        red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
-                        red_action=red_agent.get_action(red_observation, red_action_space)
-                        print("--> In main loop: Red action using mininet_observation")
-                        print(red_action)
-                        
-                        # Mininet takes step
-                        mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
-                        
-                        ########
-                        # Blue #
-                        ######## 
-                        blue_observation = mininet_blue_observation
-                        blue_observation = wrapped_cyborg.env.env.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
-                        blue_observation = np.array(blue_observation, dtype=np.float32)
-                        
-                        blue_action = agent.get_action(blue_observation, blue_action_space)
-                        blue_possible_actions = wrapped_cyborg.env.possible_actions[blue_action]
-                        print("--> In main loop: Blue action using mininet_observation")
-                        print(blue_possible_actions)
-                        
-                        # Mininet takes step
-                        mininet_blue_observation, blue_reward = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
-    
-                        ###############
-                        # Gather info #
-                        ###############
-                        actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
-                        observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
-                        rewards = {"Red": red_reward[-1] + blue_reward[-1], "Blue": red_reward[0] + blue_reward[0]}
-                    
-                    elif environment == "sim":
-                        # CybORG takes step
-                        blue_action = agent.get_action(blue_observation, blue_action_space)
-                        blue_observation, rew, done, info = wrapped_cyborg.step(blue_action)
-
-                        ###############
-                        # Gather info #
-                        ###############
-                        actions = {"Red":str(cyborg.get_last_action('Red')), 
-                                   "Blue": str(cyborg.get_last_action('Blue'))}
-                        observations = {"Red": cyborg.get_observation('Red'), 
-                                        "Blue": cyborg.get_observation('Blue')}
-                        rewards = {"Red": list(cyborg.get_rewards()['Red'].values())[0], 
-                                   "Blue": list(cyborg.get_rewards()['Blue'].values())[0]} # @ To-Do bad design intent to get the first value, {'HybridAvailabilityConfidentiality': 0, 'action_cost': 0}
-                        pprint(actions)
-                        pprint(observations)
-                        pprint(rewards)
-                    ##############################
-                    # Create state for this step #
-                    ##############################                    
-                    state_snapshot = game_state_manager.create_state_snapshot(actions, observations, rewards)
-                    game_state_manager.store_state(state_snapshot, i, j)
-                    r.append(rewards['Blue'])
-                    a.append((actions['Blue'], actions['Red']))
-
-                    print(f"===Round {j+1} is over===")
-                    
-                agent.end_episode()
-                total_reward.append(sum(r))
-                actions_list.append(a)
-                
-                # Getting intial blue_observation
-                blue_observation = wrapped_cyborg.reset() if wrapped_cyborg else cyborg.reset()
-                blue_action_space = wrapped_cyborg.get_action_space('Blue') if wrapped_cyborg else cyborg.reset()
-
-                # Getting intial red_observation
-                red_observation= wrapped_cyborg.env.env.env.get_observation('Red') if wrapped_cyborg else cyborg.get_observation('Red')
-                red_action_space= wrapped_cyborg.env.env.env.get_action_space('Red') if wrapped_cyborg else cyborg.get_action_space('Red')
-
-                # game state manager reset
-                game_state_manager.reset()
-                # mininet adapter reset
-                if environment == "emu":
-                    mininet_adapter.reset()
-                    mininet_blue_observation = blue_observation
-                    mininet_red_observation = red_observation
             mean_val = mean(total_reward)
             stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
-            print(f'Average reward for red agent {red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
+            print(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
             with open(file_name, 'a+') as data:
-                data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
+                data.write(f'steps: {num_steps}, adversary: {env.red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
                 for act, sum_rew in zip(actions_list, total_reward):
                     data.write(f'actions: {act}, total reward: {sum_rew}\n')
-        
-        if environment == "emu":
-            mininet_adapter.clean()
+    
+    return env.game_state_manager.get_game_state()
 
-    return game_state_manager.get_game_state()
 
 def parseCmdLineArgs ():
     # parse the command line
@@ -388,6 +320,6 @@ if __name__ == "__main__":
     env = parsed_args.env
     max_step = parsed_args.max_step
     max_episode = parsed_args.max_episode
-    game_castle_gym_agent_state = main(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
-    nv = NetworkVisualizer(game_castle_gym_agent_state)
-    nv.plot(save=False)
+    game_castle_gym_agent_state = main_v2(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
+    # nv = NetworkVisualizer(game_castle_gym_agent_state)
+    # nv.plot(save=False)
