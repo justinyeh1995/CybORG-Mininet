@@ -97,8 +97,6 @@ class SimulatedEnvironment(CybORGEnvironment):
                                             red_agent_name=self.red_agent_name,
                                             blue_agent_name=self.blue_agent_name,
                                             num_steps=num_steps)
-        # Reset state
-        # self.game_state_manager.reset()
 
     def run(self):
         blue_observation = self.cyborg.reset()
@@ -140,8 +138,6 @@ class SimulatedEnvironment(CybORGEnvironment):
 
             blue_observation = self.cyborg.reset()
             blue_action_space = self.cyborg.get_action_space('Blue')
-
-            # self.game_state_manager.reset()
 
         return total_reward, actions_list
 
