@@ -87,15 +87,18 @@ class SimulatedEnvironment(CybORGEnvironment):
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, game_state_manager):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode)
         self.game_state_manager = game_state_manager
-        red_agent_name: str = red_agent.__class__.__name__
-        blue_agent_name: str = blue_agent.__class__.__name__
+
+        self.openai_gym_cyborg = cyborg.env
+        self.blue_table_cyborg = cyborg.env.env
+        self.true_table_cyborg = cyborg.env.env.env
+        self.unwrapped_cyborg = cyborg.env.env.env.env
         # Set up game_state_manager
-        self.game_state_manager.set_environment(cyborg=cyborg,
+        self.game_state_manager.set_environment(cyborg=self.unwrapped_cyborg,
                                             red_agent_name=self.red_agent_name,
                                             blue_agent_name=self.blue_agent_name,
                                             num_steps=num_steps)
         # Reset state
-        self.game_state_manager.reset()
+        # self.game_state_manager.reset()
 
     def run(self):
         blue_observation = self.cyborg.reset()
@@ -108,16 +111,21 @@ class SimulatedEnvironment(CybORGEnvironment):
             r = []
             a = []
 
+            blue_observation = self.cyborg.reset()
+            blue_action_space = self.cyborg.get_action_space('Blue')
+
+            self.game_state_manager.reset()
+
             for j in range(self.num_steps):
                 blue_action = self.blue_agent.get_action(blue_observation, blue_action_space)
                 blue_observation, rew, done, info = self.cyborg.step(blue_action)
 
-                actions = {"Red": str(self.cyborg.get_last_action('Red')),
-                           "Blue": str(self.cyborg.get_last_action('Blue'))}
-                observations = {"Red": self.cyborg.get_observation('Red'),
-                                "Blue": self.cyborg.get_observation('Blue')}
-                rewards = {"Red": list(self.cyborg.get_rewards()['Red'].values())[0],
-                           "Blue": list(self.cyborg.get_rewards()['Blue'].values())[0]}
+                actions = {"Red": str(self.unwrapped_cyborg.get_last_action('Red')),
+                           "Blue": str(self.unwrapped_cyborg.get_last_action('Blue'))}
+                observations = {"Red": self.unwrapped_cyborg.get_observation('Red'),
+                                "Blue": self.unwrapped_cyborg.get_observation('Blue')}
+                rewards = {"Red": list(self.unwrapped_cyborg.get_rewards()['Red'].values())[0],
+                           "Blue": list(self.unwrapped_cyborg.get_rewards()['Blue'].values())[0]}
 
                 state_snapshot = self.game_state_manager.create_state_snapshot(actions, observations, rewards)
                 self.game_state_manager.store_state(state_snapshot, i, j)
@@ -133,7 +141,7 @@ class SimulatedEnvironment(CybORGEnvironment):
             blue_observation = self.cyborg.reset()
             blue_action_space = self.cyborg.get_action_space('Blue')
 
-            self.game_state_manager.reset()
+            # self.game_state_manager.reset()
 
         return total_reward, actions_list
 
@@ -152,28 +160,28 @@ class EmulatedEnvironment(CybORGEnvironment):
                                             red_agent_name=self.red_agent_name,
                                             blue_agent_name=self.blue_agent_name,
                                             num_steps=num_steps)
-        # Reset state
-        self.game_state_manager.reset()
-
+        # Set up mininet_adapter
         self.mininet_adapter = mininet_adapter
         self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
-        self.mininet_adapter.reset()
+
 
     def run(self):
-        blue_observation = self.cyborg.reset()
-        blue_action_space = self.cyborg.get_action_space('Blue')
-        red_observation = self.unwrapped_cyborg.get_observation('Red')
-        red_action_space = self.unwrapped_cyborg.get_action_space('Red')
-
-        mininet_blue_observation = blue_observation
-        mininet_red_observation = red_observation
-
         actions_list = []
         total_reward = []
 
         for i in range(max_episode):
             r = []
             a = []
+            self.game_state_manager.reset()
+            self.mininet_adapter.reset()
+
+            blue_observation = self.cyborg.reset()
+            blue_action_space = self.cyborg.get_action_space('Blue')
+            red_observation = self.true_table_cyborg.get_observation('Red')
+            red_action_space = self.true_table_cyborg.get_action_space('Red')
+
+            mininet_blue_observation = blue_observation
+            mininet_red_observation = red_observation
 
             for j in range(self.num_steps):
                 red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
@@ -208,16 +216,6 @@ class EmulatedEnvironment(CybORGEnvironment):
             self.blue_agent.end_episode()
             total_reward.append(sum(r))
             actions_list.append(a)
-
-            blue_observation = self.cyborg.reset()
-            blue_action_space = self.cyborg.get_action_space('Blue')
-            red_observation = self.true_table_cyborg.get_observation('Red')
-            red_action_space = self.true_table_cyborg.get_action_space('Red')
-
-            self.game_state_manager.reset()
-            self.mininet_adapter.reset()
-            mininet_blue_observation = blue_observation
-            mininet_red_observation = red_observation
 
         self.mininet_adapter.clean()
 
@@ -280,7 +278,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
             if environment == "emu":
                 env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager, mininet_adapter)
             elif environment == "sim":
-                env = SimulatedEnvironment(cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
+                env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
             else:
                 raise ValueError(f"Invalid environment: {environment}")
 
