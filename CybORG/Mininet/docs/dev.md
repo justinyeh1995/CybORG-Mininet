@@ -1,3 +1,10 @@
+## Add Support for CybORG v2.1
+Work in progress...
+
+## Emulator Actions
+The python script path is hard coded to the virtual env folder path, I will need to ask Dr. Nine how to address this issue.
+
+
 ## Mininet Adapter 
 
 `mininet_api` contains the Mininet API (in python) that is responsible for generating the topology. Any prerequisite configuration such as starting SSH servers automatically once the topology created is done at `custom_topo.py`, the routing rules are configured at `custom_topo.py`

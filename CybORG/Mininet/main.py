@@ -359,8 +359,9 @@ def main(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: 
                 data.write(f'steps: {num_steps}, adversary: {red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
                 for act, sum_rew in zip(actions_list, total_reward):
                     data.write(f'actions: {act}, total reward: {sum_rew}\n')
-
-        mininet_adapter.clean()
+        
+        if environment == "emu":
+            mininet_adapter.clean()
 
     return game_state_manager.get_game_state()
 

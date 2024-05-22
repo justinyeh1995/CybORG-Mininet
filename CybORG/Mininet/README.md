@@ -1,3 +1,6 @@
+## Presentation slides for DESTION 2024 on May 13th, 2024
+[Google Slides](https://docs.google.com/presentation/d/1f2pZ5q3p6cZK4m2dvq1Tvgj8ODyTyWGp3OVP4xXuaOw/edit?usp=sharing)
+
 ## Catalog
 
 1. [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet/CybORG/Mininet/docs/setup.md)
