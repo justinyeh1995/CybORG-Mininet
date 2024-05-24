@@ -7,7 +7,7 @@ from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessActi
 from CybORG.Emulator.Observations.Velociraptor.SSHConnectionServerObservation import SSHConnectionServerObservation
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
-import random
+
 
 class SSHConnectionServerAction(RunProcessAction):
 
