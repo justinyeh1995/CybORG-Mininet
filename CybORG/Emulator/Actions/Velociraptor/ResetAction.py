@@ -10,15 +10,14 @@ from ...Observations.Velociraptor.ResetObservation import ResetObservation
 from CybORG.Shared.Actions import Action
 
 
-
 class ResetAction(Action):
 
     def __init__(self, credentials_file):
         super().__init__()
         self.credentials_file = credentials_file
-            
+        self.directory = None
 
-    def execute(self, hostname= None,directory='.', state: Union[State, None]) -> Observation:
+    def execute(self, hostname= None,directory='.', state: Union[State, None]=None) -> Observation:
         self.directory=directory
         self.hostname=hostname
         md5_process_action = RunProcessAction(

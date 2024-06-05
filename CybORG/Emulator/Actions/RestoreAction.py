@@ -18,6 +18,7 @@ from novaclient import client
 
 from CybORG.Emulator.Observations.RestoreObservation import RestoreObservation
 
+
 class RestoreAction(Action):
 
     def __init__(
@@ -137,7 +138,6 @@ class RestoreAction(Action):
             network_id_port_data_list_dict[network.id] = port_data_list
 
         return network_id_port_data_list_dict
-
 
     def execute(self, state: Union[State, None]) -> Observation:
 

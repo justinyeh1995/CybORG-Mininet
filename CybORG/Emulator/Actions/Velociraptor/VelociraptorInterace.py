@@ -1,6 +1,7 @@
 import json
 
 import grpc
+import time
 import yaml
 from pyvelociraptor import api_pb2_grpc, api_pb2
 
@@ -115,56 +116,96 @@ class VelociraptorInterface:
 
         return environment_string
 
-    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None):
+    @staticmethod
+    def cancel_flow(stub, client_id, flow_id):
+        query = f"""
+SELECT cancel_flow(client_id="{client_id}", flow_id="{flow_id}") FROM scope() 
+"""
+        request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
+        stub.Query(request)
+
+        query = f"SELECT * FROM flows(client_id='{client_id}', flow_id='{flow_id}')"
+
+        request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
+
+        flow_not_cancelled = True
+        while flow_not_cancelled:
+
+            for response in stub.Query(request):
+                if response.Response:
+                    rows = json.loads(response.Response)
+                    if len(rows) > 0:
+                        state = rows[0].get("state")
+                        if state == "ERROR":
+                            flow_not_cancelled = False
+                            break
+
+            time.sleep(0.1)
+
+    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=10, max_retries=3):
 
         with self as stub:
-            # SUBMIT EXECUTION OF THE Generic.System.Pstree ARTIFACT FOR CLIENT client_id
-            # GET FLOW-ID OF THE EXECUTION FROM RESPONSE
-            if environment_dict is None:
-                query = f"""
+
+            flow_not_finished = True
+
+            num_retries = 0
+            while num_retries < max_retries and flow_not_finished:
+
+                # SUBMIT EXECUTION OF THE Generic.System.Pstree ARTIFACT FOR CLIENT client_id
+                # GET FLOW-ID OF THE EXECUTION FROM RESPONSE
+                if environment_dict is None:
+                    query = f"""
 SELECT collect_client(
 client_id='{client_id}', artifacts='{artifact_name}'
 ).flow_id AS FLOW_ID FROM scope()
 """
-            else:
-                environment_string = self.get_environment_string(environment_dict)
-                query = f"""
+                else:
+                    environment_string = self.get_environment_string(environment_dict)
+                    query = f"""
 SELECT collect_client(
 client_id='{client_id}', artifacts='{artifact_name}', env={environment_string}
 ).flow_id AS FLOW_ID FROM scope()
 """
 
-            request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
+                request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
 
-            flow_id = None
-            for response in stub.Query(request):
-                if response.Response:
-                    rows = json.loads(response.Response)
-
-                    if len(rows) > 0:
-                        flow_id = rows[0].get("FLOW_ID")
-                        break
-
-            if flow_id is None:
-                return None
-
-            # GET STATUS OF EXECUTION (FLOW) WITH FLOW-ID flow_id
-            # WAIT UNTIL THE STATUS IS "FINISHED"
-            query = f"SELECT * FROM flows(client_id='{client_id}', flow_id='{flow_id}')"
-
-            request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
-
-            flow_not_finished = True
-            while flow_not_finished:
-
+                flow_id = None
                 for response in stub.Query(request):
                     if response.Response:
                         rows = json.loads(response.Response)
+
                         if len(rows) > 0:
-                            state = rows[0].get("state")
-                            if state == "FINISHED":
-                                flow_not_finished = False
-                                break
+                            flow_id = rows[0].get("FLOW_ID")
+                            break
+
+                if flow_id is None:
+                    return None
+
+                # GET STATUS OF EXECUTION (FLOW) WITH FLOW-ID flow_id
+                # WAIT UNTIL THE STATUS IS "FINISHED"
+                query = f"SELECT * FROM flows(client_id='{client_id}', flow_id='{flow_id}')"
+
+                request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
+
+                start_time = int(time.time())
+                while flow_not_finished:
+
+                    for response in stub.Query(request):
+                        if response.Response:
+                            rows = json.loads(response.Response)
+                            if len(rows) > 0:
+                                state = rows[0].get("state")
+                                if state == "FINISHED":
+                                    flow_not_finished = False
+                                    break
+
+                    current_time = int(time.time())
+                    if current_time - start_time > timeout:
+                        self.cancel_flow(stub, client_id, flow_id)
+                        num_retries += 1
+                        break
+
+                    time.sleep(0.1)
 
             if flow_not_finished:
                 return None
