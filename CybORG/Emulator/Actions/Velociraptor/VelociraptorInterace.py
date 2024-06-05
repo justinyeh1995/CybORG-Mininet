@@ -142,7 +142,7 @@ SELECT cancel_flow(client_id="{client_id}", flow_id="{flow_id}") FROM scope()
 
             time.sleep(0.1)
 
-    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=10, max_retries=3):
+    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=30, max_retries=3):
 
         with self as stub:
 
