@@ -210,7 +210,7 @@ SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope()
         request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
         stub.Query(request)
 
-    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=30, max_retries=3):
+    def execute_client_artifact(self, client_id, artifact_name, environment_dict=None, timeout=120, max_retries=2):
 
         num_retries = 0
 
