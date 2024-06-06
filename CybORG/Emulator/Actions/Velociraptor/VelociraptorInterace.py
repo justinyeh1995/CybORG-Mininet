@@ -205,7 +205,7 @@ SELECT * FROM flow_results(flow_id='{flow_id}', client_id='{client_id}', artifac
     @staticmethod
     def cancel_flow(stub, client_id, flow_id):
         query = f"""
-SELECT cancel_flow(client_id="{client_id}", flow_id="{flow_id}") FROM scope() 
+SELECT cancel_flow(client_id='{client_id}', flow_id='{flow_id}') FROM scope()
 """
         request = api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(VQL=query)])
         stub.Query(request)
