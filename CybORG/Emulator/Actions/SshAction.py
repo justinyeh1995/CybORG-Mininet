@@ -8,7 +8,7 @@ from pathlib import Path
 from CybORG.Emulator.Observations.SshObservation import SshObservation
 
 from CybORG.Shared import Observation
-from CybORG.Simulator.Actions import Action
+from CybORG.Shared.Actions import Action
 from CybORG.Simulator.State import State
 
 

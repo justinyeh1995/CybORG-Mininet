@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ..Observations.DeployDecoyObservation import DeployDecoyObservation
 from CybORG.Shared.Observation import Observation
-from CybORG.Simulator.Actions import Action
+from CybORG.Shared.Actions import Action
 from CybORG.Simulator.State import State
 
 
