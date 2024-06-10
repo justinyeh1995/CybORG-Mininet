@@ -16,14 +16,13 @@ from CybORG import CybORG, CYBORG_VERSION
 
 from CybORG.Shared import Observation
 
-from CybORG.Agents import B_lineAgent, BlueReactRestoreAgent, BlueReactRemoveAgent, \
-    RandomAgent, RedMeanderAgent, SleepAgent
+from CybORG.Agents import B_lineAgent, BlueReactRemoveAgent, \
+    RedMeanderAgent, SleepAgent
 from CybORG.Agents import BaseAgent
 from CybORG.Agents.MainAgent import MainAgent
 from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
-from CybORG.Simulator.Scenarios.FileReaderScenarioGenerator import FileReaderScenarioGenerator
 
 from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
@@ -297,8 +296,8 @@ def parseCmdLineArgs ():
 
     # add optional arguments
     parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
-    parser.add_argument ("-max_step", "--max_step", type=int, default=30, help="max rounds in onr epoisode")
-    parser.add_argument ("-max_episode", "--max_episode", type=int, default=2, help="max episode in onr epoisode")
+    parser.add_argument ("-max_step", "--max_step", type=int, default=1, help="max rounds in onr epoisode")
+    parser.add_argument ("-max_episode", "--max_episode", type=int, default=1, help="max episode in onr epoisode")
     parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
 
