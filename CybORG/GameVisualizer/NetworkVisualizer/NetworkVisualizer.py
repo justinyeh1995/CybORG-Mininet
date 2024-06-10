@@ -2,6 +2,7 @@ import os
 import networkx as nx
 from pprint import pprint
 import plotly.graph_objects as go
+import plotly.io as pio
 
 def format_dict_for_display(data, indent=0):
     # Helper function to add indentation

@@ -1,0 +1,7 @@
+CybORG v3.1, Scenario2_cyborg--, Commit Hash: Not using git
+author: John Hannay, team: CardiffUni, technique: PPO + Greedy decoys
+wrappers: ChallengeWrapper(env=env, agent_name='Blue')
+mode: emu
+steps: 10, adversary: B_lineAgent, mean: -2.3000000000000003, standard deviation 0
+
+actions: [('DecoyFemitter Enterprise1', 'DiscoverRemoteSystems 10.0.136.160/28'), ('DecoySvchost Enterprise2', 'DiscoverNetworkServices 10.0.136.171'), ('DecoyFemitter Op_Host2', 'ExploitRemoteService 10.0.136.171'), ('Sleep', 'PrivilegeEscalate User1'), ('Sleep', 'DiscoverNetworkServices 10.0.234.196'), ('Sleep', 'ExploitRemoteService 10.0.234.196'), ('Sleep', 'PrivilegeEscalate Enterprise1'), ('Sleep', 'DiscoverRemoteSystems 10.0.234.192/28'), ('Sleep', 'DiscoverNetworkServices 10.0.234.202'), ('Sleep', 'ExploitRemoteService 10.0.234.202')], total reward: -2.3000000000000003

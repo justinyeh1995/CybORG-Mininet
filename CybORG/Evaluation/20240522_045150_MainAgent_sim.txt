@@ -1,0 +1,4 @@
+CybORG v3.1, Scenario2_cyborg--, Commit Hash: Not using git
+author: John Hannay, team: CardiffUni, technique: PPO + Greedy decoys
+wrappers: ChallengeWrapper(env=env, agent_name='Blue')
+mode: sim
