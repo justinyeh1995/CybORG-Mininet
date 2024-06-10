@@ -2,6 +2,7 @@ import random
 import string
 from typing import Union
 
+from CybORG.Emulator.Observations.Velociraptor.ProcessObservation import ProcessObservation
 from CybORG.Emulator.Actions.Velociraptor.RunProcessAction import RunProcessAction
 from CybORG.Emulator.Observations.Velociraptor.SSHConnectionServerObservation import SSHConnectionServerObservation
 from CybORG.Shared import Observation
@@ -32,7 +33,10 @@ class SSHConnectionServerAction(RunProcessAction):
         )
 
     def execute(self, state: Union[State, None]) -> Observation:
-
-        process_observation = super().execute(state)
-
-        return SSHConnectionServerObservation(process_observation, self.connection_key)
+        #print('Executing**')
+        if random.random()>=1: 
+           return ProcessObservation(None,False)
+        else:
+           process_observation = super().execute(state)
+           #print('**process observation is :',process_observation)
+           return SSHConnectionServerObservation(process_observation, self.connection_key)

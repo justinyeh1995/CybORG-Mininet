@@ -10,19 +10,20 @@ from CybORG.Agents.SimpleAgents.Meander import RedMeanderAgent
 from CybORG.Agents.Wrappers.BlueTableWrapper import BlueTableWrapper
 from CybORG.Agents.Wrappers.EnumActionWrapper import EnumActionWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
-
+from CybORG.Agents.Wrappers.ReduceActionSpaceWrapper import ReduceActionSpaceWrapper
 
 
 def run():
     path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Shared/Scenarios/Scenario1b.yaml'
+    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
     red_agent = RedMeanderAgent
     agent_name = 'Red'
     c = OpenAIGymWrapper(agent_name,
                               EnumActionWrapper(
+                                  ReduceActionSpaceWrapper(
                                       BlueTableWrapper(
                                           CybORG(path, 'sim', agents={'Red': red_agent}),
-                                          output_mode='vector')))
+                                          output_mode='vector'))))
     for i in range(100):
         for i in range(50):
             c.step()

@@ -3,7 +3,6 @@
 import sys
 from inspect import signature
 
-from CybORG.Shared import CybORGLogger
 from CybORG.Shared.Enums import SessionType
 
 MAX_SUBNETS = 10
@@ -18,12 +17,13 @@ MAX_FILES = 20
 MAX_PATHS = 20
 
 
-class ActionSpace(CybORGLogger):
+class ActionSpace:
 
     def __init__(self, actions, agent, allowed_subnets):
         # load in the stuff that the agent is allowed to know about
+
         # save all params
-        self.actions = {i: True for i in actions}
+        self.actions = {i: True for i in self.get_action_classes(actions)}
         self.action_params = {}
         for action in self.actions:
             self.action_params[action] = signature(action).parameters
@@ -41,6 +41,13 @@ class ActionSpace(CybORGLogger):
 
     def get_name(self, action: int) -> str:
         pass
+
+    def get_action_classes(self, actions):
+        action_classes = []
+        action_module = sys.modules['CybORG.Shared.Actions']
+        for action in actions:
+            action_classes.append(getattr(action_module, action))
+        return action_classes
 
     def get_max_action_space(self):
         max_action = {
@@ -114,9 +121,7 @@ class ActionSpace(CybORGLogger):
     def update(self, observation: dict, known: bool = True):
         if observation is None:
             return
-
         for key, info in observation.items():
-
             if key == "success" or key == 'Valid' or key == 'action':
                 continue
             if not isinstance(info, dict):
@@ -152,12 +157,7 @@ class ActionSpace(CybORGLogger):
             if "Sessions" in info:
                 for session in info["Sessions"]:
                     if "ID" in session and session['Agent'] in self.agent:
-                        if "Type" in session and (session["Type"] in (SessionType.MSF_SERVER,
-                                                                      SessionType.VELOCIRAPTOR_SERVER,
-                                                                      SessionType.RED_ABSTRACT_SESSION,
-                                                                      SessionType.GREY_SESSION,
-                                                                      SessionType.BLUE_DRONE_SESSION,
-                                                                      SessionType.RED_DRONE_SESSION)):
+                        if "Type" in session and (session["Type"] == SessionType.MSF_SERVER or session["Type"] == SessionType.VELOCIRAPTOR_SERVER or session["Type"] == SessionType.RED_ABSTRACT_SESSION or session["Type"] == SessionType.GREY_SESSION):
                             self.server_session[session["ID"]] = known
 
                         self.client_session[session["ID"]] = known

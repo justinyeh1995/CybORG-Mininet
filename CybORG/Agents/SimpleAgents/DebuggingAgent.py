@@ -1,5 +1,5 @@
 from .HeuristicRed import HeuristicRed
-from CybORG.Simulator.Actions.Action import Sleep
+from CybORG.Shared.Actions.Action import Sleep
 
 
 class DebuggingAgent(HeuristicRed):

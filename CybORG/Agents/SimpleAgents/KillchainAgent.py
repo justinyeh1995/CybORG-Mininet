@@ -4,7 +4,7 @@ import math
 
 from ipaddress import IPv4Network, IPv4Address
 
-from CybORG.Simulator.Actions import NmapScan, SambaUsermapScript, UpgradeToMeterpreter, MSFAutoroute, PingSweep, MSFEternalBlue, GetShell, FindFlag, TomcatCredentialScanner, TomcatExploit, SSHLoginExploit
+from CybORG.Shared.Actions import NmapScan, SambaUsermapScript, UpgradeToMeterpreter, MSFAutoroute, PingSweep, MSFEternalBlue, GetShell, FindFlag, TomcatCredentialScanner, TomcatExploit, SSHLoginExploit
 
 
 class KillchainAgent(BaseAgent):

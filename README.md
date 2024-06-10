@@ -6,122 +6,107 @@ A cyber security research environment for training and development of security h
 
 ## Installation
 
-Install CybORG locally using pip from the main directory that contains this readme
+Install CybORG locally using pip
 
 ```
+# from the cage-challenge-2/CybORG directory
 pip install -e .
 ```
 
 
 ## Creating the environment
-
-Create a CybORG environment with the DroneSwarm Scenario that is used for CAGE Challenge 3:
-
-```python
+Create a CybORG environment with:
+```
 from CybORG import CybORG
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-
-sg = DroneSwarmScenarioGenerator()
-cyborg = CybORG(sg, 'sim')
+path = str(inspect.getfile(CybORG))
+path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
+cyborg = CybORG(path, 'sim')
 ```
 
-The default_red_agent parameter of the DroneSwarmScenarioGenerator allows you to alter the red agent behaviour. Here is an example of a red agent that randomly selects a drone to exploit and seize control of:
+ 
 
-```python
-from CybORG import CybORG
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-from CybORG.Agents.SimpleAgents.DroneRedAgent import DroneRedAgent
 
-red_agent = DroneRedAgent
-sg = DroneSwarmScenarioGenerator(default_red_agent=red_agent)
-cyborg = CybORG(sg, 'sim')
+To create an environment where the red agent has preexisting knowledge of the network and attempts to beeline to the Operational Server use:
+
+ 
+
+```
+red_agent = B_lineAgent
+cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+```
+To create an environment where the red agent meanders through the network and attempts to take control of all hosts in the network use:
+
+ 
+
+```
+red_agent = RedMeanderAgent
+cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+```
+To create an environment where the red agent always takes the sleep action use:
+```
+red_agent = SleepAgent
+cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
 ```
 
+ 
 
 ## Wrappers
 
+ 
 
 To alter the interface with CybORG, [wrappers](CybORG/Agents/Wrappers) are avaliable.
 
  
 
-* [OpenAIGymWrapper](CybORG/Agents/Wrappers/OpenAIGymWrapper.py) - alters the interface to conform to the OpenAI Gym specification. Requires the observation to be changed into a fixed size array.
+* [OpenAIGymWrapper](CybORG/Agents/Wrappers/OpenAIGymWrapper.py) - alters the interface to conform to the OpenAI Gym specification.
 * [FixedFlatWrapper](CybORG/Agents/Wrappers/FixedFlatWrapper.py) - converts the observation from a dictionary format into a fixed size 1-dimensional vector of floats
-* [PettingZooParallelWrapper](CybORG/Agents/Wrappers/PettingZooParallelWrapper.py) - alters the interface to conform to the PettingZoo Parallel specification
-    * [ActionsCommsPettingZooParallelWrapper](CybORG/Agents/Wrappers/CommsPettingZooParallelWrapper.py) - Extends the PettingZoo Parallel interface to automatically communicate what action an agent performed to other agents
-    * [ObsCommsPettingZooParallelWrapper](CybORG/Agents/Wrappers/CommsPettingZooParallelWrapper.py) - Extends the PettingZoo Parallel interface to automatically communicate elements of an agent's observation to other agents
-    * [AgentCommsPettingZooParallelWrapper](CybORG/Agents/Wrappers/CommsPettingZooParallelWrapper.py) - Extends the PettingZoo Parallel interface to allow agents to select what message they want to broadcast to other agents as part of the agent's action space
+* [EnumActionWrapper](CybORG/Agents/Wrappers/EnumActionWrapper.py) - converts the action space into a single integer
+* [IntListToActionWrapper](CybORG/Agents/Wrappers/IntListToAction.py) - converts the action classes and parameters into a list of integers
+* [ReduceActionSpaceWrapper](CybORG/Agents/Wrappers/ReduceActionSpaceWrapper.py) - removes parameters from the action space that are unused by any of the action classes
+* [BlueTableWrapper](CybORG/Agents/Wrappers/BlueTableWrapper.py) - aggregates information from observations and converts into a 1-dimensional vector of integers
 
-## How to Use
-
-### OpenAI Gym Wrapper
-
-The OpenAI Gym Wrapper allows interaction with a single external agent. The name of that external agent must be specified at the creation of the OpenAI Gym Wrapper.
-
-```python
-from CybORG import CybORG
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
-from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
-
-sg = DroneSwarmScenarioGenerator()
-cyborg = CybORG(sg, 'sim')
-agent_name = 'blue_agent_0'
-open_ai_wrapped_cyborg = OpenAIGymWrapper(agent_name=agent_name, env=FixedFlatWrapper(cyborg))
-observation, reward, done, info = open_ai_wrapped_cyborg.step(0)
-```
-
-### PettingZoo Parallel Wrapper
-
-The PettingZoo Parallel Wrapper allows multiple agents to interact with the environment simultaneously.
-
-```python
-from CybORG import CybORG
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-from CybORG.Agents.Wrappers.PettingZooParallelWrapper import PettingZooParallelWrapper
-
-sg = DroneSwarmScenarioGenerator()
-cyborg = CybORG(sg, 'sim')
-open_ai_wrapped_cyborg = PettingZooParallelWrapper(cyborg)
-observations, rewards, dones, infos = open_ai_wrapped_cyborg.step({'blue_agent_0': 0, 'blue_agent_1': 0})
-```
-
-### Ray/RLLib wrapper  
-```python
-from CybORG import CybORG
-from CybORG.Simulator.Scenarios.DroneSwarmScenarioGenerator import DroneSwarmScenarioGenerator
-from CybORG.Agents.Wrappers.PettingZooParallelWrapper import PettingZooParallelWrapper
-from ray.rllib.env import ParallelPettingZooEnv
-from ray.tune import register_env
-
-def env_creator_CC3(env_config: dict):
-    sg = DroneSwarmScenarioGenerator()
-    cyborg = CybORG(scenario_generator=sg, environment='sim')
-    env = ParallelPettingZooEnv(PettingZooParallelWrapper(env=cyborg))
-    return env
-
-register_env(name="CC3", env_creator=env_creator_CC3)
-```
  
 
 
 ## Evaluating agent performance
 
-To evaluate an agent's performance please use the [evaluation script](CybORG/Evaluation/evaluation.py) and the [submission file](CybORG/Evaluation/submission/submission.py).
+ 
 
-Please see the [submission instructions](CybORG/Evaluation/submission/submission_readme.md) for further information on submission and evaluation of agents.
+To evaluate an agent's performance please use the [evaluation script](CybORG/Evaluation/evaluation.py). 
+
+ 
+
+
+The [wrap function](CybORG/Evaluation/evaluation.py#L22-L23) defines what wrappers will be used during evaluation.
+```
+def wrap(env):
+    return ChallengeWrapper(env=env, agent_name='Blue')
+```
+The agent under evaluation is defined [here](CybORG/Evaluation/evaluation.py#L42-L43). 
+To evaluate an agent, extend the [BaseAgent](CybORG/Agents/SimpleAgents/BaseAgent.py). 
+We have included the [BlueLoadAgent](CybORG/Agents/SimpleAgents/BlueLoadAgent.py) as an example of an agent that uses the stable_baselines3 library.
+```
+# Change this line to load your agent
+agent = BlueLoadAgent()
+```
 
 ## Additional Readings
 For further guidance on the CybORG environment please refer to the [tutorial notebook series.](CybORG/Tutorial)
 
 ## Citing this project
 ```
-@misc{cage_cyborg_2022, 
-  Title = {Cyber Operations Research Gym}, 
-  Note = {Created by Maxwell Standen, David Bowman, Son Hoang, Toby Richer, Martin Lucas, Richard Van Tassel, Phillip Vu, Mitchell Kiely, KC C., Natalie Konschnik, Joshua Collyer}, 
-  Publisher = {GitHub}, 
-  Howpublished = {\url{https://github.com/cage-challenge/CybORG}}, 
-  Year = {2022} 
+@misc{cage_challenge_2,
+  Title = {Cyber Autonomy Gym for Experimentation Challenge 2},
+  Note = {Created by Maxwell Standen, David Bowman, Son Hoang, Toby Richer, Martin Lucas, Richard Van Tassel, Phillip Vu, Mitchell Kiely},
+  Publisher = {GitHub},
+  Howpublished = {\url{https://github.com/cage-challenge/cage-challenge-2}},
+  Year = {2022}
 }
 ```
 
+## DSTG Development team 
+
+* **David Bowman** - david.bowman@dst.defence.gov.au
+* **Martin Lucas** - martin.lucas@dst.defence.gov.au
+* **Toby Richer** - toby.richer@dst.defence.gov.au
+* **Maxwell Standen** - max.standen@dst.defence.gov.au

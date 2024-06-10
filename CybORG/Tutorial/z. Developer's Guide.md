@@ -35,7 +35,7 @@ from CybORG import CybORG
 from CybORG.Agents import B_lineAgent
 
 path = str(inspect.getfile(CybORG))
-path = path[:-7] + f'/Shared/Scenarios/Scenario2.yaml'
+path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
 cyborg = CybORG(path)
 
 results = env.reset(agent='Red')
@@ -141,7 +141,7 @@ From above, we instantiated CybORG by passing in a scenario path:
 
 ```
 path = str(inspect.getfile(CybORG))
-path = path[:-7] + f'/Shared/Scenarios/Scenario2.yaml'
+path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
 cyborg = CybORG(path)
 ```
 
@@ -150,7 +150,7 @@ We now know that CybORG passes the scenario path to the SimulationController, wh
 The SimulationController also creates AgentInterfaces for each Agent in the scenario. In this example, we haven't passed any agents into CyBORG, so the internal agents will all be Sleep. We could pass in B_lineAgent via:
 
 ```
-cyborg = CybORG(path, agents={'Red': B_lineAgent()})
+cyborg = CybORG(path, agents={'Red': B_lineAgent})
 ```
 
 ### CybORG Reset

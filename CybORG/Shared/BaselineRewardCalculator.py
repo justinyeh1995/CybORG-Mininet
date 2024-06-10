@@ -1,6 +1,6 @@
 # Copyright DST Group. Licensed under the MIT license.
 
-from CybORG.Simulator.Actions.Action import Action
+from CybORG.Shared.Actions.Action import Action
 from CybORG.Shared.RewardCalculator import RewardCalculator
 
 WIN_REWARD = 1

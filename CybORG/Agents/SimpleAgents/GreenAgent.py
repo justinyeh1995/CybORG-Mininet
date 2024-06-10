@@ -1,10 +1,11 @@
+import random
+
 from CybORG.Agents.SimpleAgents.BaseAgent import BaseAgent
 from CybORG.Shared import Results
-from CybORG.Simulator.Actions import Sleep, GreenPingSweep, GreenPortScan, GreenConnection
+from CybORG.Shared.Actions import Sleep, GreenPingSweep, GreenPortScan, GreenConnection
 
 class GreenAgent(BaseAgent):
-    def __init__(self, np_random=None):
-        super().__init__(np_random)
+    def __init__(self):
         self.action_space = [
                 Sleep,
                 # GreenPingSweep,
@@ -28,14 +29,14 @@ class GreenAgent(BaseAgent):
                 ]
 
     def get_action(self,observation,action_space):
-        action = self.np_random.choice(self.action_space)
+        action = random.choice(self.action_space)
         if action == Sleep:
             return Sleep()
         elif action == GreenPingSweep:
-            subnet = self.np_random.choice(self.subnets)
+            subnet = random.choice(self.subnets)
             return action(subnet=subnet,session=0,agent='Green')
         else:
-            hostname = self.np_random.choice(self.hostnames)
+            hostname = random.choice(self.hostnames)
             return action(hostname=hostname,session=0,agent='Green')
 
     def train(self,results):

@@ -5,10 +5,10 @@ from CybORG.Simulator.Process import Process
 
 class MSFServerSession(Session):
 
-    def __init__(self, ident: str, hostname: str, user: str, agent: str,
+    def __init__(self, ident: str, host: str, user: str, agent: str,
                  process: Process, timeout: int = 0, session_type: str = 'msf server', name=None):
-        super().__init__(ident, hostname, user, agent,
-                         process, timeout, session_type, name=name)
+        super().__init__(ident, host, user, agent,
+                 process, timeout, session_type, name=name)
         self.routes = {}  # routes have the structure sessionid: subnet
 
     def dead_child(self, child_id: int):

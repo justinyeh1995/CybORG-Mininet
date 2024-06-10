@@ -8,10 +8,11 @@ from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 
 
 class RedTableWrapper(BaseWrapper):
-    def __init__(self, env=None, output_mode='table'):
-        super().__init__(env)
-        self.env = TrueTableWrapper(env=env)
-
+    def __init__(self, env=None, agent=None, output_mode='table'):
+        super().__init__(env,agent)
+        self.env = TrueTableWrapper(env=env, agent=agent)
+        self.agent = agent
+        print('**** In red table reset *****' )
         self.red_info = {}
         self.known_subnets = set()
         self.step_counter = -1
@@ -20,6 +21,7 @@ class RedTableWrapper(BaseWrapper):
         self.success = None
 
     def reset(self, agent=None):
+        print('**** In red table reset *****' )
         self.red_info = {}
         self.known_subnets = set()
         self.step_counter = -1
@@ -27,7 +29,7 @@ class RedTableWrapper(BaseWrapper):
         self.success = None
         result = self.env.reset(agent)
         if agent =='Red':
-            obs = self.observation_change(agent, result.observation)
+            obs = self.observation_change(result.observation)
             result.observation = obs
         return result
 
@@ -37,7 +39,7 @@ class RedTableWrapper(BaseWrapper):
         elif output_mode == 'true_table':
             return self.env.get_table()
 
-    def observation_change(self, agent, observation):
+    def observation_change(self, observation):
         self.success = observation['success']
 
         self.step_counter += 1
@@ -121,16 +123,14 @@ class RedTableWrapper(BaseWrapper):
                 ip = str(host['Interface'][0]['IP Address'])
                 hostname = host['System info']['Hostname']
                 session = host['Sessions'][0]
-                access = 'Privileged' if 'Username' in session and session['Username'] in ['root', 'SYSTEM'] else 'User'
+                access = 'Privileged' if 'Username' in session else 'User'
 
                 self.red_info[ip][2] = hostname
                 self.red_info[ip][4] = access
 
     def _process_priv_esc(self, obs, hostname):
         if obs['success'] == False:
-            red_info = [info for info in self.red_info.values() if info[2] == hostname]
-            if len(red_info) > 0:
-                red_info[0][4] = 'None'
+            [info for info in self.red_info.values() if info[2] == hostname][0][4] = 'None'
         else:
             for hostid in obs:
                 if hostid == 'success':
@@ -166,6 +166,7 @@ class RedTableWrapper(BaseWrapper):
 
         table.sortby = 'IP Address'
         table.success = self.success
+        print('\n from RedTablewrapper, the tabel is:',table)
         return table
 
     def _create_vector(self, num_hosts=13):

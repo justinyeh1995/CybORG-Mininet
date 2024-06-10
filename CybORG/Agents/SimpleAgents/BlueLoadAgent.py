@@ -7,7 +7,7 @@ from CybORG.Agents.SimpleAgents.BaseAgent import BaseAgent
 from CybORG.Agents.Wrappers.EnumActionWrapper import EnumActionWrapper
 from CybORG.Agents.Wrappers.FixedFlatWrapper import FixedFlatWrapper
 from CybORG.Agents.Wrappers.OpenAIGymWrapper import OpenAIGymWrapper
-
+from CybORG.Agents.Wrappers.ReduceActionSpaceWrapper import ReduceActionSpaceWrapper
 from CybORG.Agents.Wrappers import ChallengeWrapper
 
 class BlueLoadAgent(BaseAgent):
@@ -31,7 +31,7 @@ class BlueLoadAgent(BaseAgent):
         """gets an action from the agent that should be performed based on the agent's internal state and provided observation and action space"""
         if self.model is None:
             path = str(inspect.getfile(CybORG))
-            path = path[:-7] + f'/Shared/Scenarios/Scenario1b.yaml'
+            path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
             cyborg = ChallengeWrapper(env=CybORG(path, 'sim'), agent_name='Blue')
             self.model = PPO('MlpPolicy', cyborg)
         action, _states = self.model.predict(observation)

@@ -8,9 +8,9 @@ from CybORG.Agents.Wrappers.RedTableWrapper import RedTableWrapper
 if __name__ == "__main__":
     print("Setup")
     path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Shared/Scenarios/Scenario1b.yaml'
+    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
 
-    cyborg = RedTableWrapper(env=CybORG(path, 'sim',agents={'Blue':BlueMonitorAgent}), output_mode='raw')
+    cyborg = RedTableWrapper(env=CybORG(path, 'sim',agents={'Blue':BlueMonitorAgent}), output_mode='table')
     agent_name = 'Red'
 
     results = cyborg.reset(agent=agent_name)

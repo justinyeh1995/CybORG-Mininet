@@ -1,9 +1,8 @@
-from CybORG.Agents import BaseAgent
-from CybORG.Simulator.Actions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact
+import random
+from CybORG.Shared.Actions import DiscoverRemoteSystems, DiscoverNetworkServices, ExploitRemoteService, PrivilegeEscalate, Impact
 
-class HeuristicRed(BaseAgent):
-    def __init__(self, session=0, priority=None, np_random=None):
-        super().__init__(np_random)
+class HeuristicRed():
+    def __init__(self, session=0, priority=None):
         self.priority = priority
         self.parameters = {
                 'session':session,
@@ -57,8 +56,8 @@ class HeuristicRed(BaseAgent):
             ip = self._get_ip(action.hostname)
             self.ip_status[ip] = 1
         elif name == 'ExploitRemoteService':
-            # host may be Defender or attack may have randomly failed
-            pass
+            # Assuming host is Defender
+            self.ip_status[action.ip_address] = 3
         else:
             raise NotImplementedError('Scans are not supposed to fail.')
 
@@ -88,7 +87,7 @@ class HeuristicRed(BaseAgent):
 
     def _advance_killchain(self):
         if self.unexplored_subnets:
-            subnet = self.np_random.choice(list(self.unexplored_subnets))
+            subnet = random.choice(list(self.unexplored_subnets))
             action = DiscoverRemoteSystems(subnet=subnet,**self.parameters)
         else:
 
@@ -104,7 +103,7 @@ class HeuristicRed(BaseAgent):
 
     def _choose_ip(self):
         if self.active_ip is None:
-            self.active_ip = self.np_random.choice(list(self.ip_status.keys()))
+            self.active_ip = random.choice(list(self.ip_status.keys()))
 
         ip = self.active_ip
         status = self.ip_status[ip]
@@ -112,11 +111,10 @@ class HeuristicRed(BaseAgent):
             pass
         else:
             valid_ips = [ip for ip in self.ip_status if self.ip_status[ip] < 3]
-            ip = self.active_ip = self.np_random.choice(valid_ips) if valid_ips else None
+            ip = self.active_ip = random.choice(valid_ips) if valid_ips else None
 
         self.active_ip = ip
-        if ip not in self.ip_status:
-            breakpoint()
+        assert ip in self.ip_status
         return ip
 
     def _choose_exploit(self,ip):
@@ -125,7 +123,7 @@ class HeuristicRed(BaseAgent):
         if status == 0:
             action = command(ip_address=ip,**self.parameters)
         elif status == 1: 
-            action = command(ip_address=ip, **self.parameters)
+            action = command(ip_address=ip, priority=self.priority,**self.parameters)
         else:
             hostname = self.ip_map[ip]
             action = command(hostname=hostname,**self.parameters)

@@ -1,12 +1,15 @@
 ## The following code contains work of the United States Government and is not subject to domestic copyright protection under 17 USC § 105.
 ## Additionally, we waive copyright and related rights in the utilized code worldwide through the CC0 1.0 Universal public domain dedication.
 import hashlib
+from copy import deepcopy
+from datetime import datetime
+
+from ipaddress import IPv4Network, IPv4Address
+from random import randrange
 from typing import Optional, List
 
-import numpy as np
-
-
-from CybORG.Shared.Enums import (OperatingSystemPatch, OperatingSystemKernelVersion,
+from CybORG.Shared.Enums import (
+        SessionType, OperatingSystemPatch, OperatingSystemKernelVersion,
         OperatingSystemVersion, DecoyType,
         OperatingSystemDistribution, OperatingSystemType
         )
@@ -14,6 +17,7 @@ from CybORG.Shared.Enums import (OperatingSystemPatch, OperatingSystemKernelVers
 from CybORG.Simulator.Entity import Entity
 from CybORG.Simulator.File import File
 from CybORG.Simulator.Interface import Interface
+from CybORG.Simulator.LocalGroup import LocalGroup
 from CybORG.Simulator.MSFServerSession import MSFServerSession
 from CybORG.Simulator.Process import Process
 from CybORG.Simulator.Session import VelociraptorServer, RedAbstractSession, Session
@@ -28,9 +32,9 @@ class Host(Entity):
     The methods are used to change the state of the host.
     """
 
-    def __init__(self, np_random, system_info: dict, hostname: str = None, users: dict = None,
+    def __init__(self, system_info: dict, hostname: str = None, users: dict = None,
                  files: list = None, sessions: dict = None, processes: list = None, interfaces: list = None, info: dict = None,
-                 services: dict = None, respond_to_ping: bool = True, starting_position=np.array([0.0, 0.0]), host_type='host'):
+                 services: dict = None):
         super().__init__()
         self.original_services = {}
         self.os_type = OperatingSystemType.parse_string(system_info["OSType"])
@@ -46,8 +50,7 @@ class Host(Entity):
                 self.patches.append(OperatingSystemPatch.parse_string(patch))
         self.hostname = hostname
         self.architecture = system_info["Architecture"]
-        self.respond_to_ping = respond_to_ping
-        self.host_type = host_type
+        self.respond_to_ping = True
 
         self.users = []
         if users is not None:
@@ -60,13 +63,13 @@ class Host(Entity):
         if files is not None:
             for file in files:
                 self.files.append(File(**file))
-        self.original_files = []
+        self.original_files = deepcopy(self.files)
 
         self.sessions = {}
         if sessions is not None:
             for agent_name, session in sessions.items():
                 self.add_session(agent=agent_name, **session)
-        self.original_sessions = {}
+        self.original_sessions = deepcopy(self.sessions)
 
         self.default_process_info = processes
         self.processes = []
@@ -78,11 +81,12 @@ class Host(Entity):
                             open_ports=process.get('Connections'), properties=process.get('Properties'),
                             process_version=process.get('Process Version'), # adding process version.
                             process_type=process.get('Process Type')))
-        self.original_processes = []
+        self.original_processes = deepcopy(self.processes)
 
-        self.interfaces = []
+        self.interfaces = [Interface(name='lo', ip_address="127.0.0.1", subnet="127.0.0.0/8")]
         if interfaces is not None:
             for interface in interfaces:
+                interface['name'] = f'eth{len(self.interfaces) - 1}'
                 self.interfaces.append(Interface(**interface))
 
         self.ephemeral_ports = []
@@ -94,41 +98,42 @@ class Host(Entity):
         self.info = info if info is not None else {}
         self.events = {'NetworkConnections': [], 'ProcessCreation': []}
 
-        self.position = starting_position
-
-        self.np_random = np_random
-
-
     def get_state(self):
         observation = {"os_type": self.os_type, "os_distribution": self.distribution, "os_version": self.version,
                        "os_patches": self.patches, "os_kernel": self.kernel, "hostname": self.hostname,
-                       "architecture": self.architecture, "position": self.position}
+                       "architecture": self.architecture}
         return observation
 
     def get_ephemeral_port(self):
-        port = self.np_random.randint(49152, 60000)
+        port = randrange(49152, 60000)
         if port in self.ephemeral_ports:
-            port = self.np_random.randint(49152, 60000)
+            port = randrange(49152, 60000)
         self.ephemeral_ports.append(port)
         return port
 
     def add_session(self, username, ident, agent, parent, timeout=0, pid=None, session_type="Shell", name=None, artifacts=None,
             is_escalate_sandbox:bool=False):
+        if parent is not None:
+            parent_id = parent.ident
+        else:
+            parent_id = None
         if pid is None:
             pid = self.add_process(name=str(session_type), user=username).pid
         if session_type == 'MetasploitServer':
-            new_session = MSFServerSession(hostname=self.hostname, user=username, ident=ident, agent=agent, process=pid,
+            new_session = MSFServerSession(host=self.hostname, user=username, ident=ident, agent=agent, process=pid,
                                            timeout=timeout, session_type=session_type, name=name)
         elif session_type == 'RedAbstractSession':
-            new_session = RedAbstractSession(hostname=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
+            new_session = RedAbstractSession(host=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
                                              timeout=timeout, session_type=session_type, name=name)
         elif session_type == 'VelociraptorServer':
-            new_session = VelociraptorServer(hostname=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
+            new_session = VelociraptorServer(host=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
                                              timeout=timeout, session_type=session_type, name=name, artifacts=artifacts)
         else:
-            new_session = Session(hostname=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
-                                  timeout=timeout, parent=parent, session_type=session_type, name=name, is_escalate_sandbox=is_escalate_sandbox)
+            new_session = Session(host=self.hostname, agent=agent, username=username, ident=ident, pid=pid,
+                                  timeout=timeout, parent=parent_id, session_type=session_type, name=name, is_escalate_sandbox=is_escalate_sandbox)
 
+        if parent is not None:
+            parent.children[new_session.ident] = new_session
         # TODO revisit the base ssh issue
         # elif new_session.session_type != SessionType.SHELL and new_session.session_type != SessionType.VELOCIRAPTOR_SERVER and new_session.session_type != SessionType.MSF_SERVER:
         #     raise ValueError(f"New Session of type {new_session.session_type.name} requires parent but none has been set")
@@ -144,7 +149,9 @@ class Host(Entity):
             pids = []
             for process in self.processes:
                 pids.append(process.pid)
-            pid = max(pids) + self.np_random.randint(1, 10)
+            pid = 0
+            while pid == 0 or pid in pids:
+                pid = randrange(32768)
         if type(open_ports) is dict:
             open_ports = [open_ports]
 
@@ -389,10 +396,6 @@ class Host(Entity):
             for service_name, service_info in self.original_services.items():
                 self.services[service_name] = {'active': service_info.get('active'),
                                                         'process': service_info.get('PID')}
-
-    def update(self, state):
-        """Performs an update of host for the end of turn"""
-        pass
 
     def __str__(self):
         return f'{self.hostname}'

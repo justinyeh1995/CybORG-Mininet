@@ -6,6 +6,4 @@ from .RedTableWrapper import RedTableWrapper
 from .TrueTableWrapper import TrueTableWrapper
 from .EnumActionWrapper import EnumActionWrapper
 from .ChallengeWrapper import ChallengeWrapper
-from .IntFixedFlatWrapper import IntFixedFlatWrapper
-from .SimpleRedWrapper import SimpleRedWrapper
-from .PettingZooParallelWrapper import PettingZooParallelWrapper
+from .ReduceActionSpaceWrapper import ReduceActionSpaceWrapper

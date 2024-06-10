@@ -1,12 +1,15 @@
+import random
+from pprint import pprint
 from CybORG.Agents import BaseAgent
 from CybORG.Shared import Results
-from CybORG.Simulator.Actions import PrivilegeEscalate, ExploitRemoteService, DiscoverRemoteSystems, Impact, \
+from CybORG.Shared.Actions import PrivilegeEscalate, ExploitRemoteService, DiscoverRemoteSystems, Impact, \
     DiscoverNetworkServices, Sleep
+from enum import Enum
+
 
 
 class B_lineAgent(BaseAgent):
-    def __init__(self, np_random=None):
-        super(B_lineAgent, self).__init__(np_random)
+    def __init__(self):
         self.action = 0
         self.target_ip_address = None
         self.last_subnet = None
@@ -19,34 +22,39 @@ class B_lineAgent(BaseAgent):
         pass
 
     def get_action(self, observation, action_space):
-        # print(self.action)
+        print('\n ==>from Bline, **** Red observation is:',observation)
+        #print('action space is:',action_space)
         """gets an action from the agent that should be performed based on the agent's internal state and provided observation and action space"""
         session = 0
-
+        
+        #print('\n obs success is:',observation['success'], 'its type is:',type(observation['success']))
         while True:
             if observation['success'] == True:
+                ('\n *** In funny loop **** \n ')
                 self.action += 1 if self.action < 14 else 0
             else:
                 self.action = self.jumps[self.action]
-
+            
+            print('-> From bline, self.action is"',self.action)
+                
             if self.action in self.action_history:
                 action = self.action_history[self.action]
-
+            
             # Discover Remote Systems
             elif self.action == 0:
                 self.initial_ip = observation['User0']['Interface'][0]['IP Address']
+                #print('self initial ip:',self.initial_ip)
                 self.last_subnet = observation['User0']['Interface'][0]['Subnet']
                 action = DiscoverRemoteSystems(session=session, agent='Red', subnet=self.last_subnet)
             # Discover Network Services- new IP address found
             elif self.action == 1:
-                hosts = [value for key, value in observation.items() if key not in ['success', 'message']]
+                hosts = [value for key, value in observation.items() if key != 'success']
+                print('self initial ip:',self.initial_ip,'Hosts are:',hosts)
                 get_ip = lambda x : x['Interface'][0]['IP Address']
+                
                 interfaces = [get_ip(x) for x in hosts if get_ip(x)!= self.initial_ip]
-                if len(interfaces) < 1:
-                    action = DiscoverRemoteSystems(session=session, agent='Red', subnet=self.last_subnet)
-                else:
-                    self.last_ip_address = self.np_random.choice(interfaces)
-                    action = DiscoverNetworkServices(session=session, agent='Red', ip_address=self.last_ip_address)
+                self.last_ip_address = random.choice(interfaces)
+                action =DiscoverNetworkServices(session=session, agent='Red', ip_address=self.last_ip_address)
 
             # Exploit User1
             elif self.action == 2:
@@ -114,8 +122,17 @@ class B_lineAgent(BaseAgent):
 
             if self.action not in self.action_history:
                 self.action_history[self.action] = action
+            
+            print("--> red action in bline is:", action)
+            
+            #print('\n action id is:',self.action)
+            #print('\n **** self.action_history:', self.action_history)
             return action
 
+    def ip_to_name(self,action):
+        #to do : standarize the interface 
+        pass
+    
     def end_episode(self):
         self.action = 0
         self.target_ip_address = None

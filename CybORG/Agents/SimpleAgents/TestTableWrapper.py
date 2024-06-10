@@ -9,9 +9,9 @@ from CybORG.Agents.Wrappers.TrueTableWrapper import TrueTableWrapper
 if __name__ == "__main__":
     print("Setup")
     path = str(inspect.getfile(CybORG))
-    path = path[:-7] + f'/Shared/Scenarios/Scenario1b.yaml'
+    path = path[:-10] + '/Shared/Scenarios/Scenario1b.yaml'
 
-    cyborg = TrueTableWrapper(env=CybORG(path, 'sim',agents={'Red':B_lineAgent()}),observer_mode=False)
+    cyborg = TrueTableWrapper(env=CybORG(path, 'sim',agents={'Red':B_lineAgent}),observer_mode=False)
     agent_name = 'Blue'
 
     results = cyborg.reset(agent=agent_name)

@@ -8,13 +8,13 @@ from CybORG.Simulator.Entity import Entity
 
 class Session(Entity):
 
-    def __init__(self, ident: int, hostname: str, username: str, agent: str,
-                 pid: int, timeout: int = 0, session_type: str = 'shell',
+    def __init__(self, ident: int, host: str, username: str, agent: str,
+                 pid: int, timeout: int = 0, session_type: str = 'shell', 
                  active: bool = True, parent=None, name=None,
                  is_escalate_sandbox: bool = False):
         super().__init__()
         self.ident = ident
-        self.hostname = hostname
+        self.host = host
         self.username = username
         self.agent = agent
         self.timeout = timeout
@@ -40,9 +40,9 @@ class Session(Entity):
 
 class RedAbstractSession(Session):
     # a session that remembers previously seen information that can be used by actions
-    def __init__(self, ident: int, hostname: str, username: str, agent: str,
+    def __init__(self, ident: int, host: str, username: str, agent: str,
                  pid: int, timeout: int = 0, session_type: str = 'shell', active: bool = True, parent=None, name=None):
-        super().__init__(ident, hostname, username, agent, pid, timeout, session_type, active, parent, name)
+        super().__init__(ident, host, username, agent, pid, timeout, session_type, active , parent, name)
         self.ports = {} # a mapping of IP Addresses to previously seen open ports
         self.operating_system = {} # a mapping of hostnames to os types
         self.ot_service = None
@@ -54,7 +54,7 @@ class RedAbstractSession(Session):
             self.ports[ip_address] = [port]
 
     def clearports(self, ip_address: IPv4Address):
-                self.ports[ip_address] = []
+            self.ports[ip_address] = []
 
     def addos(self, hostname: str, os: OperatingSystemType):
         self.operating_system[hostname] = os
@@ -62,9 +62,9 @@ class RedAbstractSession(Session):
 class GreenAbstractSession(Session):
     # Currently a clone of RedAbstractSession
     # a session that remembers previously seen information that can be used by actions
-    def __init__(self, ident: int, hostname: str, username: str, agent: str,
+    def __init__(self, ident: int, host: str, username: str, agent: str,
                  pid: int, timeout: int = 0, session_type: str = 'shell', active: bool = True, parent=None, name=None):
-        super().__init__(ident, hostname, username, agent, pid, timeout, session_type, active, parent, name)
+        super().__init__(ident, host, username, agent, pid, timeout, session_type, active , parent, name)
         self.ports = {} # a mapping of IP Addresses to previously seen open ports
         self.operating_system = {} # a mapping of hostnames to os types
         self.ot_service = None
@@ -80,10 +80,10 @@ class GreenAbstractSession(Session):
 
 class VelociraptorServer(Session):
     # a session that remembers previously seen information that can be used by actions
-    def __init__(self, ident: int, hostname: str, username: str, agent: str,
+    def __init__(self, ident: int, host: str, username: str, agent: str,
                  pid: int, timeout: int = 0, session_type: str = 'shell', active: bool = True, parent=None, name=None,
                  artifacts=None):
-        super().__init__(ident, hostname, username, agent, pid, timeout, session_type, active, parent, name)
+        super().__init__(ident, host, username, agent, pid, timeout, session_type, active , parent, name)
         self.artifacts = [] if artifacts is None else artifacts  # a list of artifacts that the velociraptor collects
         self.sus_pids = {}
         self.sus_files = {}
