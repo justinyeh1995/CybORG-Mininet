@@ -57,12 +57,12 @@ class CybORGFactory:
     def wrap(self, env):
         return ChallengeWrapper(env=env, agent_name='Blue')
     
-    def create(self, type: str, red_agent) -> Dict:
+    def create(self, type: str, red_agent: BaseAgent) -> Dict:
         self.red_agent = red_agent()
         path = str(inspect.getfile(CybORG))
-        path = path[:-7] + f'/Simulator/Scenarios/scenario_files/{self.file_name}.yaml'
-        sg = FileReaderScenarioGenerator(path)
-        cyborg = CybORG(sg, 'sim', agents={'Red': self.red_agent})
+        path = path[:-10] + f'/Shared/Scenarios/{self.file_name}.yaml'
+        #sg = FileReaderScenarioGenerator(path)
+        cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
         
         if type == "wrap":
             return {"wrapped": self.wrap(cyborg), "unwrapped": cyborg, 'Red': self.red_agent}
@@ -78,6 +78,13 @@ class CybORGEnvironment(ABC):
         self.max_episode = max_episode
         self.red_agent_name: str = red_agent.__class__.__name__
         self.blue_agent_name: str = blue_agent.__class__.__name__
+
+        self.openai_gym_cyborg = cyborg.env
+        self.enum_action_cyborg = cyborg.env.env
+        self.blue_table_cyborg = cyborg.env.env.env
+        self.true_table_cyborg = cyborg.env.env.env.env
+        self.unwrapped_cyborg = cyborg.env.env.env.env.env
+
     @abstractmethod
     def run(self):
         pass
@@ -87,10 +94,6 @@ class SimulatedEnvironment(CybORGEnvironment):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode)
         self.game_state_manager = game_state_manager
 
-        self.openai_gym_cyborg = cyborg.env
-        self.blue_table_cyborg = cyborg.env.env
-        self.true_table_cyborg = cyborg.env.env.env
-        self.unwrapped_cyborg = cyborg.env.env.env.env
         # Set up game_state_manager
         self.game_state_manager.set_environment(cyborg=self.unwrapped_cyborg,
                                             red_agent_name=self.red_agent_name,
@@ -144,11 +147,6 @@ class EmulatedEnvironment(CybORGEnvironment):
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, game_state_manager, mininet_adapter):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode)
         self.game_state_manager = game_state_manager
-        
-        self.openai_gym_cyborg = cyborg.env
-        self.blue_table_cyborg = cyborg.env.env
-        self.true_table_cyborg = cyborg.env.env.env
-        self.unwrapped_cyborg = cyborg.env.env.env.env
 
         # Set up game_state_manager
         self.game_state_manager.set_environment(cyborg=self.unwrapped_cyborg,
@@ -245,7 +243,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
     
     print(f'Using agent {agent.__class__.__name__}, if this is incorrect please update the code to load in your agent')
 
-    file_name = str(inspect.getfile(CybORG))[:-7] + '/Evaluation/' + time.strftime("%Y%m%d_%H%M%S") + f'_{agent.__class__.__name__}_{environment}' + '.txt'
+    file_name = str(inspect.getfile(CybORG))[:-10] + '/Evaluation/' + time.strftime("%Y%m%d_%H%M%S") + f'_{agent.__class__.__name__}_{environment}' + '.txt'
     print(f'Saving evaluation results to {file_name}')
     with open(file_name, 'a+') as data:
         data.write(f'CybORG v{cyborg_version}, {scenario}, Commit Hash: {commit_hash}\n')
