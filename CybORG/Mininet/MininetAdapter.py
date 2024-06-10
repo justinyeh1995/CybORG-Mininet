@@ -18,7 +18,7 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
 
 class MininetAdapter:
     def __init__(self):
-        self.path = str(inspect.getfile(CybORG))[:-7]
+        self.path = str(inspect.getfile(CybORG))[:-10]
         
         config = configparser.ConfigParser ()
         config.read ('config.ini')
