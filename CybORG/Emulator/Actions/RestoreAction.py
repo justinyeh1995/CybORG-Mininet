@@ -14,8 +14,6 @@ import paramiko
 import shutil
 import time
 
-from novaclient import client as novaclient
-
 
 class RestoreAction(Action):
 
@@ -135,7 +133,8 @@ class RestoreAction(Action):
                         "admin_state_up": True,
                         'fixed_ips': port.fixed_ips,
                         'mac_address': mac_address,
-                        "network_id": network.id
+                        "network_id": network.id,
+                        "security_groups": port.security_group_ids
                     }
                 })
             network_id_port_data_list_dict[network_name] = port_data_list
@@ -212,10 +211,7 @@ class RestoreAction(Action):
 
         # COMPILE LIST OF STILL-EXISTING PORTS TO ATTACH TO RESTORED SERVER
         network_list = []
-        new_network_id_port_data_dict = {}
         for network_name, port_data_list in network_id_port_data_list_dict.items():
-            new_port_data_list = []
-            include_network = True
             for port_data in port_data_list:
                 port_id = port_data['port_id']
                 # IF PORT EXISTS, PLACE IN LIST TO ATTACH TO RESTORED SERVER
@@ -224,12 +220,10 @@ class RestoreAction(Action):
                     include_network = False
                 # OTHERWISE, PLACE DATA ABOUT PORT INTO LIST FOR RE-CREATION
                 else:
-                    port_data['port_id'] = None
-                    new_port_data_list.append(port_data)
-            if len(new_port_data_list) > 0:
-                new_network_id_port_data_dict[network_name] = new_port_data_list
-                if include_network:
-                    network_list.append({ 'uuid': port_data['port_info']['network_id']})
+                    port = conn.create_port(
+                        **port_data['port_info']
+                    )
+                    network_list.append({'port': port.id})
 
         #
         # RESTORE THE SERVER
@@ -244,49 +238,6 @@ class RestoreAction(Action):
         )
         # WAIT UNTIL SERVER FULLY RESTORED
         conn.compute.wait_for_server(server=redeployed_instance, wait=1200)
-
-        # GET INFO ABOUT RESTORED SERVER
-        restored_server = conn.compute.find_server(self.hostname)
-
-        # GET A NOVA CLIENT
-        project_id = server.location.project.id
-        nova_client = novaclient.Client(
-            version='2.1',
-            username=self.username,
-            password=self.password,
-            project_id=project_id,
-            auth_url=self.auth_url,
-            user_domain_name=self.user_domain_name,
-            project_domain_name="ISIS"
-        )
-        server_nova_client = nova_client.servers.get(restored_server.id)
-
-        # IF THERE ARE PORTS TO RE-CREATE
-        if len(new_network_id_port_data_dict) > 0:
-
-            for port_data_list in new_network_id_port_data_dict.values():
-                for port_data in port_data_list:
-                    # RECREATE PORT USING NEUTRON
-                    port = conn.create_port(
-                        device_id=restored_server.id,
-                        **port_data['port_info']
-                    )
-                    port_data['port_id'] = port.id
-
-        # GET DATA ABOUT ALL EXISTING PORTS ON NEW SERVER
-        new_network_id_port_data_list_dict = self.get_network_id_port_data_list_dict(conn, restored_server)
-
-        new_port_id_ip_address_set_dict = {
-            item['port_id']: {fixed_ip['ip_address'] for fixed_ip in item['port_info']['fixed_ips']}
-            for value in new_network_id_port_data_list_dict.values()
-            for item in value
-        }
-
-        for port_id, ip_address_set in new_port_id_ip_address_set_dict.items():
-
-            remaining_ip_address_set = ip_address_set.difference(server_ip_address_set)
-            if remaining_ip_address_set == ip_address_set:
-                server_nova_client.interface_detach(port_id)
 
         ssh_session = self.get_ssh_session(ssh_ip_address)
         if ssh_session is None:
