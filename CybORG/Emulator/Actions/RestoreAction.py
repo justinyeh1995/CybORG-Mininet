@@ -248,3 +248,6 @@ class RestoreAction(Action):
         ssh_session.close()
 
         shutil.rmtree(str(self.temp_directory_path))
+
+        observation.set_success(True)
+        return observation
