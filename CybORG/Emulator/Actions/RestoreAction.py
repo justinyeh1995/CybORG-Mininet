@@ -13,6 +13,7 @@ from CybORG.Shared.Actions import Action
 import paramiko
 import shutil
 import time
+import socket
 
 
 class RestoreAction(Action):
@@ -72,9 +73,18 @@ class RestoreAction(Action):
                 ssh_session.connect(hostname=ip_address, username='vagrant', password='vagrant')
                 session_success = True
                 break
-            except Exception:
-                # print(f"SSH connection try {ix} failed. Retrying...")
-                time.sleep(1)
+            except paramiko.BadHostKeyException as bad_host_key_exception:
+                print(f"SSH connection try {ix} failed: BadHostKeyException ({str(bad_host_key_exception)})")
+                return None
+            except paramiko.AuthenticationException as authentication_exception:
+                print(f"SSH connection try {ix} failed: AuthenticationException ({str(authentication_exception)})")
+                return None
+            except paramiko.SSHException as ssh_exception:
+                print(f"SSH connection try {ix} failed: SSHException ({str(ssh_exception)})")
+            except socket.error:
+                print(f"SSH connection try {ix} failed: socker.error ({str(socket.error)})")
+
+            time.sleep(5)
 
         if session_success:
             return ssh_session
