@@ -55,6 +55,7 @@ class CybORGFactory:
     red_agent: BaseAgent = None
     
     def wrap(self, env):
+        # env = LinkDiagramWrapper(env=env)
         return ChallengeWrapper(env=env, agent_name='Blue')
     
     def create(self, type: str, red_agent: BaseAgent) -> Dict:
@@ -255,6 +256,9 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
 
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
     
+    # generate a enhanced network object for cyborg v2 
+    # wrapped cyborg
+
     # Single  
     # game manager initialization
     game_state_manager = GameStateCollector(environment=environment)
