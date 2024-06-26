@@ -1,11 +1,10 @@
 from CybORG.Emulator.Actions.Velociraptor.NetstatAction import NetstatAction
 
-credentials_file = "prog_client.yaml"
+credentials_file = "prog_client3.yaml"
 
 netstat_action = NetstatAction(
     credentials_file=credentials_file, hostname="TESTDOCKER1"
 )
-
 
 netstat_observation = netstat_action.execute(None)
 

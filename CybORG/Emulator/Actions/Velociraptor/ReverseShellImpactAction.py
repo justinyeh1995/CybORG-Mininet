@@ -7,7 +7,7 @@ from .RunProcessAction import RunProcessAction
 from CybORG.Emulator.Observations.Velociraptor.ReverseShellObservation import ReverseShellObservation
 
 
-class ImpactAction(RunProcessAction):
+class ReverseShellImpactAction(RunProcessAction):
 
     def __init__(
             self,
