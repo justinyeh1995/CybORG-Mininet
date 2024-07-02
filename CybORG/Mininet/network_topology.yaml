@@ -1,91 +1,43 @@
 topo:
-  routers:
-  - router: r1
-    ip: 10.0.112.205
-  - router: r2
-    ip: 10.0.144.5
-  - router: r3
-    ip: 10.0.108.5
+  routers: []
   lans:
   - name: lan1
     router: r1
-    router_ip: 10.0.112.205
-    subnet: 10.0.112.192/28
+    router_ip: 10.0.32.49
+    subnet: 10.0.32.48/28
     hosts: 4
     hosts_info:
-      h1: 10.0.112.204
-      h2: 10.0.112.195
-      h3: 10.0.112.193
-      h4: 10.0.112.202
+      h1: 10.0.32.61
+      h2: 10.0.32.51
+      h3: 10.0.32.57
+      h4: 10.0.32.56
     nat: nat0
-    nat_ip: 10.0.112.206
+    nat_ip: 10.0.32.62
   - name: lan2
     router: r2
-    router_ip: 10.0.144.5
-    subnet: 10.0.144.0/28
+    router_ip: 10.0.97.209
+    subnet: 10.0.97.208/28
     hosts: 4
     hosts_info:
-      h1: 10.0.144.6
-      h2: 10.0.144.13
-      h3: 10.0.144.14
-      h4: 10.0.144.4
+      h1: 10.0.97.210
+      h2: 10.0.97.214
+      h3: 10.0.97.217
+      h4: 10.0.97.216
     nat: nat1
-    nat_ip: 10.0.144.12
+    nat_ip: 10.0.97.222
   - name: lan3
     router: r3
-    router_ip: 10.0.108.5
-    subnet: 10.0.108.0/28
+    router_ip: 10.0.113.129
+    subnet: 10.0.113.128/28
     hosts: 5
     hosts_info:
-      h1: 10.0.108.13
-      h2: 10.0.108.2
-      h3: 10.0.108.6
-      h4: 10.0.108.10
-      h5: 10.0.108.12
+      h1: 10.0.113.133
+      h2: 10.0.113.137
+      h3: 10.0.113.142
+      h4: 10.0.113.130
+      h5: 10.0.113.141
     nat: nat2
-    nat_ip: 10.0.108.14
-  links:
-  - ep1-router: r1
-    ep2-router: r2
-    subnet: 10.50.1.0/28
-  - ep1-router: r1
-    ep2-router: r3
-    subnet: 10.100.1.0/28
-  - ep1-router: r2
-    ep2-router: r3
-    subnet: 10.150.1.0/28
-  routes:
-  - router: r1
-    entries:
-    - 10.0.144.0/28 via 10.50.1.2 dev r1-eth1
-    - 10.0.108.0/28 via 10.100.1.2 dev r1-eth2
-    - default via 10.0.112.206 dev r1-eth0
-  - router: r2
-    entries:
-    - 10.0.112.192/28 via 10.50.1.1 dev r2-eth1
-    - 10.0.108.0/28 via 10.150.1.2 dev r2-eth2
-    - default via 10.0.144.12 dev r2-eth0
-  - router: r3
-    entries:
-    - 10.0.112.192/28 via 10.100.1.1 dev r3-eth1
-    - 10.0.144.0/28 via 10.150.1.1 dev r3-eth2
-    - default via 10.0.108.14 dev r3-eth0
-  nats:
-  - name: nat0
-    subnets:
-    - 10.0.112.192/28
-    - 10.0.144.0/28
-    - 10.0.108.0/28
-    router: r1
-  - name: nat1
-    subnets:
-    - 10.0.112.192/28
-    - 10.0.144.0/28
-    - 10.0.108.0/28
-    router: r2
-  - name: nat2
-    subnets:
-    - 10.0.112.192/28
-    - 10.0.144.0/28
-    - 10.0.108.0/28
-    router: r3
+    nat_ip: 10.0.113.140
+  links: []
+  routes: []
+  nats: []

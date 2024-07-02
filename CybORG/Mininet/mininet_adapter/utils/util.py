@@ -10,10 +10,10 @@ from CybORG.Mininet.mininet_api import custom_utils as cu
 # CybORG-2-Mininet Mapper #
 ###########################
 
-def set_name_map(cyborg) -> Dict:
+def build_cyborg_to_mininet_name_map(cyborg) -> Dict:
     cyborg_to_mininet_name_map = collections.defaultdict(str)
     
-    for cnt, (lan_name, network) in enumerate(cyborg.get_cidr_map().items()):
+    for cnt, (lan_name, network) in enumerate(cyborg.environment_controller.subnet_cidr_map.items()):
             cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
             cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}'
         
@@ -71,19 +71,13 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
     lans_info = []
     counter = 0
     # Create LANs based on the networks
-    for lan_name, network in cyborg.get_cidr_map().items():
+    for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items():
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
         
         hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
-        router_ip = cyborg.get_ip_map()[f'{lan_name}_router']
         
         # Calculate the usable IP range
         usable_ips = list(network.hosts())
-        # Exclude the router's IP address from the usable IP range
-        if router_ip in usable_ips:
-            usable_ips.remove(router_ip)
-        else:
-            print("Invalid router ip")
 
         for ip in hosts_info.values():  # create as many hosts as the number we specified      
             host_ip = ipaddress.ip_address(ip)
@@ -91,7 +85,13 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
                 usable_ips.remove(host_ip)
             else:
                 print("Invalid host ip")
-
+        
+        if usable_ips:
+            router_ip = usable_ips[0]
+            usable_ips.remove(router_ip)
+        else:
+            print("No ip let for router")
+            
         lans_info.append({
             'name': cyborg_to_mininet_name_map[lan_name],
             'router': cyborg_to_mininet_name_map[f'{lan_name}_router'],
@@ -139,7 +139,7 @@ def get_nats_info(cyborg, topology):
         if lan.get('nat', None):
             nats_info.append({
                 'name': lan['nat'],
-                'subnets': [str(network) for lan_name, network in cyborg.get_cidr_map().items() if lan_name != lan['name']],
+                'subnets': [str(network) for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items() if lan_name != lan['name']],
                 'router': lan['router'],
             })
 

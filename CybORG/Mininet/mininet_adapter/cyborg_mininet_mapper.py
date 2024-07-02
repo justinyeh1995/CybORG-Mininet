@@ -5,7 +5,7 @@ from ipaddress import IPv4Address, IPv4Network
 import re
 import traceback 
 from typing import List, Dict
-from CybORG.Mininet.mininet_adapter.utils.util import set_name_map, parse_mininet_ip, \
+from CybORG.Mininet.mininet_adapter.utils.util import build_cyborg_to_mininet_name_map, parse_mininet_ip, \
                             build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map
 
 class CybORGMininetMapper:
@@ -30,20 +30,23 @@ class CybORGMininetMapper:
         self.mininet_to_cyborg_host_map = {}
         self.cyborg_ip_to_mininet_ip_map = {}
         self.mininet_ip_to_cyborg_ip_map = {}
-        
+    
     def init_mapping(self, cyborg) -> None: 
         self.ip_map = cyborg.get_ip_map()
-        self.cidr_map = {lan_name: str(ip) for lan_name, ip in cyborg.get_cidr_map().items()}
+        self.cidr_map = {lan_name: network for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items()}
+
         self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()}
         self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
 
-        self.usable_ip_to_subnet = {str(network): list(network.hosts()) for network in cyborg.get_cidr_map().values()} # Dict[str]: list of IPV4Address
+        self.usable_ip_to_subnet = {str(network): list(network.hosts()) for network in self.cidr_map.values()} # Dict[str]: list of IPV4Address
+        
         for network, usable_ips in self.usable_ip_to_subnet.items():
             for ip in self.cyborg_ip_to_host_map:
                 if IPv4Address(ip) in usable_ips:
                     self.cyborg_ip_to_subnet.update({ip: network})
         
-        self.cyborg_to_mininet_name_map = set_name_map(cyborg)
+        # generate router ip 
+        self.cyborg_to_mininet_name_map = build_cyborg_to_mininet_name_map(cyborg)
         self.mininet_host_to_ip_map = {}
     
     def update_mapping(self, output: str, topology_data: dict) -> None:

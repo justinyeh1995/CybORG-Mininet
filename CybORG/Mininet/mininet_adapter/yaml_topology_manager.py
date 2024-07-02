@@ -28,7 +28,13 @@ class YamlTopologyManager:
 
             self.topology_data['topo']['routes'] = generate_routing_rules(self.topology_data)
 
-            print("Topology for file 'network_topology.yaml' created.")
+            for name, component in self.topology_data['topo'].values():
+                print(name)
+                print(component)
+                if not component:
+                    raise ValueError(f"{name} component is empty.")
+                
+            print("Topology data for file 'network_topology.yaml' created successfully.")
                     
         except Exception as e:
             print("An error occurred while creating the topology:")

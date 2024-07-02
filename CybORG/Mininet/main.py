@@ -23,6 +23,7 @@ from CybORG.Agents.MainAgent import MainAgent
 from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
+from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
 
 from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
@@ -55,7 +56,7 @@ class CybORGFactory:
     red_agent: BaseAgent = None
     
     def wrap(self, env):
-        # env = LinkDiagramWrapper(env=env)
+        env = LinkDiagramWrapper(env=env)
         return ChallengeWrapper(env=env, agent_name='Blue')
     
     def create(self, type: str, red_agent: BaseAgent) -> Dict:
