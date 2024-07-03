@@ -28,7 +28,7 @@ class YamlTopologyManager:
 
             self.topology_data['topo']['routes'] = generate_routing_rules(self.topology_data)
 
-            for name, component in self.topology_data['topo'].values():
+            for name, component in self.topology_data['topo'].items():
                 print(name)
                 print(component)
                 if not component:
