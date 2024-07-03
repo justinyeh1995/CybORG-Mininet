@@ -14,7 +14,7 @@ class MininetCommandInterface:
         try:
             self.clean()
             path = str(inspect.getfile(CybORG))
-            path = path[:-7] + f'/Mininet/mininet_api/custom_net.py' # To-Do: might need to be configurable in the config file
+            path = path[:-10] + f'/Mininet/mininet_api/custom_net.py' # To-Do: might need to be configurable in the config file
             self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
             self.mininet_process.timeout = 300
             self.mininet_process.expect("mininet>")
