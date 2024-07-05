@@ -62,11 +62,23 @@ class MininetAdapter:
         # Create YAML topology file
         file_path = 'network_topology.yaml'
         # This involves updating topology data and mappings
-        self.topology_manager.generate_topology_data(self.cyborg, self.mapper.cyborg_to_mininet_name_map)
+        
+        try:
+            self.topology_manager.generate_topology_data(self.cyborg, self.mapper.cyborg_to_mininet_name_map)
+
+        except Exception as e:
+            traceback.format_exc()
+            raise e
+
         self.topology_manager.save_topology(file_path)
         
         # Start Mininet with the topology
-        expect_text = self.command_interface.start_mininet(file_path)
+        try:
+            expect_text = self.command_interface.start_mininet(file_path)
+        
+        except Exception as e:
+            traceback.format_exc()
+            raise e
         # pprint(expect_text)
 
         self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
@@ -88,32 +100,52 @@ class MininetAdapter:
         print(f"---> in MininetAdapter {agent_type} step")
         target, cyborg_action = self.parse_action_string(action_string)
         isSuccess = True # Always True man..
-        
-        if agent_type == "Blue":
-            mininet_command = self.blue_action_translator.translate(cyborg_action, 
-                                                                target, 
-                                                                self.mapper.cyborg_to_mininet_host_map,
-                                                                self.mapper.mininet_host_to_ip_map)  
-        elif agent_type == "Red":
-            mininet_command = self.red_action_translator.translate(cyborg_action, 
-                                                                target,
-                                                                self.mapper.cyborg_to_mininet_host_map,
-                                                                self.mapper.mininet_host_to_ip_map)
 
-        mininet_cli_text = self.command_interface.send_command(mininet_command)
-        
-        print("===Mininet Cli Text====")
-        print(mininet_cli_text)
-        
-        mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
-        
-        print("===Obs===")
-        pprint(mininet_obs.data)
+        try:
+            if agent_type == "Blue":
+                mininet_command = self.blue_action_translator.translate(cyborg_action, 
+                                                                    target, 
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)  
+            elif agent_type == "Red":
+                mininet_command = self.red_action_translator.translate(cyborg_action, 
+                                                                    target,
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)
+        except Exception as e:
+            traceback.print_exc()
+            raise e
 
-        reward = self.reward_calculator.reward(mininet_obs.data, self.mapper)
+        try:
+            mininet_cli_text = self.command_interface.send_command(mininet_command)
+            
+            print("===Mininet Cli Text====")
+            print(mininet_cli_text)
+        
+        except Exception as e:
+            traceback.print_exc()
+            raise e
 
-        print("===Rewards===")
-        print(reward)
+        try:    
+            mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
+            
+            print("===Obs===")
+            pprint(mininet_obs.data)
+
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
+        try:
+            reward = self.reward_calculator.reward(mininet_obs.data, self.mapper)
+
+            print("===Rewards===")
+            print(reward)
+
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
         print("*********")
 
         return mininet_obs, reward
