@@ -119,7 +119,6 @@ class NetworkVisualizer:
         # Adjust the layout to accommodate the new controls
         fig.update_layout(
             height=900,  # Increase the height to accommodate all controls
-            margin=dict(l=50, r=50, t=100, b=150)  # Adjust margins
         )
         
     def _save_figure(self, fig, red_agent, step):
