@@ -1,5 +1,6 @@
 from copy import deepcopy
 from pprint import pprint
+# from click import 
 from prettytable import PrettyTable
 
 import networkx as nx
@@ -22,18 +23,13 @@ class LinkDiagramWrapper(BaseWrapper):
         self.link_diagram = None
         self.connected_components = None
         
-        # chain of behaviour
+    
+    def reset(self):
+        print("Add routers into core cyborg state")
         self.add_routers().setup_data_links()
 
     def add_routers(self):
         # self.env.environment_controller.state.subnets
-        return self
-
-    def setup_data_links(self):
-        """Sets up the data links object for the initial state."""
-        # create the link diagram
-        self.link_diagram = nx.Graph()
-        
         for lan_name, network in self.cyborg.environment_controller.state.subnet_name_to_cidr.items():
             router = lan_name + '_router'
             usable_ips = list(network.hosts())
@@ -42,6 +38,12 @@ class LinkDiagramWrapper(BaseWrapper):
             router_ip = usable_ips[0]
             self.cyborg.environment_controller.state.ip_addresses.update({IPv4Address(router_ip): router})
             self.cyborg.environment_controller.hostname_ip_map.update({router: IPv4Address(router_ip)})
+        return self
+
+    def setup_data_links(self):
+        """Sets up the data links object for the initial state."""
+        # create the link diagram
+        self.link_diagram = nx.Graph()
 
         # add hosts to link diagram
         for hostname in self.cyborg.environment_controller.hostname_ip_map.keys():

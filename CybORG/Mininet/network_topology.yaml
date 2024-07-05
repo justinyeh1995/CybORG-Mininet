@@ -1,5 +1,11 @@
 topo:
-  routers: []
+  routers:
+  - router: r1
+    ip: 10.0.120.145
+  - router: r2
+    ip: 10.0.110.33
+  - router: r3
+    ip: 10.0.214.177
   lans:
   - name: lan1
     router: r1
@@ -48,7 +54,22 @@ topo:
   - ep1-router: r2
     ep2-router: r3
     subnet: 10.150.1.0/28
-  routes: []
+  routes:
+  - router: r1
+    entries:
+    - 10.0.110.32/28 via 10.50.1.2 dev r1-eth1
+    - 10.0.214.176/28 via 10.100.1.2 dev r1-eth2
+    - default via 10.0.120.157 dev r1-eth0
+  - router: r2
+    entries:
+    - 10.0.120.144/28 via 10.50.1.1 dev r2-eth1
+    - 10.0.214.176/28 via 10.150.1.2 dev r2-eth2
+    - default via 10.0.110.45 dev r2-eth0
+  - router: r3
+    entries:
+    - 10.0.120.144/28 via 10.100.1.1 dev r3-eth1
+    - 10.0.110.32/28 via 10.150.1.1 dev r3-eth2
+    - default via 10.0.214.190 dev r3-eth0
   nats:
   - name: nat0
     subnets:
