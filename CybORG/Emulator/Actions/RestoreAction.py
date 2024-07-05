@@ -112,14 +112,59 @@ class RestoreAction(Action):
 
         sftp_client = ssh_session.open_sftp()
 
-        sftp_client.put(str(cls.tarfile_path), cls.tarfile_name)
-        sftp_client.put(str(cls.restore_script_path), cls.restore_script_name)
+        max_tries = 10
+        no_tries = 0
+        while no_tries < max_tries:
+            try:
+                sftp_client.put(str(cls.tarfile_path), cls.tarfile_name)
+                break
+            except FileNotFoundError as fileNotFoundError:
+                print(f"File not found error: {fileNotFoundError}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except IOError as ioError:
+                print(f"IOError: {ioError}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
+
+            no_tries += 1
+            print(f"Copy {str(cls.tarfile_path)} failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not copy {str(cls.tarfile_path)}"
+            print(error)
+            raise Exception(error)
+
+        max_tries = 10
+        no_tries = 0
+        while no_tries < max_tries:
+            try:
+                sftp_client.put(str(cls.restore_script_path), cls.restore_script_name)
+                break
+            except FileNotFoundError as fileNotFoundError:
+                print(f"File not found error: {fileNotFoundError}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except IOError as ioError:
+                print(f"IOError: {ioError}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
+
+            no_tries += 1
+            print(f"Copy {str(cls.restore_script_path)} failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not copy {str(cls.restore_script_path)}"
+            print(error)
+            raise Exception(error)
 
         sftp_client.close()
 
         stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
 
-        ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
+        # ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
 
         return stdout.readlines()
 
