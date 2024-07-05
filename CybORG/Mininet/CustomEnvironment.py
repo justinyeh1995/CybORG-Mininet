@@ -18,6 +18,7 @@ class CybORGEnvironment(ABC):
         self.blue_agent_name: str = blue_agent.__class__.__name__
 
         # @To-Do: highly coupled dependency: bad
+        self.linked_diagram_cyborg = cyborg
         self.challenge_wrapper = cyborg.env
         self.openai_gym_cyborg = cyborg.env.env
         self.enum_action_cyborg = cyborg.env.env.env
@@ -106,13 +107,14 @@ class EmulatedEnvironment(CybORGEnvironment):
             r = []
             a = []
 
-            blue_observation = self.challenge_wrapper.reset()
+            blue_observation = self.linked_diagram_cyborg.reset()
             blue_action_space = self.challenge_wrapper.get_action_space('Blue')
             red_observation = self.true_table_cyborg.get_observation('Red')
             red_action_space = self.true_table_cyborg.get_action_space('Red')
 
             mininet_blue_observation = blue_observation
             mininet_red_observation = red_observation
+
 
             # @To-Do bad design, the reset() among different objects has ordering dependecies
             try:
