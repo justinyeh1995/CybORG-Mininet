@@ -45,3 +45,6 @@ doas bash -c 'echo -e "ubuntu\nubuntu" | passwd "ubuntu" > /dev/null 2>&1'
 
 cd ..
 rm -rf CollectFiles collect_files.tgz
+
+doas mkdir -p /usr/local/run
+chmod a+rwxt /usr/local/run
