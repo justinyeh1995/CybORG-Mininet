@@ -205,16 +205,16 @@ class Frame:
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             width=1000,
-            annotations=[],  # Include the annotations by default, shown initially
+            annotations=[observations],  # Include the annotations by default, shown initially
             updatemenus=[
                 dict(
                     buttons=[
                         dict(label="Show Observations",
                             method="relayout",
-                            args=[{"annotations": [observations]}]), 
+                            args=[{"annotations[0].visible": True}]), 
                         dict(label="Hide Observations",
                             method="relayout",
-                            args=[{"annotations": []}]),  # This should hide all annotations
+                            args=[{"annotations[0].visible": False}]),  # This should hide all annotations
                     ],
                     direction="down",
                     # pad={"r": 20, "t": 20},
