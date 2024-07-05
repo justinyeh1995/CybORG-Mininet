@@ -117,9 +117,11 @@ class RestoreAction(Action):
 
         sftp_client.close()
 
-        ssh_session.exec_command(f"bash {cls.restore_script_name}")
+        stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
 
         ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
+
+        return stdout.readlines()
 
     @staticmethod
     def get_network_id_port_data_list_dict(conn, server):
@@ -189,7 +191,7 @@ class RestoreAction(Action):
                 for fixed_ip in port_data['port_info']['fixed_ips']:
                     ip_address = fixed_ip['ip_address']
                     server_ip_address_set.add(ip_address)
-                    if network_name == 'control':
+                    if network_name.startswith('control'):
                         server_control_network_ip_address_list.append(ip_address)
 
         # GET IP ADDRESS FOR SSH CONNECTION
@@ -253,7 +255,8 @@ class RestoreAction(Action):
         if ssh_session is None:
             return observation
 
-        self.restore_files(ssh_session)
+        output = self.restore_files(ssh_session)
+        observation.Stdout = output
 
         ssh_session.close()
 
