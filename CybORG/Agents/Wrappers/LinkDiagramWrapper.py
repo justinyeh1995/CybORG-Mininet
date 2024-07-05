@@ -10,6 +10,7 @@ from ipaddress import IPv4Network, IPv4Address
 
 from CybORG.Shared.Enums import TrinaryEnum
 from CybORG.Agents.Wrappers.BaseWrapper import BaseWrapper
+from CybORG.Shared.Observation import Observation
 
 class LinkDiagramWrapper(BaseWrapper):
     def __init__(self, env: BaseWrapper = None):
@@ -23,13 +24,15 @@ class LinkDiagramWrapper(BaseWrapper):
         self.link_diagram = None
         self.connected_components = None
         
-    
-    def reset(self):
+    def reset(self) -> Observation:
+        """Called ChallengeWrapper.reset() to get observation and set up routers and data links"""
+        obs = self.env.reset()
         print("Add routers into core cyborg state")
         self.add_routers().setup_data_links()
+        return obs
 
     def add_routers(self):
-        # self.env.environment_controller.state.subnets
+        """Add routers into ip_addresses-related obj in SimulationEnvironment object"""
         for lan_name, network in self.cyborg.environment_controller.state.subnet_name_to_cidr.items():
             router = lan_name + '_router'
             usable_ips = list(network.hosts())
@@ -40,8 +43,8 @@ class LinkDiagramWrapper(BaseWrapper):
             self.cyborg.environment_controller.hostname_ip_map.update({router: IPv4Address(router_ip)})
         return self
 
-    def setup_data_links(self):
-        """Sets up the data links object for the initial state."""
+    def setup_data_links(self) -> None:
+        """Sets up the data links object for the current state."""
         # create the link diagram
         self.link_diagram = nx.Graph()
 
