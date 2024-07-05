@@ -1,3 +1,4 @@
+import traceback
 import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Dict
@@ -104,8 +105,6 @@ class EmulatedEnvironment(CybORGEnvironment):
         for i in range(self.max_episode):
             r = []
             a = []
-            self.game_state_manager.reset()
-            self.mininet_adapter.reset()
 
             blue_observation = self.challenge_wrapper.reset()
             blue_action_space = self.challenge_wrapper.get_action_space('Blue')
@@ -115,13 +114,31 @@ class EmulatedEnvironment(CybORGEnvironment):
             mininet_blue_observation = blue_observation
             mininet_red_observation = red_observation
 
+            # @To-Do bad design, the reset() among different objects has ordering dependecies
+            try:
+                self.game_state_manager.reset()
+            except Exception as e:
+                traceback.print_exc()
+                raise e
+            
+            try:
+                self.mininet_adapter.reset()
+            except Exception as e:
+                traceback.print_exc()
+                raise e
+            
             for j in range(self.num_steps):
                 red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
                 red_action = self.red_agent.get_action(red_observation, red_action_space)
                 print("--> In main loop: Red action using mininet_observation")
                 print(red_action)
                 
-                mininet_red_observation, red_reward = self.mininet_adapter.step(str(red_action), agent_type='Red')
+                try:
+                    mininet_red_observation, red_reward = self.mininet_adapter.step(str(red_action), agent_type='Red')
+
+                except Exception as e:
+                    traceback.print_exec()
+                    raise e
 
                 blue_observation = mininet_blue_observation
                 # blue_observation = self.blue_table_cyborg.observation_change('Blue', blue_observation.data) if isinstance(blue_observation, Observation) else blue_observation
