@@ -127,12 +127,15 @@ def parseCmdLineArgs ():
     return args
 
 if __name__ == "__main__":
-    parsed_args = parseCmdLineArgs ()
-    
-    # ip = parsed_args.ip
-    env = parsed_args.env
-    max_step = parsed_args.max_step
-    max_episode = parsed_args.max_episode
-    game_castle_gym_agent_state = main_v2(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
-    nv = NetworkVisualizer(game_castle_gym_agent_state)
-    nv.plot(save=False)
+    try:
+        parsed_args = parseCmdLineArgs ()
+        
+        # ip = parsed_args.ip
+        env = parsed_args.env
+        max_step = parsed_args.max_step
+        max_episode = parsed_args.max_episode
+        game_castle_gym_agent_state = main_v2(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
+        nv = NetworkVisualizer(game_castle_gym_agent_state)
+        nv.plot(save=False)
+    except KeyboardInterrupt:
+        pass
