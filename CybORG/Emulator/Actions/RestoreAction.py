@@ -97,15 +97,82 @@ class RestoreAction(Action):
 
         sftp_client = ssh_session.open_sftp()
 
-        sftp_client.put(str(cls.collect_script_path), cls.collect_script_name)
+        max_tries = 10
+        no_tries = 0
+        while no_tries < max_tries:
+            try:
+                sftp_client.put(str(cls.collect_script_path), cls.collect_script_name)
+                break
+            except FileNotFoundError as fileNotFoundError:
+                print(f"File not found error: {fileNotFoundError}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except IOError as ioError:
+                print(f"IOError: {ioError}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
 
-        ssh_session.exec_command(f"bash {cls.collect_script_name}")
+            no_tries += 1
+            print(f"Copy {str(cls.collect_script_path)} failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not copy {str(cls.collect_script_path)}"
+            print(error)
+            raise Exception(error)
+
+        max_tries = 10
+        no_tries = 0
+        stdout = None
+        while no_tries < max_tries:
+            try:
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.collect_script_name}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
+
+            no_tries += 1
+            print(f"Exec of \"bash {cls.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not exec \"bash {cls.collect_script_name}\""
+            print(error)
+            raise Exception(error)
+
+        output = stdout.readlines()
 
         # WAIT FOR EXEC'D COMMAND TO COMPLETE
         time.sleep(5)
 
-        sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
+        max_tries = 10
+        no_tries = 0
+        while no_tries < max_tries:
+            try:
+                sftp_client.get(cls.tarfile_name, str(cls.tarfile_path))
+                break
+            except FileNotFoundError as fileNotFoundError:
+                print(f"File not found error: {fileNotFoundError}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except IOError as ioError:
+                print(f"IOError: {ioError}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
+
+            no_tries += 1
+            print(f"Retrieval of {str(cls.tarfile_name)} failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not retrieve {str(cls.tarfile_name)}"
+            print(error)
+            raise Exception(error)
+
         sftp_client.close()
+
+        return output
 
     @classmethod
     def restore_files(cls, ssh_session):
@@ -162,7 +229,25 @@ class RestoreAction(Action):
 
         sftp_client.close()
 
-        stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
+        max_tries = 10
+        no_tries = 0
+        stdout = None
+        while no_tries < max_tries:
+            try:
+                stdin, stdout, stderr = ssh_session.exec_command(f"bash {cls.restore_script_name}")
+                break
+            except paramiko.SSHException as sshException:
+                print(f"SSH error: {sshException}")
+            except Exception as exception:
+                print(f"Unexpected exception: {exception}")
+
+            no_tries += 1
+            print(f"Exec of \"bash {cls.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
+
+        if no_tries >= max_tries:
+            error = f"Could not exec \"bash {cls.restore_script_name}\""
+            print(error)
+            raise Exception(error)
 
         # ssh_session.exec_command(f"rm -rf {cls.tarfile_name}")
 
@@ -305,7 +390,7 @@ class RestoreAction(Action):
 
         ssh_session.close()
 
-        shutil.rmtree(str(self.temp_directory_path))
+        #shutil.rmtree(str(self.temp_directory_path))
 
         observation.set_success(True)
         return observation
