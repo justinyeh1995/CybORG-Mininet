@@ -19,14 +19,14 @@ if ! doas [ -d "$ubuntu_ssh_directory" ]; then
     doas mkdir "$ubuntu_ssh_directory"
 fi
 
-known_hosts_file="know_hosts"
+known_hosts_file="known_hosts"
 
 ubuntu_known_hosts_file="/home/ubuntu/.ssh/$known_hosts_file"
 if [ -f "$known_hosts_file" ]; then
     doas cp "$known_hosts_file" "$ubuntu_known_hosts_file"
 fi
 
-authorized_keys_file="know_hosts"
+authorized_keys_file="authorized_keys"
 
 ubuntu_authorized_keys_file="/home/ubuntu/.ssh/$authorized_keys_file"
 if [ -f "$authorized_keys_file" ]; then
