@@ -21,3 +21,4 @@ pyvelociraptor
 kaleido
 pexpect
 tqdm
+rich
