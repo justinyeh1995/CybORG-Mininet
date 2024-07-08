@@ -6,6 +6,9 @@ import random
 import argparse 
 from pprint import pprint
 
+import logging
+from rich.logging import RichHandler
+
 from typing import List, Dict
 
 from CybORG import CybORG, CYBORG_VERSION
@@ -126,15 +129,25 @@ def parseCmdLineArgs ():
 
     return args
 
+def getLogger ():
+    logging.basicConfig(handlers=[RichHandler()])
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    return logger
+
 if __name__ == "__main__":
     try:
         parsed_args = parseCmdLineArgs ()
-        
+        logger = getLogger ()
         # ip = parsed_args.ip
         env = parsed_args.env
         max_step = parsed_args.max_step
         max_episode = parsed_args.max_episode
+        start = time.time()
         game_castle_gym_agent_state = main_v2(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
+        
+        logger.info(f"Time for {max_episode} Episodes and {max_step} Steps: %d sec", time.time()-start)
+        
         nv = NetworkVisualizer(game_castle_gym_agent_state)
         nv.plot(save=False)
     except KeyboardInterrupt:
