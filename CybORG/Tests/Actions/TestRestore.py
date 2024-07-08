@@ -1,6 +1,6 @@
 from CybORG.Emulator.Actions.RestoreAction import RestoreAction
 import argparse
-import getpass
+import keyring
 
 parser = argparse.ArgumentParser()
 
@@ -11,14 +11,13 @@ args = parser.parse_args()
 #DO it via arg parser
 user_name=args.user
 
-password = getpass.getpass()
-
+password = keyring.get_password("openstack", user_name)
 
 
 restore_action = RestoreAction(
-    hostname='user-host-2',
+    hostname='Defender',
     auth_url='https://cloud.isislab.vanderbilt.edu:5000/v3',
-    project_name='mvp1',
+    project_name='mvp1a',
     username=user_name,
     password=password,
     user_domain_name='ISIS',

@@ -113,6 +113,8 @@ class RestoreAction(Action):
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
 
+            time.sleep(1)
+
             no_tries += 1
             print(f"Copy {str(cls.collect_script_path)} failed on try {no_tries} out of {max_tries}")
 
@@ -132,6 +134,8 @@ class RestoreAction(Action):
                 print(f"SSH error: {sshException}")
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
+
+            time.sleep(1)
 
             no_tries += 1
             print(f"Exec of \"bash {cls.collect_script_name}\" failed on try {no_tries} out of {max_tries}")
@@ -161,6 +165,8 @@ class RestoreAction(Action):
                 print(f"IOError: {ioError}")
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
+
+            time.sleep(1)
 
             no_tries += 1
             print(f"Retrieval of {str(cls.tarfile_name)} failed on try {no_tries} out of {max_tries}")
@@ -195,6 +201,8 @@ class RestoreAction(Action):
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
 
+            time.sleep(1)
+
             no_tries += 1
             print(f"Copy {str(cls.tarfile_path)} failed on try {no_tries} out of {max_tries}")
 
@@ -219,6 +227,8 @@ class RestoreAction(Action):
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
 
+            time.sleep(1)
+
             no_tries += 1
             print(f"Copy {str(cls.restore_script_path)} failed on try {no_tries} out of {max_tries}")
 
@@ -240,6 +250,8 @@ class RestoreAction(Action):
                 print(f"SSH error: {sshException}")
             except Exception as exception:
                 print(f"Unexpected exception: {exception}")
+
+            time.sleep(1)
 
             no_tries += 1
             print(f"Exec of \"bash {cls.restore_script_name}\" failed on try {no_tries} out of {max_tries}")
