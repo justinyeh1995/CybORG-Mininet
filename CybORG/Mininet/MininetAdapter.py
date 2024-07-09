@@ -4,11 +4,10 @@ from typing import List, Dict
 import configparser # for configuration parsing
 import inspect
 
-from CybORG import CybORG, CYBORG_VERSION
+from CybORG import CybORG
 
 from CybORG.Shared import Observation
 
-from CybORG.Mininet.mininet_api.custom_utils import IP_components
 from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
