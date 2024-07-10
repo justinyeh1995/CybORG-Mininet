@@ -4,6 +4,10 @@ from typing import List, Dict
 import configparser # for configuration parsing
 import inspect
 
+import logging
+from logging import RootLogger
+from rich.logging import RichHandler
+
 from CybORG import CybORG
 
 from CybORG.Shared import Observation
@@ -17,6 +21,10 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
 
 class MininetAdapter:
     def __init__(self):
+        logging.basicConfig(handlers=[RichHandler()])
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
+        
         self.path = str(inspect.getfile(CybORG))[:-10]
         
         config = configparser.ConfigParser ()
@@ -53,7 +61,7 @@ class MininetAdapter:
 
     
     def reset(self):
-        print("===Resetting===")
+        self.logger.info("===Resetting===")
         self.clean()
 
         self.mapper.init_mapping(self.cyborg)
@@ -96,7 +104,7 @@ class MininetAdapter:
            Translate CybORG action to Mininet command and send it
            Retrieve the results and create observations
         '''
-        print(f"---> in MininetAdapter {agent_type} step")
+        self.logger.info(f"---> in MininetAdapter {agent_type} step")
         target, cyborg_action = self.parse_action_string(action_string)
         isSuccess = True # Always True man..
 
@@ -118,8 +126,8 @@ class MininetAdapter:
         try:
             mininet_cli_text = self.command_interface.send_command(mininet_command)
             
-            print("===Mininet Cli Text====")
-            print(mininet_cli_text)
+            self.logger.info("===Mininet-Cli-Text====")
+            self.logger.debug(mininet_cli_text)
         
         except Exception as e:
             traceback.print_exc()
@@ -128,8 +136,8 @@ class MininetAdapter:
         try:    
             mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
             
-            print("===Obs===")
-            pprint(mininet_obs.data)
+            self.logger.info("===Obs===")
+            self.logger.debug(mininet_obs.data)
 
         except Exception as e:
             traceback.print_exc()
@@ -138,8 +146,8 @@ class MininetAdapter:
         try:
             reward = self.reward_calculator.reward(mininet_obs.data, self.mapper)
 
-            print("===Rewards===")
-            print(reward)
+            self.logger.info("===Rewards===")
+            self.logger.debug(reward)
 
         except Exception as e:
             traceback.print_exc()
