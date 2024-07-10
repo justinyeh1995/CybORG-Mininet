@@ -218,7 +218,7 @@ def parse_decoy_action(decoy_action_output) -> Observation:
     # Extract the 'TRUE' or 'FALSE' part if found
     success_status = enum_to_boolean(match.group()) if match else None
     
-    print(f"Match is: {match} \n")
+    # print(f"Match is: {match} \n")
     
     return Observation(success_status)
     
