@@ -99,6 +99,9 @@ def main ():
   # @To-Do: Got flushed by DHCP
   info ("Configure DNS on every host\n")
   topo.configureHostsDNS (net, dns="8.8.8.8")
+
+  info ("Check if /usr/local/run/ if not create it\n")
+  topo.add_usr_local_run (net)
     
   CLI (net)   # this gives us mininet prompt
     

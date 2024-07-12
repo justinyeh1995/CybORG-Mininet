@@ -41,6 +41,10 @@ from linux_router import LinuxRouter
 # Support for Yaml
 import yaml
 
+import pathlib
+from pathlib import Path
+import logging
+
 #################################################
 # I don't think there is any simple way to create individual topologies in their own
 # classes and then somehow combine them by picking, say, a switch from the
@@ -369,6 +373,20 @@ class CustomTopology (Topo):
           output = net[host].waitOutput()
           info(f"Output of kill command on {host}: {output}\n")
 
+
+  def add_usr_local_run(self, net):
+    """
+    Add /usr/local/run/ directory, if it has not existed yet
+    """
+    path = Path("/", "usr", "local", "run")
+    if path.exists():
+      print (f"{path} exists\n")
+      return 
+    for lan in self.topo_dict['lans']:
+      for host_name, _ in lan['hosts_info'].items():
+        host = lan['name'] + host_name
+        net[host].cmd(f"sudo mkdir /usr/local/run/")
+        return 
 
   ##########################################
   # The overridden build method
