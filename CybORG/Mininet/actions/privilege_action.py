@@ -1,7 +1,8 @@
 import argparse
 
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionServerAction import SSHConnectionServerAction
-from CybORG.Emulator.Actions.Velociraptor.SSHConnectionClientAction import SSHConnectionClientAction
+from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
+from CybORG.Emulator.Observations.Velociraptor.PrivilegeEscalateObservation import PrivilegeEscalateObservation
 
 def parseCmdLineArgs ():
     # parse the command line
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     print(f"Attacker Hostname: {hostname}")
     print(f"Remote IP: {remote_ip}")
 
-    credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"  
+    credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"  # @To-Do make it configurable
 
     ssh_connection_server_action = SSHConnectionServerAction(
         credentials_file=credentials_file,
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     
     ssh_connection_server_observation = ssh_connection_server_action.execute(None)
     
-    ssh_connection_client_action_gain_root_access = SSHConnectionClientAction(
+    ssh_connection_client_action_gain_root_access = SSHConnectionImpactAction(
         credentials_file=credentials_file,
         hostname=hostname,
         connection_key=ssh_connection_server_observation.connection_key,
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     
     ssh_connection_client_observation_2 = ssh_connection_client_action_gain_root_access.execute(None)
     
-    ssh_connection_client_action_3 = SSHConnectionClientAction(
+    ssh_connection_client_action_3 = SSHConnectionImpactAction(
         credentials_file=credentials_file,
         hostname=hostname,
         connection_key=ssh_connection_server_observation.connection_key,
