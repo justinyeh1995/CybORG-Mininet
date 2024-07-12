@@ -1,6 +1,3 @@
-## Add Support for CybORG v2.1
-Work in progress...
-
 ## Emulator Actions
 The python script path is hard coded to the virtual env folder path, I will need to ask Dr. Nine how to address this issue.
 
@@ -9,11 +6,19 @@ The python script path is hard coded to the virtual env folder path, I will need
 
 `mininet_api` contains the Mininet API (in python) that is responsible for generating the topology. Any prerequisite configuration such as starting SSH servers automatically once the topology created is done at `custom_topo.py`, the routing rules are configured at `custom_topo.py`
 
+- Starting the topology includes:
+    - adding routing rules
+    - adding nat rules
+    - setting password for everyhost
+    - starting sshd
+    - starting velociraptor client & server
+    - configuring Host DNS rules
+
 `mininet_adapter` contains the middleware that binds Mininet API and CybORG API.
 
-`MininetAdapter.py` is the main class that runs the `mininet_adapter` logic. Should be placed along with your CybORG object.
+`MininetAdapter.py` is the main class that runs the `mininet_adapter` & `mininet_api` logic. Should be placed along with your CybORG object. It controls the lifecycle of mininet
 
-`Tests` covered `mininet_adapter` (on going work)
+`Tests` covered `mininet_adapter` (an ongoing work)
 
 `main.py` is the standalone program that runs the experiment.
 
@@ -81,3 +86,17 @@ classDiagram
 
 `Mininet_CybORG_Experiment.ipynb` is a notebook for visualizing the workflow
 05/22/2024 - Clean up code & start migrating to v2
+
+To debug whats happening in the scripts in `Mininet/actions/`, 
+```
+cd Mininet/mininet_api
+sudo mn -c && sudo python3 custom_net.py -y ../network_topology.yaml
+```
+Inside mininet cli
+```
+mininet> lan3h1 <your python intepretor which has CybORG installed> -m pdb actions/<SCRIPT>.py 
+```
+
+## Extending Actions
+1. Wrap actions as a script to Mininet/actions folder
+2. Implement a parser for the specific action and add it in ResultBundler class in Mininet/mininet_adapter/results_bundler.py

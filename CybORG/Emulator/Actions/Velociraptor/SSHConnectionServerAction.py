@@ -21,22 +21,34 @@ class SSHConnectionServerAction(RunProcessAction):
             ) for _ in range(cls.connection_key_size)
         )
 
-    def __init__(self, credentials_file, hostname, remote_hostname, remote_username, remote_password, client_port):
+    def __init__(
+            self,
+            credentials_file,
+            hostname,
+            remote_hostname,
+            remote_username,
+            remote_password,
+            client_port,
+            server_port=22,
+            success_probability=1.0
+    ):
 
         self.connection_key = self.get_connection_key()
+        self.success_probility = success_probability
 
+        # print('Credential file :',credentials_file,'host:',hostname)
         super().__init__(
             credentials_file=credentials_file,
             hostname=hostname,
-            command=f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.3.venv/bin/python3 /home/ubuntu/justinyeh1995/castle-vm/Scripts/SSHConnectionServer.py -n {self.connection_key} " +
-                    f"-m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d"
-        )
+            command=f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.2.venv/bin/python3 /home/ubuntu/justinyeh1995/castle-vm/Scripts/SSHConnectionServer.py -n {self.connection_key} " + \
+                    f"-m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d " + \
+                    f"-s {server_port} > /dev/null 2>&1 &"
 
     def execute(self, state: Union[State, None]) -> Observation:
-        #print('Executing**')
-        if random.random()>=1: 
+        # print('Executing**')
+        if random.random() >= self.success_probility:
            return ProcessObservation(None,False)
-        else:
-           process_observation = super().execute(state)
-           #print('**process observation is :',process_observation)
-           return SSHConnectionServerObservation(process_observation, self.connection_key)
+
+        process_observation = super().execute(state)
+        # print('**process observation is :',process_observation)
+        return SSHConnectionServerObservation(process_observation, self.connection_key)
