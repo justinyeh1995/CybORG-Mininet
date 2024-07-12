@@ -31,7 +31,7 @@ class SSHConnectionServerAction(RunProcessAction):
             remote_password,
             client_port,
             server_port=22,
-            success_probability=1.0
+            success_probability=0.5
     ):
 
         self.connection_key = self.get_connection_key()
