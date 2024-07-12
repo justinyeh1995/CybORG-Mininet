@@ -21,6 +21,7 @@ class SSHConnectionServerAction(RunProcessAction):
             ) for _ in range(cls.connection_key_size)
         )
 
+# =======
     def __init__(
             self,
             credentials_file,
@@ -43,6 +44,7 @@ class SSHConnectionServerAction(RunProcessAction):
             command=f"/home/ubuntu/justinyeh1995/CASTLEGym/castle.2.venv/bin/python3 /home/ubuntu/justinyeh1995/castle-vm/Scripts/SSHConnectionServer.py -n {self.connection_key} " + \
                     f"-m {remote_hostname} -u {remote_username} -p {remote_password} -c {client_port} -d " + \
                     f"-s {server_port} > /dev/null 2>&1 &"
+        )
 
     def execute(self, state: Union[State, None]) -> Observation:
         # print('Executing**')
