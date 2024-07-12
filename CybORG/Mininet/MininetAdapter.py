@@ -34,9 +34,11 @@ class MininetAdapter:
         self.command_interface = MininetCommandInterface()
         self.mapper = CybORGMininetMapper()
         self.blue_action_translator = BlueActionTranslator(path=self.path, 
-                                                           config=config)
-        self.red_action_translator = RedActionTranslator(path=self.path, 
-                                                           config=config)
+                                                           config=config,
+                                                           logger=self.logger)
+        self.red_action_translator = RedActionTranslator(path=self.path,
+                                                         config=config,
+                                                         logger=self.logger)
         self.results_bundler = ResultsBundler()
         
         self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
@@ -61,7 +63,7 @@ class MininetAdapter:
 
     
     def reset(self):
-        self.logger.info("===Resetting===")
+        self.logger.info("===Resetting Mininet Environment===")
         self.clean()
 
         self.mapper.init_mapping(self.cyborg)
