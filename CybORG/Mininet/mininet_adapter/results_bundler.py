@@ -5,7 +5,6 @@ from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
 
 from CybORG.Shared import Observation
-from CybORG.Emulator.Observations.Velociraptor.DiscoverNetworkServicesObservation import DiscoverNetworkServicesObservation
 
 def enum_to_boolean(enum_value):
     if enum_value == 'TRUE':
@@ -60,6 +59,88 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
         hostid = mapper.cyborg_ip_to_host_map[str(ip)]
         obs.add_process(hostid=hostid, local_port=proc["port"], local_address=ip)
         
+    return obs
+
+def parse_exploit_action(ssh_action_output, mapper) -> Observation:
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    ssh_action_output = ansi_escape.sub('', ssh_action_output)
+    
+    pattern = re.compile(r'TRUE|FALSE')
+
+    # Use re.search to find a match
+    match = pattern.search(ssh_action_output)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = enum_to_boolean(match.group()) if match else None
+    
+    obs = Observation(success_status)
+    
+    if not success_status:
+        return obs
+    
+    # print(ssh_action_output)
+
+    pattern1 = r"(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+).*pid=(\d+)"
+    
+    # Use re.findall() to extract the values
+    match = re.search(pattern1, ssh_action_output)
+
+    data = {}
+    if match:
+        local_ip, port, remote_ip, port_for_reverse_shell, pid = match.groups()
+        
+        alt_name = mapper.mininet_ip_to_cyborg_ip_map.get(remote_ip)
+        host_name = mapper.cyborg_ip_to_host_map.get(alt_name)
+        
+        remote_port_on_attacker = 4444
+        attacker_node = mapper.cyborg_host_to_ip_map.get('User0')
+
+        data[alt_name] = {
+            'Processes': [
+               {
+                'Connections': [
+                    {
+                        'local_port': port_for_reverse_shell,
+                        'remote_port': remote_port_on_attacker,
+                        'local_address': IPv4Address(alt_name),
+                        'remote_address': IPv4Address(attacker_node)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+               },
+               {
+                'Connections': [
+                    {
+                        'local_port': port,
+                        'local_address': IPv4Address(alt_name),
+                        'Status': 'ProcessState.OPEN'
+                    }
+                ],
+                'Process Type': 'ProcessType.XXX'
+               }
+            ],
+            'Interface': [{'IP Address': IPv4Address(alt_name)}],
+            'Sessions': [{'Username':'root', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
+            'System info': {'Hostname': host_name, 'OSType': 'LINUX'}
+        }
+            
+        data[attacker_node]={
+            'Processes': [
+                {
+                'Connections': [
+                    {
+                        'local_port': remote_port_on_attacker,
+                        'remote_port': port_for_reverse_shell,
+                        'local_address': IPv4Address(attacker_node),
+                        'remote_address': IPv4Address(alt_name)
+                    }
+                ],
+                'Process Type': 'ProcessType.REVERSE_SESSION'
+                }]
+        }
+
+    obs.data.update(data)
+
     return obs
 
 
@@ -163,7 +244,6 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     if not success_status:
         return obs
     
-    
     # Parse Escalated Host IP
     pattern1 = r"Remote IP: (\d+\.\d+\.\d+\.\d+)"
     
@@ -208,6 +288,8 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     obs.data.update(data)
     return obs
     
+def parse_remove_action(action_string) -> Observation:
+    pass
 
 def parse_decoy_action(decoy_action_output) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')
@@ -235,7 +317,7 @@ class ResultsBundler:
             return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
         elif cyborg_action == "ExploitRemoteService":
-            return parse_ssh_action(mininet_cli_str, mapper)
+            return parse_exploit_action(mininet_cli_str, mapper)
         
         elif cyborg_action == "PrivilegeEscalate":
             return parse_escalate_action(mininet_cli_str, mapper)
