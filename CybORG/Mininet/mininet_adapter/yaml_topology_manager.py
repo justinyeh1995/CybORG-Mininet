@@ -1,11 +1,13 @@
 import yaml
 import traceback 
 from typing import Dict, List
+import logging
 
+from CybORG.Mininet.mininet_adapter.entity import Entity
 from CybORG.Mininet.mininet_adapter.utils.util import get_routers_info, get_lans_info, get_links_info, get_nats_info, \
                                                 generate_routing_rules
 
-class YamlTopologyManager:
+class YamlTopologyManager(Entity):
     def __init__(self, topology_data: Dict = None):
         self.topology_data = topology_data or {'topo': {'routers': [], 'lans': [], 'links': [], 'routes': [], 'nats': []}}
         
@@ -34,11 +36,11 @@ class YamlTopologyManager:
                 if not component:
                     raise ValueError(f"{name} component is empty.")
                 
-            print("Topology data for file 'network_topology.yaml' created successfully.")
+            logging.info ("Topology data for file 'network_topology.yaml' created successfully.")
                     
         except Exception as e:
-            print("An error occurred while creating the topology:")
-            print(e)
+            logging.error ("An error occurred while creating the topology:")
+            logging.exception (e)
             traceback.print_exc() 
 
     

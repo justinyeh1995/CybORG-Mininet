@@ -4,11 +4,12 @@ import inspect
 import logging
 
 from CybORG import CybORG, CYBORG_VERSION
+from CybORG.Mininet.mininet_adapter.entity import Entity
 
-class MininetCommandInterface:
+class MininetCommandInterface(Entity):
     def __init__(self):
         self.mininet_process = None
-
+        
     
     def start_mininet(self, topology_file: str) -> str:
         try:
