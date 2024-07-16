@@ -1,4 +1,6 @@
 import argparse
+import inspect
+from CybORG import CybORG
 
 from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
 
@@ -9,7 +11,7 @@ def parseCmdLineArgs ():
     # add optional arguments
     # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
     parser.add_argument ("-host", "--hostname", default="cpswtjustin", help="Hostname, use hostname to figure out hostname")
-    parser.add_argument ("-conn_key", "--conn_key", default="cpswtjustin", help="connection_key from exploit action")
+    parser.add_argument ("-conn_key", "--conn_key", default="", help="connection_key from exploit action")
 
     # parse the args
     args = parser.parse_args ()
@@ -24,7 +26,9 @@ if __name__ == "__main__":
     hostname = parsed_args.hostname
     conn_key = parsed_args.conn_key
 
-    credentials_file = "/home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/prog_client.yaml"
+    path = str(inspect.getfile(CybORG))
+    path = path[:-10]
+    credentials_file = f"{path}/Mininet/actions/prog_client.yaml"  # @To-Do make it configurable
 
     remove_action = RemoveAction(credentials_file, hostname, conn_key)
 
