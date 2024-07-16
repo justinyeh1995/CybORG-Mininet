@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y \
 RUN git clone git://github.com/mininet/mininet && \
     mininet/util/install.sh -nfv
 
+# Install Velociraptor
+
 # Install packages
 RUN pip install -e .
 
@@ -40,5 +42,5 @@ RUN pip install -e .
 # RUN pip install stable_baselines3
 
 # Run evaluation script
-ENTRYPOINT ["python", "/cage/CybORG/Evaluation/validation.py"]
+ENTRYPOINT ["python", "/cage/CybORG/Mininet/main.py"]
 

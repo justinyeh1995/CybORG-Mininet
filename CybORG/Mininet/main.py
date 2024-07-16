@@ -9,7 +9,7 @@ from pprint import pprint
 import logging
 from rich.logging import RichHandler
 
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from CybORG import CybORG, CYBORG_VERSION
 
@@ -29,12 +29,7 @@ from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
 from CybORG.Mininet.MininetAdapter import MininetAdapter
 
-MAX_EPS = 50
-agent_name = 'Blue'
 random.seed(0)
-cyborg_version = CYBORG_VERSION
-# scenario = 'Scenario2'
-scenario = 'Scenario2_cyborg--'
 
 def wrap(env):
     return ChallengeWrapper(env=env, agent_name='Blue')
@@ -42,10 +37,9 @@ def wrap(env):
 def get_git_revision_hash() -> str:
     return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
 
-def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10, max_episode: int = 2) -> None:
-    environment = environment
+def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_step: int = 10, max_episode: int = 2, scenario: str = "Scenario2") -> None:
     cyborg_version = CYBORG_VERSION
-    scenario = 'Scenario2_cyborg--'
+    scenario = 'Scenario2'
     # commit_hash = get_git_revision_hash()
     commit_hash = "Not using git"
     # ask for a name
@@ -90,7 +84,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
     for num_steps in [max_step]:
         for red_agent in [B_lineAgent]:
 
-            cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent)
+            cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent, file_name=scenario)
             wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
 
             if environment == "emu":
@@ -123,7 +117,7 @@ def parseCmdLineArgs ():
     parser.add_argument ("-max_episode", "--max_episode", type=int, default=1, help="max episode in onr epoisode")
     parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
-
+    parser.add_argument ("-scenario", "--scenario", default="Scenario2")
     # parse the args
     args = parser.parse_args ()
 
@@ -138,17 +132,29 @@ def getLogger ():
 if __name__ == "__main__":
     try:
         parsed_args = parseCmdLineArgs ()
-        logger = getLogger ()
-        # ip = parsed_args.ip
+
         env = parsed_args.env
         max_step = parsed_args.max_step
         max_episode = parsed_args.max_episode
+        scenario = parsed_args.scenario
+
         start = time.time()
-        game_castle_gym_agent_state = main_v2(agent_type="CASTLEgym", cyborg_type="wrap", environment=env, max_step=max_step, max_episode=max_episode)
+        game_castle_gym_agent_state = main_v2(agent_type = "CASTLEgym", 
+                                              cyborg_type = "wrap", 
+                                              environment = env, 
+                                              max_step = max_step, 
+                                              max_episode = max_episode,
+                                              scenario = scenario)
         
+        logger = getLogger ()
         logger.info(f"Time for {max_episode} Episodes and {max_step} Steps: %d sec", time.time()-start)
         
-        nv = NetworkVisualizer(game_castle_gym_agent_state)
-        nv.plot(save=False)
+        try:
+            nv = NetworkVisualizer(game_castle_gym_agent_state)
+            nv.plot(save=False)
+        except Exception as e:
+            logger.error ("Visualization went wrong...")
+            raise e
+        
     except KeyboardInterrupt:
         pass
