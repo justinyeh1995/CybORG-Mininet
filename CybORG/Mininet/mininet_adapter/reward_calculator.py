@@ -2,6 +2,7 @@ import yaml
 import inspect
 from CybORG import CybORG, CYBORG_VERSION
 from CybORG.Mininet.mininet_adapter import CybORGMininetMapper
+from CybORG.Mininet.mininet_adapter.entity import Entity
 
 WIN_REWARD = 0
 LOSE_REWARD = 0
@@ -12,7 +13,7 @@ LOSE_ROOT_SESSION_REWARD = 0
 
 REWARD_MAX_DECIMAL_PLACES = 1
 
-class RewardCalculator():
+class RewardCalculator(Entity):
     # this reward calculator provides a reward to both red and blue due to changes in the number of privileged sessions
     def __init__(self, scenario):
         self.old_total = 0
@@ -36,31 +37,22 @@ class RewardCalculator():
         root_sessions=0; system_sessions=0
         for host, info in current_state.items():
 
-            if host == 'success':
-                continue
-
             if 'Sessions' in info:
                 for session in info['Sessions']:
                         #if session['Agent'] == self.agent_name:
                         # count the number of root sessions
-                        if session['Username'] == 'root' and info['System info']['OSType'] == 'LINUX':
-                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {})
-                                                                 .get(self.get_host(host, mapper), {})
-                                                                 .get('ConfidentialityValue', 'Low')]
-                            print(confidentiality_value)
+                        if session['Username'] == 'root':
+                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {}).get(host, {}).get('ConfidentialityValue', 'Low')]
                             root_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
                         # count the number of SYSTEM sessions
-                        if session['Username'] == 'SYSTEM' and info['System info']['OSType'] == 'WINDOWS':
-                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {})
-                                                                 .get(self.get_host(host, mapper), {})
-                                                                 .get('ConfidentialityValue', 'Low')]
-                            print(confidentiality_value)
+                        if session['Username'] == 'SYSTEM':
+                            confidentiality_value = self.mapping[self.scenario.get('Hosts', {}).get(host, {}).get('ConfidentialityValue', 'Low')]
                             system_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
-
+                        
             # find the difference from the old privileged sessions
         total = root_sessions + system_sessions
         reward = total  # - self.old_total
