@@ -3,6 +3,7 @@ import traceback
 from typing import List, Dict
 import configparser # for configuration parsing
 import inspect
+import random
 
 import logging
 from logging import RootLogger
@@ -43,6 +44,17 @@ class MininetAdapter:
         
         self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
+        self.connection_key={}
+        self.used_ports={}
+        self.exploited_hosts=[]
+        self.priviledged_hosts=[]
+        self.old_exploit_outcome={}
+        self.network_state={}
+        self.available_ports: List = random.sample(range(4000, 5000 + 1), 50)
+        
+        self.blue_action_translator.register(self)
+        self.red_action_translator.register(self)
+        
     
     def set_environment(self, cyborg):
         # Setup based on cyborg environment...
@@ -69,7 +81,7 @@ class MininetAdapter:
         self.mapper.init_mapping(self.cyborg)
 
         # Create YAML topology file
-        file_path = 'network_topology.yaml'
+        file_path = './systems/tmp/network_topology.yaml'
         # This involves updating topology data and mappings
         
         try:
@@ -126,7 +138,14 @@ class MininetAdapter:
             raise e
 
         try:
-            mininet_cli_text = self.command_interface.send_command(mininet_command)
+            if cyborg_action == "ExploitRemoteService" :
+                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)}, Exploited hosts are: {self.exploited_hosts}")
+            # @To-Do
+            if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map[target] in self.exploited_hosts:  # this event happens
+                mininet_cli_text = "We have already exploited this host. Skip!"
+            # if target in self.exploited_host: return previous state 
+            else:
+                mininet_cli_text = self.command_interface.send_command(mininet_command)
             
             self.logger.info("===Mininet-Cli-Text====")
             self.logger.debug(mininet_cli_text)
@@ -136,8 +155,22 @@ class MininetAdapter:
             raise e
 
         try:    
-            mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
-            
+            if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
+                mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(target)]
+            else:
+                mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
+                
+                if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
+                    additional_data = mininet_obs.data["Additional Info"]
+                    remote_ip = additional_data["Attacked IP"]
+                    client_port = additional_data["Attacker Port"]
+                    connection_key = additional_data["Connection Key"]
+                    if client_port in self.available_ports:
+                        self.available_ports.remove(client_port)
+                    self.old_exploit_outcome.update({remote_ip: mininet_obs})
+                    self.exploited_hosts.append(remote_ip)
+                    self.connection_key.update({remote_ip:connection_key})
+            # if mininet_obs.success: update  
             self.logger.info("===Obs===")
             self.logger.debug(mininet_obs.data)
 
