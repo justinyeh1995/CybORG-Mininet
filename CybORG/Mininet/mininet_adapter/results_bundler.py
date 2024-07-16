@@ -5,6 +5,7 @@ from typing import List, Dict
 from ipaddress import IPv4Address, IPv4Network
 
 from CybORG.Shared import Observation
+from CybORG.Mininet.mininet_adapter.entity import Entity
 
 def enum_to_boolean(enum_value):
     if enum_value == 'TRUE':
@@ -76,71 +77,87 @@ def parse_exploit_action(ssh_action_output, mapper) -> Observation:
     obs = Observation(success_status)
     
     if not success_status:
+        #@To-Do: Follow wrapper branch?? 
         return obs
     
     # print(ssh_action_output)
 
-    pattern1 = r"(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+).*pid=(\d+)"
+    pattern = r"(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+).*pid=(\d+)"
     
     # Use re.findall() to extract the values
-    match = re.search(pattern1, ssh_action_output)
+    match = re.search(pattern, ssh_action_output)
 
+    pattern = r"Connection Key is: ([a-zA-Z0-9]*)" # parse connection key
+    match_key = re.search(pattern, ssh_action_output)
+    conn_key = match_key.group(1) # .groups() returns a tuple, group(1) group(0): Connection Key is: 1C01IZBLD3 group(1): 1C01IZBLD3 group(): Connection Key is: 1C01IZBLD3
+    
     data = {}
     if match:
-        local_ip, port, remote_ip, port_for_reverse_shell, pid = match.groups()
+        # local_ip, port, remote_ip, port_for_reverse_shell, pid = match.groups()
+        attacked_ip, attacked_port, attacker_ip, attacker_port, pid = match.groups()
         
-        alt_name = mapper.mininet_ip_to_cyborg_ip_map.get(remote_ip)
-        host_name = mapper.cyborg_ip_to_host_map.get(alt_name)
+        attacked_host_name = mapper.cyborg_ip_to_host_map.get(attacked_ip)
         
-        remote_port_on_attacker = 4444
-        attacker_node = mapper.cyborg_host_to_ip_map.get('User0')
-
-        data[alt_name] = {
-            'Processes': [
-               {
-                'Connections': [
-                    {
-                        'local_port': port_for_reverse_shell,
-                        'remote_port': remote_port_on_attacker,
-                        'local_address': IPv4Address(alt_name),
-                        'remote_address': IPv4Address(attacker_node)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-               },
-               {
-                'Connections': [
-                    {
-                        'local_port': port,
-                        'local_address': IPv4Address(alt_name),
-                        'Status': 'ProcessState.OPEN'
-                    }
-                ],
-                'Process Type': 'ProcessType.XXX'
-               }
-            ],
-            'Interface': [{'IP Address': IPv4Address(alt_name)}],
-            'Sessions': [{'Username':'root', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
-            'System info': {'Hostname': host_name, 'OSType': 'LINUX'}
+        attacker_node = attacker_ip #mapper.cyborg_host_to_ip_map.get('User0')
+        
+        attack_start_ip= 21
+        
+        data[attacked_ip] = {
+            "Processes": [{
+                "Connections": [{
+                    "local_port": attacked_port,
+                    "remote_port": attacker_port,
+                    "local_address": IPv4Address(attacked_ip),
+                    "remote_address": IPv4Address(attacker_ip)
+                }],
+                "Process Type": 'ProcessType.REVERSE_SESSION'
+            }, 
+            {
+                "Connections": [{
+                    "local_port": attacked_port,
+                    "local_address": IPv4Address(attacked_ip),
+                    "Status": 'ProcessState.OPEN'
+                }],
+                "Process Type": 'ProcessType.FEMITTER' #??
+            }],
+            "Interface": [{
+                "IP Address": IPv4Address(attacked_ip)
+            }],
+            "Sessions": [{
+                "ID": 1,
+                'Username':'SYSTEM',
+                "Type": 'SessionType.RED_REVERSE_SHELL',
+                "Agent": "Red"
+            }],
+            "System info": {
+                "Hostname": attacked_host_name,
+                "OSType": 'OperatingSystemType.LINUX'
+            }
         }
             
         data[attacker_node]={
-            'Processes': [
-                {
-                'Connections': [
-                    {
-                        'local_port': remote_port_on_attacker,
-                        'remote_port': port_for_reverse_shell,
-                        'local_address': IPv4Address(attacker_node),
-                        'remote_address': IPv4Address(alt_name)
-                    }
-                ],
-                'Process Type': 'ProcessType.REVERSE_SESSION'
-                }]
+            "Processes": [{
+                "Connections": [{
+                    "local_port": attacker_port,
+                    "remote_port": attacked_port,
+                    "local_address": IPv4Address(attacker_ip),
+                    "remote_address": IPv4Address(attacked_ip)
+                }],
+                "Process Type": 'ProcessType.REVERSE_SESSION_HANDLER'
+            }],
+            "Interface": [{
+                "IP Address": IPv4Address(attacker_ip)
+            }]
         }
+        
+        data["Additional Info"]= { 
+            "Connection Key": conn_key,
+            "Attacked IP": attacked_ip,
+            "Attacker Port": attacker_port,
+        }        
 
     obs.data.update(data)
-
+    
     return obs
 
 
@@ -207,7 +224,7 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
                }
             ],
             'Interface': [{'IP Address': IPv4Address(alt_name)}],
-            'Sessions': [{'Username':'root', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
+            'Sessions': [{'Username':'SYSTEM', 'ID': 1, 'PID': pid, 'Type': 'SessionType.RED_REVERSE_SHELL', 'Agent': 'Red'}],
             'System info': {'Hostname': host_name, 'OSType': 'LINUX'}
         }
             
@@ -258,7 +275,11 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
         remote_hostname = mapper.cyborg_ip_to_host_map[remote_ip]
         
         enterprise_hostname = 'Enterprise1' # @To-Do bad design hard coded
-        data[enterprise_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[enterprise_hostname])}]}
+        enterprise_ip = mapper.cyborg_host_to_ip_map[enterprise_hostname]
+        enterprise_subnet = mapper.cyborg_ip_to_subnet[enterprise_ip]
+        data[enterprise_hostname] = {'Interface': [{'IP Address': IPv4Address(enterprise_ip),
+                                                    'Subnet': IPv4Network(enterprise_subnet)
+                                                    }]}
 
         op_hostname = 'Op_Server0' # @To-Do bad design hard coded
         data[op_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[op_hostname])}]}
@@ -269,8 +290,8 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
                     'Sessions': [{'Agent': 'Red',
                             'ID': 1,
                             'Type': 'SessionType.SSH: 2',
-                            'Username': 'SYSTEM'}],
-                    'System info': {'Hostname': remote_hostname, 'OSType': 'WINDOWS'}
+                            'Username': 'root'}],
+                    'System info': {'Hostname': remote_hostname, 'OSType': 'LINUX'}
         }
     '''
     Red Action: PrivilegeEscalate User1
@@ -305,7 +326,7 @@ def parse_decoy_action(decoy_action_output) -> Observation:
     return Observation(success_status)
     
 
-class ResultsBundler:
+class ResultsBundler(Entity):
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation:
         if not isSuccess:
             return Observation(False)#.data
@@ -316,7 +337,7 @@ class ResultsBundler:
         elif cyborg_action == "DiscoverNetworkServices":
             return parse_nmap_port_scan(mininet_cli_str, target, mapper)
 
-        elif cyborg_action == "ExploitRemoteService":
+        elif cyborg_action == "ExploitRemoteService":            
             return parse_exploit_action(mininet_cli_str, mapper)
         
         elif cyborg_action == "PrivilegeEscalate":
