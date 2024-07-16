@@ -44,8 +44,9 @@ class CybORGFactory:
         env = ChallengeWrapper(env=env, agent_name='Blue')
         return LinkDiagramWrapper(env=env)
     
-    def create(self, type: str, red_agent: BaseAgent) -> Dict:
+    def create(self, type: str, red_agent: BaseAgent, file_name: str) -> Dict:
         self.red_agent = red_agent()
+        self.file_name = file_name
         path = str(inspect.getfile(CybORG))
         path = path[:-10] + f'/Shared/Scenarios/{self.file_name}.yaml'
         #sg = FileReaderScenarioGenerator(path)
