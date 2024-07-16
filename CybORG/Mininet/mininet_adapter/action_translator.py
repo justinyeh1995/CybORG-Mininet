@@ -1,5 +1,9 @@
 import traceback 
 import socket
+import json
+import base64
+
+from CybORG.Mininet.mininet_adapter.entity import Entity
 
 from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
 from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
@@ -8,10 +12,11 @@ from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
 
 from pprint import pprint
 
-class ActionTranslator:
+class ActionTranslator(Entity):
     def __init__(self, path: str, config, logger):
         self.logger = logger
         self.path = path
+        self.hostname = socket.gethostname()
         self.python_exe = config["PYTHON"]["FILE_PATH"]
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
 
@@ -28,12 +33,6 @@ class RedActionTranslator(ActionTranslator):
             "ExploitRemoteService": self.exploit_remote_service_v2,
             "PrivilegeEscalate": self.privilege_escalate
         }
-        self.connection_key={}
-        self.used_ports={}
-        self.exploited_hosts=[]
-        self.priviledged_hosts=[]
-        self.old_exploit_outcome={}
-        self.network_state={}
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         action_method = self.action_map.get(action_type)
@@ -70,18 +69,27 @@ class RedActionTranslator(ActionTranslator):
         print("Red Exploit Network Services")
         host = cyborg_to_mininet_host_map['User0']
         hostname = socket.gethostname()
-        ## @To-Do Rewirte 
+        
+        additional_data = {
+            'available_ports': self.mininet_adpator.available_ports
+        }
+        json_str = json.dumps(additional_data)
+        base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+        
         action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py --hostname {hostname} --remote_hostname"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        return f'{host} timeout 60 {action} {target}'
+        
+        return f'{host} timeout 60 {action} {target} --additional_data {base64_data}'
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
         host = cyborg_to_mininet_host_map['User0']
-        hostname = socket.gethostname()
-        action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py --hostname {hostname} --remote"
+        action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py --hostname {self.hostname} --remote"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        return f'{host} timeout 100 {action} {target}'
+        
+        conn_key = self.mininet_adpator.connection_key[target]
+        
+        return f'{host} timeout 100 {action} {target} --conn_key {conn_key}'
 
 
 class BlueActionTranslator(ActionTranslator):
@@ -120,10 +128,10 @@ class BlueActionTranslator(ActionTranslator):
         print("Blue Remove")
         # @To-Do Not Implemented as of now
         host = cyborg_to_mininet_host_map['Defender']
-        action = f"{self.python_exe} {self.action_folder_path}/remove.py --ip"
+        action = f"{self.python_exe} {self.action_folder_path}/remove.py --hostname {self.hostname}"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        port = self.decoy_service_name_to_port.get(action_type, 80)
-        return f"{host} {action} {target} --port {port}"
+        conn_key = self.mininet_adpator.connection_key[target]
+        return f"{host} {action} --conn_key {conn_key}"
 
     def restore(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Restore")

@@ -374,7 +374,7 @@ class CustomTopology (Topo):
           info(f"Output of kill command on {host}: {output}\n")
 
 
-  def add_usr_local_run(self, net):
+  def add_usr_local_dir(self, net):
     """
     Add /usr/local/run/ directory, if it has not existed yet
     """
@@ -385,7 +385,8 @@ class CustomTopology (Topo):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
-        net[host].cmd(f"sudo mkdir /usr/local/run/")
+        net[host].cmd (f"sudo mkdir /usr/local/run/")
+        net[host].cmd (f"sudo mkdir /usr/local/scripts/python/")
         return 
 
   ##########################################

@@ -100,8 +100,8 @@ def main ():
   info ("Configure DNS on every host\n")
   topo.configureHostsDNS (net, dns="8.8.8.8")
 
-  info ("Check if /usr/local/run/ if not create it\n")
-  topo.add_usr_local_run (net)
+  info ("Set up necessary directory in /usr/local/\n")
+  topo.add_usr_local_dir (net)
     
   CLI (net)   # this gives us mininet prompt
     
