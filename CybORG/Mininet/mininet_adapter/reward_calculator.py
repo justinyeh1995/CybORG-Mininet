@@ -37,6 +37,9 @@ class RewardCalculator(Entity):
         root_sessions=0; system_sessions=0
         for host, info in current_state.items():
 
+            if host == 'success':
+                continue
+
             if 'Sessions' in info:
                 for session in info['Sessions']:
                         #if session['Agent'] == self.agent_name:
@@ -52,7 +55,7 @@ class RewardCalculator(Entity):
                             system_sessions += confidentiality_value
                             self.compromised_hosts[host] = confidentiality_value
                             break
-                        
+
             # find the difference from the old privileged sessions
         total = root_sessions + system_sessions
         reward = total  # - self.old_total
