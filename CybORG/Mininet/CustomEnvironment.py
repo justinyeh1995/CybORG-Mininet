@@ -139,7 +139,7 @@ class EmulatedEnvironment(CybORGEnvironment):
                     mininet_red_observation, red_reward = self.mininet_adapter.step(str(red_action), agent_type='Red')
 
                 except Exception as e:
-                    traceback.print_exec()
+                    traceback.print_exc()
                     raise e
 
                 blue_observation = mininet_blue_observation
