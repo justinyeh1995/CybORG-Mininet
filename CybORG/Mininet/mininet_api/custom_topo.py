@@ -304,8 +304,8 @@ class CustomTopology (Topo):
     for lan in self.topo_dict['lans']:
       for host_name, _ in lan['hosts_info'].items():
         host = lan['name'] + host_name
-        if host == 'lan3h1':
-          continue
+        # if host == 'lan3h1':
+        #   continue
         info(f"Start velociraptor client on {host}\n")
         # net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
         net[host].cmd('velociraptor --config /etc/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
