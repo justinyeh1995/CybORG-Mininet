@@ -1,8 +1,8 @@
 # copied from https://github.com/geekyutao/PyTorch-PPO/blob/master/PPO_discrete.py
 # only changes involve keeping track of decoys, adding scanning states, and reduction of action space
 
-from PPO.ActorCritic import ActorCritic
-from PPO.Memory import Memory
+from CybORG.Mininet.DARTMOUTH.PPO.ActorCritic import ActorCritic
+from CybORG.Mininet.DARTMOUTH.PPO.Memory import Memory
 import torch
 import torch.nn as nn
 from CybORG.Agents import BaseAgent
