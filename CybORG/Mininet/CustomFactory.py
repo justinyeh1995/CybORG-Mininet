@@ -10,6 +10,7 @@ from CybORG.Agents import B_lineAgent, BlueReactRemoveAgent
 from CybORG.Agents import BaseAgent
 from CybORG.Agents.MainAgent import MainAgent
 from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
+from CybORG.Mininet.DARTMOUTH.Agents.BlueAgents.GenericAgent import GenericAgent
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
 from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
@@ -30,6 +31,8 @@ class AgentFactory:
             return MainAgent()
         elif type == "CASTLEgym":
             return MainAgent_cyborg_mm()
+        elif type == "DARTMOUTH":
+            return GenericAgent()
         else:
             return BlueReactRemoveAgent()  
 
@@ -37,7 +40,7 @@ class AgentFactory:
 class CybORGFactory:
     """Class for keeping building agents."""
     type: str = "wrap"
-    file_name: str = "Scenario2_cyborg--"
+    file_name: str = "Scenario2"
     red_agent: BaseAgent = None
     
     def wrap(self, env):
