@@ -90,6 +90,9 @@ class RedActionTranslator(ActionTranslator):
         conn_key = self.mininet_adpator.connection_key[target]
         
         return f'{host} timeout 100 {action} {target} --conn_key {conn_key}'
+    
+    def impact(self, target_host):
+        pass
 
 
 class BlueActionTranslator(ActionTranslator):
@@ -116,8 +119,10 @@ class BlueActionTranslator(ActionTranslator):
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         if action_type.startswith("Decoy"):
-            action_type = "Decoy"
-        action_method = self.action_map.get(action_type) # @To-Do slick logic here, needs to be better
+            action_method = self.action_map.get("Decoy")
+        else:
+            action_method = self.action_map.get(action_type) # @To-Do slick logic here, needs to be better
+        
         if action_method:
             return action_method(action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map)
         else:
