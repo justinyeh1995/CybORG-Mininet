@@ -18,8 +18,6 @@ from CybORG.Shared import Observation
 from CybORG.Agents import B_lineAgent, BlueReactRemoveAgent, \
     RedMeanderAgent, SleepAgent
 from CybORG.Agents import BaseAgent
-from CybORG.Agents.MainAgent import MainAgent
-from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
 from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
@@ -115,7 +113,7 @@ def parseCmdLineArgs ():
     parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
     parser.add_argument ("-max_step", "--max_step", type=int, default=15, help="max rounds in onr epoisode")
     parser.add_argument ("-max_episode", "--max_episode", type=int, default=1, help="max episode in onr epoisode")
-    parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
+    parser.add_argument ("-agent_type", "--agent_type", default="DARTMOUTH", help="CASTLEgym/CardiffUni/DARTMOUTH")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
     parser.add_argument ("-scenario", "--scenario", default="Scenario2")
     # parse the args
