@@ -113,7 +113,7 @@ def parseCmdLineArgs ():
 
     # add optional arguments
     parser.add_argument ("-env", "--env", default="emu", help="sim/emu")
-    parser.add_argument ("-max_step", "--max_step", type=int, default=1, help="max rounds in onr epoisode")
+    parser.add_argument ("-max_step", "--max_step", type=int, default=15, help="max rounds in onr epoisode")
     parser.add_argument ("-max_episode", "--max_episode", type=int, default=1, help="max episode in onr epoisode")
     parser.add_argument ("-agent_type", "--agent_type", default="CASTLEgym", help="CASTLEgym/CardiffUni/Others")
     parser.add_argument ("-cyborg_type", "--cyborg_type", default="wrap/others")
