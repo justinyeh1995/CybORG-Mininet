@@ -167,6 +167,7 @@ class EmulatedEnvironment(CybORGEnvironment):
                 print(f"===Episode {i+1}, Round {j + 1} is over===")
 
             self.blue_agent.end_episode()
+            self.red_agent.end_episode()
             total_reward.append(sum(r))
             actions_list.append(a)
 
