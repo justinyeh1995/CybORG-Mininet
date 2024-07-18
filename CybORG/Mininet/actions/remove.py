@@ -33,6 +33,8 @@ if __name__ == "__main__":
     remove_action = RemoveAction(credentials_file, hostname, conn_key)
 
     observation=remove_action.execute(None)
+    
+    print("Success?:", observation.success)
 
     print('Malicious file removed?:',observation.malicious_file_removed)
     print('Connection Terminated?:',observation.connection_removed)
