@@ -1,7 +1,7 @@
 from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
-from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
+from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactActionForMininet import SSHConnectionImpactAction
 from CybORG.Emulator.Observations.Velociraptor.PrivilegeEscalateObservation import PrivilegeEscalateObservation
 
 class PrivilegeEscalateAction: 
@@ -29,9 +29,9 @@ class PrivilegeEscalateAction:
         if self.conn_key == None:
             return PrivilegeEscalateObservation(success=False)
 
-        out1 = self.run_command("sudo whoami")
-        out2 = self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts")
-        out3 = self.run_command(f"sudo ss -tunap | grep ':{self.client_port}'")
+        out1 = self.run_command("whoami")
+        out2 = self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts") # @To-Do use a temp known_hosts file instead and see castle-vm to understand how know_hosts are set up 
+        out3 = self.run_command(f"ss -tunap | grep ':{self.client_port}'") # @To-Do ask if this is appropriate!
         return PrivilegeEscalateObservation(success=True,user=out1,explored_host=out2,pid=out3)
 
 
