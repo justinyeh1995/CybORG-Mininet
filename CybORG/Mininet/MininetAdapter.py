@@ -138,13 +138,17 @@ class MininetAdapter:
             raise e
 
         try:
-            if cyborg_action == "ExploitRemoteService" :
-                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)}, Exploited hosts are: {self.exploited_hosts}")
-            # @To-Do
-            if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map[target] in self.exploited_hosts:  # this event happens
-                mininet_cli_text = "We have already exploited this host. Skip!"
-            # if target in self.exploited_host: return previous state 
+            # @To-Do is there a better design or this is the best way to handle resources like self.exploited_hosts
+            if cyborg_action == "ExploitRemoteService" and \
+                self.mapper.mininet_host_to_ip_map[target] in self.exploited_hosts:  # this event happens
+                
+                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)},\n 
+                               Exploited hosts are: {self.exploited_hosts}")
+                
+                mininet_cli_text = "We have already exploited this host. Skipping sending command to Mininet!"
+            
             else:
+            
                 mininet_cli_text = self.command_interface.send_command(mininet_command)
             
             self.logger.info("===Mininet-Cli-Text====")
@@ -156,20 +160,34 @@ class MininetAdapter:
 
         try:    
             if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
+                
+                logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(target)} is already exploited, 
+                               we will use the previously stored observation.\n Skipping sending text to result bundler")
+                
                 mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(target)]
+            
             else:
+                
                 mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
                 
+                # post processing to manage the states of the cluster
                 if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
+                    
+                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} has gotten exploited, 
+                                   the adapter will store this observation for future use")
+                
                     additional_data = mininet_obs.data["Additional Info"]
                     remote_ip = additional_data["Attacked IP"]
                     client_port = additional_data["Attacker Port"]
                     connection_key = additional_data["Connection Key"]
+                    
                     if client_port in self.available_ports:
                         self.available_ports.remove(client_port)
+                    
                     self.old_exploit_outcome.update({remote_ip: mininet_obs})
                     self.exploited_hosts.append(remote_ip)
                     self.connection_key.update({remote_ip:connection_key})
+            
             # if mininet_obs.success: update  
             self.logger.info("===Obs===")
             self.logger.debug(mininet_obs.data)
