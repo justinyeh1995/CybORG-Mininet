@@ -309,8 +309,18 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     obs.data.update(data)
     return obs
     
-def parse_remove_action(action_string) -> Observation:
-    pass
+def parse_remove_action(remove_action_string: str) -> Observation:
+    pattern = re.compile(r'TRUE|FALSE')
+
+    # Use re.search to find a match
+    match = pattern.search(remove_action_string)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = enum_to_boolean(match.group()) if match else None
+    
+    obs = Observation(success_status)
+    
+    return obs
 
 def parse_decoy_action(decoy_action_output) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')
