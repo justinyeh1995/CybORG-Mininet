@@ -235,10 +235,13 @@ class CustomTopology (Topo):
 
 
   def cleanupServices(self, net):
+    """Clean up services and temp files and sockets and daemon processes"""
     host = 'lan3h1' # User0
     net[host].cmd("pkill -f 'sudo -u velociraptor'")
     net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{{print $2}}' | xargs -r sudo kill")
-
+    net[host].cmd(f"ps aux | grep '[S]SHConnectionServer.py' | awk '{{print $2}}' | xargs sudo kill -9") # clean the socket
+    net[host].cmd(f"rm /tmp/terminal_connection_*")
+    net[host].cmd(f"rm /usr/local/run/*")
 
   def setPassword(self, net):
     for lan in self.topo_dict['lans']:
