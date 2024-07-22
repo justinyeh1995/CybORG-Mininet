@@ -24,7 +24,6 @@ def parseCmdLineArgs ():
     return args
 
 if __name__ == "__main__":
-  
     parsed_args = parseCmdLineArgs ()
     
     hostname = parsed_args.hostname
