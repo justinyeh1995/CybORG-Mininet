@@ -1,8 +1,12 @@
+from pathlib import Path
 from typing import Union
 from CybORG.Shared import Observation
 from CybORG.Simulator.State import State
 from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactActionForMininet import SSHConnectionImpactAction
 from CybORG.Emulator.Observations.Velociraptor.PrivilegeEscalateObservation import PrivilegeEscalateObservation
+
+
+import json 
 
 class PrivilegeEscalateAction: 
   
@@ -14,6 +18,13 @@ class PrivilegeEscalateAction:
         self.remote_username=remote_username
         self.remote_password=remote_password
         self.client_port= client_port
+
+        ssh_known_hosts_map_json_file = Path('/', 'tmp', '.ssh', 'known_hosts.json')
+        if not ssh_known_hosts_map_json_file.exists():
+            raise FileNotFoundError(f"File {ssh_known_hosts_map_json_file} does not exist...")
+       
+        with open('/tmp/.ssh/known_hosts.json', 'r') as f:
+            self.ssh_known_hosts_map = json.load(f)
 
     def run_command(self,command='CLOSE'):
        ssh_connection_client_action = SSHConnectionImpactAction(
@@ -30,13 +41,15 @@ class PrivilegeEscalateAction:
             return PrivilegeEscalateObservation(success=False)
 
         out1 = self.run_command("whoami")
-        out2 = self.run_command("grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' ~/.ssh/known_hosts") # @To-Do use a temp known_hosts file instead and see castle-vm to understand how know_hosts are set up 
+        file_path = self.ssh_known_hosts_map.get(self.remote_hostname, '~/.ssh/known_hosts')
+        out2 = self.run_command(f"grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' {file_path}") # @To-Do use a temp known_hosts file instead and see castle-vm to understand how know_hosts are set up 
         out3 = self.run_command(f"ss -tunap | grep ':{self.client_port}'") # @To-Do ask if this is appropriate!
         return PrivilegeEscalateObservation(success=True,user=out1,explored_host=out2,pid=out3)
 
 
 if __name__=="__main__":
     credentials_file = "prog_client.yaml"
+    connection_key = "FOOBAR"
     hostname = "user-host-1"
     remote_hostname = "10.10.10.13"
     remote_username = "vagrant"
