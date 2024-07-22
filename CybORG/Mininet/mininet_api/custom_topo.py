@@ -40,8 +40,8 @@ from linux_router import LinuxRouter
 
 # Support for Yaml
 import yaml
+import json
 
-import pathlib
 from pathlib import Path
 import logging
 
@@ -243,6 +243,7 @@ class CustomTopology (Topo):
     net[host].cmd(f"rm /tmp/terminal_connection_*")
     net[host].cmd(f"rm /usr/local/run/*")
 
+  
   def setPassword(self, net):
     for lan in self.topo_dict['lans']:
       for host_name, host_info in lan['hosts_info'].items():
@@ -274,6 +275,52 @@ class CustomTopology (Topo):
         net[host].cmd(f'/usr/sbin/sshd -D -f {temp_config_file} > /tmp/sshd_{host}.log 2>&1 &')
 
 
+  def setupSSHKnownHosts(self, net):
+    '''Rules for SSH known_hosts file on different hosts'''
+    """~/.ssh/known_hosts_ent10 for User3 & User4 should store the info of Enterprise 0
+      ~/.ssh/known_hosts_ent11 for User1 & User2 & Defender should store the info of Enterprise 1
+      ~/.ssh/known_hosts_ops10 for Enterprise 2 should store the info of Operational Server 0"""
+    # A very Ad-hoc way to setup the known_hosts file, trying to map what castle-vm is doing
+    ssh_known_hosts_map = {}
+    for lan in self.topo_dict['lans']:
+      for host_name, cyborg_name in lan['hosts_name_map'].items():
+        host = lan['name'] + host_name
+        ip = net[host].IP()
+        if cyborg_name == 'User3' or cyborg_name == 'User4':
+          ssh_known_hosts_map[ip] = '/tmp/.ssh/known_hosts_ent10'
+        elif cyborg_name == 'User1' or cyborg_name == 'User2' or cyborg_name == 'Defender':
+          ssh_known_hosts_map[ip] = '/tmp/.ssh/known_hosts_ent11'
+        elif cyborg_name == 'Enterprise2':
+          ssh_known_hosts_map[ip] = '/tmp/.ssh/known_hosts_ops10'
+    
+    ssh_known_hosts_map_json_file = Path('/', 'tmp', '.ssh', 'known_hosts.json')
+    ssh_known_hosts_map_json_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    # if not ssh_known_hosts_map_json_file.exists():
+    #   raise FileNotFoundError(f"File {ssh_known_hosts_map_json_file} does not exist")
+      
+    with open('/tmp/.ssh/known_hosts.json', 'w') as f:
+      json.dump(ssh_known_hosts_map, f)
+    
+    for lan in self.topo_dict['lans']:
+      for host_name, cyborg_name in lan['hosts_name_map'].items():
+        if cyborg_name == 'Enterprise0':
+          host = lan['name'] + host_name
+          ip = net[host].IP()
+          info(f"Setup SSH known_hosts file for User3, User5\n")
+          net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ent10')
+        elif cyborg_name == 'Enterprise1':
+          host = lan['name'] + host_name
+          ip = net[host].IP()
+          info(f"Setup SSH known_hosts file for User1, User2, Defender\n")
+          net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ent11')
+        elif cyborg_name == 'Op_Server0':
+          host = lan['name'] + host_name
+          ip = net[host].IP()
+          info(f"Setup SSH known_hosts file for Enterprise2\n")
+          net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ops10')
+
+
   def updateClientConfigFile(self, net):
     '''rewrite server_urls'''
     lan3h1_ip = net['lan3h1'].IP()
@@ -292,13 +339,15 @@ class CustomTopology (Topo):
 
 
   def startVelociraptorServer(self, net):
+    '''Start the Velociraptor server on the attacker host and the defender host'''
     pids = collections.defaultdict(list)
-    host = 'lan3h1' # User0
-    info(f"Start velociraptor server on {host}\n")
-    net[host].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
-    # net[host].cmd('systemctl start velociraptor_server &')
-    pid = net[host].cmd('echo $!')
-    pids[host].append(pid)
+    attacker_host = 'lan3h1' # User0
+    defender_host = 'lan1h4' # Defender
+    info(f"Start velociraptor server on {attacker_host} & {defender_host}\n")
+    for node in [attacker_host, defender_host]:
+      net[node].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
+      pid = net[node].cmd('echo $!')
+      pids[node].append(pid)
     return pids
   
 
@@ -351,9 +400,9 @@ class CustomTopology (Topo):
 
 
   def stopVelociraptorServer(self, net, pids):
-    for lan in self.topo_dict['lans']:
-      for host_name, _ in lan['hosts_info'].items():
-        host = lan['name'] + host_name
+    attacker_host = 'lan3h1' # User0
+    defender_host = 'lan1h4' # Defender
+    for host in [attacker_host, defender_host]:
         info(f"Stopping velociraptor server on {host}\n")
         # net[host].cmd('systemctl stop velociraptor_server &')
         for pid in pids[host]:
