@@ -13,7 +13,7 @@ from CybORG.Agents.MainAgent_cyborg_mm import MainAgent as MainAgent_cyborg_mm
 from CybORG.Mininet.DARTMOUTH.Agents.BlueAgents.GenericAgent import GenericAgent
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
-from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
+from CybORG.Mininet.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
 
 MAX_EPS = 50
 agent_name = 'Blue'
