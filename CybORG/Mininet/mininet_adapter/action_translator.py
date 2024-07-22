@@ -89,7 +89,7 @@ class RedActionTranslator(ActionTranslator):
         
         conn_key = self.mininet_adpator.connection_key[target]
         
-        return f'{host} timeout 100 {action} {target} --conn_key {conn_key}'
+        return f'{host} {action} {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
     
     def impact(self, target_host):
         pass
