@@ -75,7 +75,7 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
         
         hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
-        
+        hosts_name_map = { f'h{i+1}': name for i, name in enumerate(hosts)}
         # Calculate the usable IP range
         usable_ips = list(network.hosts())
 
@@ -99,6 +99,7 @@ def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
             'subnet': str(network),
             'hosts': len(hosts),
             'hosts_info': hosts_info,
+            'hosts_name_map': hosts_name_map,
             'nat': f'nat{counter}',
             'nat_ip': str(usable_ips[-1]) # Assign the next available IP address to the NAT node
         })
