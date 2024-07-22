@@ -248,6 +248,9 @@ def parse_ssh_action(ssh_action_output, mapper) -> Observation:
     return obs
 
 def parse_escalate_action(escalate_action_output, mapper) -> Observation:
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    escalate_action_output = ansi_escape.sub('', escalate_action_output)
+    
     pattern = re.compile(r'TRUE|FALSE')
 
     # Use re.search to find a match
@@ -266,23 +269,40 @@ def parse_escalate_action(escalate_action_output, mapper) -> Observation:
     
     # Use re.findall() to extract the values
     matches = re.findall(pattern1, escalate_action_output)
+    
+    pattern_explored = r"Any new host explored\?: (\d+\.\d+\.\d+\.\d+)"
+    match_explored = re.search(pattern_explored, escalate_action_output)
+    explored_host_ip = match_explored.group(1) if match_explored else None
 
-    # @To-Do
+    # @To-Do 
+    pattern = r"(\d+\.\d+\.\d+\.\d+):(\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+).*pid=(\d+)"
+    
+    # Use re.findall() to extract the values
+    match = re.search(pattern, escalate_action_output)
+    if match:
+        # local_ip, port, remote_ip, port_for_reverse_shell, pid = match.groups()
+        attacked_ip, attacked_port, attacker_ip, attacker_port, pid = match.groups()
+        
     data = {}
     if matches:
         remote_ip = matches[0]
         subnet_cidr = mapper.cyborg_ip_to_subnet[remote_ip]
         remote_hostname = mapper.cyborg_ip_to_host_map[remote_ip]
         
-        enterprise_hostname = 'Enterprise1' # @To-Do bad design hard coded
-        enterprise_ip = mapper.cyborg_host_to_ip_map[enterprise_hostname]
-        enterprise_subnet = mapper.cyborg_ip_to_subnet[enterprise_ip]
-        data[enterprise_hostname] = {'Interface': [{'IP Address': IPv4Address(enterprise_ip),
-                                                    'Subnet': IPv4Network(enterprise_subnet)
-                                                    }]}
+        if explored_host_ip:    
+            explored_host_name = mapper.cyborg_ip_to_host_map.get(explored_host_ip, "")
+            data[explored_host_name] = {     
+                'Interface': [{'IP Address': IPv4Address(explored_host_ip)}]
+            }       
+        # enterprise_hostname = 'Enterprise1' # @To-Do bad design hard coded
+        # enterprise_ip = mapper.cyborg_host_to_ip_map[enterprise_hostname]
+        # enterprise_subnet = mapper.cyborg_ip_to_subnet[enterprise_ip]
+        # data[enterprise_hostname] = {'Interface': [{'IP Address': IPv4Address(enterprise_ip),
+        #                                             'Subnet': IPv4Network(enterprise_subnet)
+        #                                             }]}
 
-        op_hostname = 'Op_Server0' # @To-Do bad design hard coded
-        data[op_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[op_hostname])}]}
+        # op_hostname = 'Op_Server0' # @To-Do bad design hard coded
+        # data[op_hostname] = {'Interface': [{'IP Address': IPv4Address(mapper.cyborg_host_to_ip_map[op_hostname])}]}
 
         data[remote_hostname] = {'Interface': [{'IP Address': IPv4Address(remote_ip),
                             'Interface Name': 'eth0',
