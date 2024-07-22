@@ -60,14 +60,14 @@ class SimulatedEnvironment(CybORGEnvironment):
 
             for j in range(self.num_steps):
                 blue_action = self.blue_agent.get_action(blue_observation, blue_action_space)
-                blue_observation, rew, done, info = self.cyborg.step(blue_action)
+                blue_observation, rew, done, info = self.challenge_wrapper.step(blue_action)
 
                 actions = {"Red": str(self.unwrapped_cyborg.get_last_action('Red')),
                            "Blue": str(self.unwrapped_cyborg.get_last_action('Blue'))}
                 observations = {"Red": self.unwrapped_cyborg.get_observation('Red'),
                                 "Blue": self.unwrapped_cyborg.get_observation('Blue')}
-                rewards = {"Red": list(self.unwrapped_cyborg.get_rewards()['Red'].values())[0],
-                           "Blue": list(self.unwrapped_cyborg.get_rewards()['Blue'].values())[0]}
+                rewards = {"Red": self.unwrapped_cyborg.get_rewards()['Red'],
+                           "Blue": self.unwrapped_cyborg.get_rewards()['Blue']}
 
                 state_snapshot = self.game_state_manager.create_state_snapshot(actions, observations, rewards)
                 self.game_state_manager.store_state(state_snapshot, i, j)
