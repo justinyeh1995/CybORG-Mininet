@@ -84,6 +84,9 @@ def main ():
   # Now start ssh server
   info ("Start SSH server on every host\n")
   topo.startSSHServer (net)
+  
+  info ("Setup SSH known hosts\n")
+  topo.setupSSHKnownHosts (net)
 
   info ("Rewrite client.config.yaml")
   topo.updateClientConfigFile (net)
