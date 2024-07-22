@@ -14,6 +14,7 @@ from CybORG import CybORG
 from CybORG.Shared import Observation
 
 from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
+                                    TopologyAssetManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
                                     RedActionTranslator, BlueActionTranslator, \
@@ -31,6 +32,7 @@ class MininetAdapter:
         config = configparser.ConfigParser ()
         config.read ('config.ini')
 
+        self.topology_asset_manager = TopologyAssetManager()
         self.topology_manager = YamlTopologyManager()
         self.command_interface = MininetCommandInterface()
         self.mapper = CybORGMininetMapper()
@@ -54,6 +56,7 @@ class MininetAdapter:
         
         self.blue_action_translator.register(self)
         self.red_action_translator.register(self)
+        self.topology_asset_manager.register(self)
         
     
     def set_environment(self, cyborg):
@@ -142,8 +145,8 @@ class MininetAdapter:
             if cyborg_action == "ExploitRemoteService" and \
                 self.mapper.mininet_host_to_ip_map[target] in self.exploited_hosts:  # this event happens
                 
-                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)},\n 
-                               Exploited hosts are: {self.exploited_hosts}")
+                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)},\n" + 
+                               f"Exploited hosts are: {self.exploited_hosts}")
                 
                 mininet_cli_text = "We have already exploited this host. Skipping sending command to Mininet!"
             
@@ -161,8 +164,8 @@ class MininetAdapter:
         try:    
             if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
                 
-                logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(target)} is already exploited, 
-                               we will use the previously stored observation.\n Skipping sending text to result bundler")
+                logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(target)} is already exploited,\n" + 
+                               "we will use the previously stored observation.\n Skipping sending text to result bundler")
                 
                 mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(target)]
             
@@ -173,8 +176,8 @@ class MininetAdapter:
                 # post processing to manage the states of the cluster
                 if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
                     
-                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} has gotten exploited, 
-                                   the adapter will store this observation for future use")
+                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} has gotten exploited,\n" + 
+                                   "the adapter will store this observation for future use")
                 
                     additional_data = mininet_obs.data["Additional Info"]
                     remote_ip = additional_data["Attacked IP"]
