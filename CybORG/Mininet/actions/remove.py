@@ -2,7 +2,7 @@ import argparse
 import inspect
 from CybORG import CybORG
 
-from CybORG.Emulator.Actions.Velociraptor.RemoveAction import RemoveAction
+from CybORG.Emulator.Actions.Velociraptor.RemoveActionForMininet import RemoveAction
 
 def parseCmdLineArgs ():
     # parse the command line
@@ -10,8 +10,8 @@ def parseCmdLineArgs ():
 
     # add optional arguments
     # parser.add_argument ("-ip", "--ip", default="0.0.0.0", help="IP Address")
-    parser.add_argument ("-host", "--hostname", default="cpswtjustin", help="Hostname, use hostname to figure out hostname")
-    parser.add_argument ("-conn_key", "--conn_key", default="", help="connection_key from exploit action")
+    parser.add_argument ("-m", "--hostname", default="cpswtjustin", help="Hostname, use hostname to figure out hostname")
+    parser.add_argument ("-n", "--conn_key", default="", help="connection_key from exploit action")
 
     # parse the args
     args = parser.parse_args ()
