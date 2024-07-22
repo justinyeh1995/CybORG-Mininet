@@ -7,6 +7,7 @@ from CybORG import CybORG, CYBORG_VERSION
 
 from CybORG.Shared import Observation
 
+
 class CybORGEnvironment(ABC):
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode):
         self.cyborg = cyborg
@@ -107,7 +108,7 @@ class EmulatedEnvironment(CybORGEnvironment):
             r = []
             a = []
 
-            blue_observation = self.linked_diagram_cyborg.reset()
+            blue_observation = self.linked_diagram_cyborg.reset() # @To-Do; Follow wrapper branch and use the obs from assets/blue_init_observation.json
             blue_action_space = self.challenge_wrapper.get_action_space('Blue')
             red_observation = self.true_table_cyborg.get_observation('Red')
             red_action_space = self.true_table_cyborg.get_action_space('Red')
@@ -125,6 +126,14 @@ class EmulatedEnvironment(CybORGEnvironment):
             
             try:
                 self.mininet_adapter.reset()
+            except Exception as e:
+                traceback.print_exc()
+                raise e
+            
+            try:
+                self.mininet_adapter.topology_asset_manager.reset()
+                # assert type(self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()) == type(mininet_blue_observation) # needs type checking 
+                mininet_blue_observation = self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()
             except Exception as e:
                 traceback.print_exc()
                 raise e
