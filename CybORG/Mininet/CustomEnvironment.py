@@ -130,13 +130,13 @@ class EmulatedEnvironment(CybORGEnvironment):
                 traceback.print_exc()
                 raise e
             
-            try:
-                self.mininet_adapter.topology_asset_manager.reset()
-                # assert type(self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()) == type(mininet_blue_observation) # needs type checking 
-                mininet_blue_observation = self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()
-            except Exception as e:
-                traceback.print_exc()
-                raise e
+            # try:
+            #     self.mininet_adapter.topology_asset_manager.reset()
+            #     # assert type(self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()) == type(mininet_blue_observation) # needs type checking 
+            #     mininet_blue_observation = self.mininet_adapter.topology_asset_manager.get_inti_blue_obs()
+            # except Exception as e:
+            #     traceback.print_exc()
+            #     raise e
             
             for j in range(self.num_steps):
                 red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
