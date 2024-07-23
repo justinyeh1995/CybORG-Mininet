@@ -73,6 +73,7 @@ class RedActionTranslator(ActionTranslator):
         host = cyborg_to_mininet_host_map['User0']
         hostname = socket.gethostname()
         
+        # Serialize additional data
         additional_data = {
             'available_ports': self.mininet_adpator.available_ports
         }
