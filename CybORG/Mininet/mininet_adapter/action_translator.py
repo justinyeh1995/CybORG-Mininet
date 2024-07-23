@@ -38,6 +38,7 @@ class RedActionTranslator(ActionTranslator):
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
         self.last_action = action_type
+        self.last_target = mininet_host_to_ip_map.get(target_host, "")
         action_method = self.action_map.get(action_type)
         if action_method:
             return action_method(target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map)
