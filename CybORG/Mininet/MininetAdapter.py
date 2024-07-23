@@ -192,6 +192,12 @@ class MininetAdapter:
                     self.old_exploit_outcome.update({remote_ip: mininet_obs})
                     self.exploited_hosts.append(remote_ip)
                     self.connection_key.update({remote_ip:connection_key})
+                
+                if cyborg_action == "PrivilegeEscalate" and mininet_obs.success.name == "TRUE":
+                    
+                    logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(target)} is successful")
+                    
+                    self.priviledged_hosts.append(self.mapper.mininet_host_to_ip_map.get(target))
             
             # if mininet_obs.success: update  
             self.logger.info("===Obs===")
