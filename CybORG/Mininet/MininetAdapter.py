@@ -180,7 +180,8 @@ class MininetAdapter:
                     logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} \
                                     has gotten exploited,\n" + 
                                    "the adapter will store this observation for future use")
-                
+                    
+                    # Deserializing the additional data
                     additional_data = mininet_obs.data["Additional Info"]
                     remote_ip = additional_data["Attacked IP"]
                     client_port = additional_data["Attacker Port"]
