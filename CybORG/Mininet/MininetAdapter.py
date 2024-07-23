@@ -162,7 +162,8 @@ class MininetAdapter:
             raise e
 
         try:    
-            if cyborg_action == "ExploitRemoteService" and self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
+            if cyborg_action == "ExploitRemoteService" and \
+                self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
                 
                 logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(target)} is already exploited,\n" + 
                                "we will use the previously stored observation.\n Skipping sending text to result bundler")
@@ -176,7 +177,8 @@ class MininetAdapter:
                 # post processing to manage the states of the cluster
                 if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
                     
-                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} has gotten exploited,\n" + 
+                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} \
+                                    has gotten exploited,\n" + 
                                    "the adapter will store this observation for future use")
                 
                     additional_data = mininet_obs.data["Additional Info"]
@@ -195,6 +197,22 @@ class MininetAdapter:
             self.logger.info("===Obs===")
             self.logger.debug(mininet_obs.data)
 
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
+        try:
+            if agent_type == "Blue" and \
+                self.red_action_translator.last_action in ['ExploitRemoteService', 'DiscoverNetworkServices']:
+                
+                logging.info ("Modify Blue Observation given Previous Red Observation")
+                
+                mininet_obs.data = self.results_bundler.modify_blue_observation_by_red(mininet_obs.data, \
+                                                                                self.results_bundler.last_red_observation.data, \
+                                                                                self.red_action_translator.last_action, \
+                                                                                self.red_action_translator.last_target)
+                self.results_bundler.last_blue_observation = mininet_obs
+                
         except Exception as e:
             traceback.print_exc()
             raise e
