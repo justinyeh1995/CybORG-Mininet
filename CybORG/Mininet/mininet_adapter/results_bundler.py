@@ -33,6 +33,9 @@ class ResultsBundler(Entity):
         elif cyborg_action == "PrivilegeEscalate":
             obs = parse_escalate_action(mininet_cli_str, mapper)
 
+        elif cyborg_action == "Impact":
+            obs = Observation(False) # @To-Do
+            
         elif cyborg_action.startswith("Decoy"):
             obs = parse_decoy_action(mininet_cli_str)
 
@@ -44,6 +47,9 @@ class ResultsBundler(Entity):
         
         elif cyborg_action == "Sleep":
             obs = Observation(True)
+            
+        elif cyborg_action == "Analyse":
+            obs = Observation(False) # @To-Do
             
         else:
             obs = Observation(False)
