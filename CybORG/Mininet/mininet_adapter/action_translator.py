@@ -16,6 +16,8 @@ class ActionTranslator(Entity):
     def __init__(self, path: str, config, logger):
         self.logger = logger
         self.path = path
+        self.last_action: str = None
+        self.last_target: str = None
         self.hostname = socket.gethostname()
         self.python_exe = config["PYTHON"]["FILE_PATH"]
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
@@ -35,6 +37,7 @@ class RedActionTranslator(ActionTranslator):
         }
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
+        self.last_action = action_type
         action_method = self.action_map.get(action_type)
         if action_method:
             return action_method(target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map)
