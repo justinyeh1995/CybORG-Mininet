@@ -94,7 +94,7 @@ class ResultsBundler(Entity):
             if red_outcome['success'].name == "TRUE":
                 red_to_blue=self.convert_red_exploit_dict(red_data)
                 
-            elif red_outcome['success'].name in ["FALSE", "Unknown"]:
+            elif red_outcome['success'].name in ["FALSE", "UNKNOWN"]:
             # Iterate over all the processes and their connections
                 red_to_blue = {'Processes': []}
                 for process in red_data['Processes']:
