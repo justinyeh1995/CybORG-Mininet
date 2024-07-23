@@ -23,6 +23,7 @@ class MininetCommandInterface(Entity):
         except Exception as e:
             logging.error (f"Failed to start Mininet: {e}")
             traceback.print_exc()
+            raise e
 
     
     def send_command(self, command: str, expect_prompt: bool=True) -> str:
