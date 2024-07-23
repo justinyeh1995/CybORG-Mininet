@@ -164,5 +164,5 @@ class BlueActionTranslator(ActionTranslator):
         port = self.decoy_service_name_to_port.get(action_type, 80)
         return f"{host} {action} {target} --port {port}"
     
-    def analyse(self):
+    def analyse(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         return "sleep 1"
