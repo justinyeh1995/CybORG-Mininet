@@ -32,31 +32,32 @@ class MininetAdapter:
         config = configparser.ConfigParser ()
         config.read ('config.ini')
 
-        self.topology_asset_manager = TopologyAssetManager()
-        self.topology_manager = YamlTopologyManager()
-        self.command_interface = MininetCommandInterface()
-        self.mapper = CybORGMininetMapper()
-        self.blue_action_translator = BlueActionTranslator(path=self.path, 
+        # self.topology_asset_manager: TopologyAssetManager = TopologyAssetManager()
+        self.topology_manager: YamlTopologyManager = YamlTopologyManager()
+        self.command_interface: MininetCommandInterface = MininetCommandInterface()
+        self.mapper: CybORGMininetMapper = CybORGMininetMapper()
+        self.blue_action_translator: BlueActionTranslator = BlueActionTranslator(path=self.path, 
                                                            config=config,
                                                            logger=self.logger)
-        self.red_action_translator = RedActionTranslator(path=self.path,
+        self.red_action_translator: RedActionTranslator = RedActionTranslator(path=self.path,
                                                          config=config,
                                                          logger=self.logger)
-        self.results_bundler = ResultsBundler()
+        self.results_bundler: ResultsBundler = ResultsBundler()
         
-        self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
+        self.reward_calculator: RewardCalculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
-        self.connection_key={}
-        self.used_ports={}
-        self.exploited_hosts=[]
-        self.priviledged_hosts=[]
-        self.old_exploit_outcome={}
-        self.network_state={}
+        self.connection_key: Dict = {}
+        self.used_ports: Dict = {}
+        self.exploited_hosts: List = []
+        self.priviledged_hosts: List = []
+        self.old_exploit_outcome: Dict = {}
+        self.network_state: Dict = {}
         self.available_ports: List = random.sample(range(4000, 5000 + 1), 50)
         
         self.blue_action_translator.register(self)
         self.red_action_translator.register(self)
-        self.topology_asset_manager.register(self)
+        # self.topology_asset_manager.register(self)
+        self.results_bundler.register(self)
         
     
     def set_environment(self, cyborg):
@@ -101,6 +102,7 @@ class MininetAdapter:
             expect_text = self.command_interface.start_mininet(file_path)
         
         except Exception as e:
+            logging.error ("Error in starting Mininet")
             traceback.format_exc()
             raise e
         # pprint(expect_text)
