@@ -86,8 +86,35 @@ def parse_exploit_action(ssh_action_output, mapper) -> Observation:
     
     obs = Observation(success_status)
     
-    if not success_status:
-        #@To-Do: Follow wrapper branch?? 
+    if not success_status or success_status == 'FALSE':
+        #@To-Do: Follow wrapper branch??
+        pattern_remote_ip = r"Remote IP:\s+(\d+.\d+.\d+.\d+)"
+        pattern_client_port = r"Client Port:\s+(\d+)"
+        match_remote_ip = re.search(pattern_remote_ip, ssh_action_output)
+        match_client_port = re.search(pattern_client_port, ssh_action_output)
+         
+        formatted_data = {}
+        
+        ip = match_remote_ip.group(1)
+        port = match_client_port.group(1)
+        
+        formatted_data['1'] ={
+            'Interface': [{'IP Address': IPv4Address(ip)}]
+        }
+        
+        formatted_data[ip]= {
+            'Interface': [{'IP Address': IPv4Address(ip)}],
+            'Processes': [{
+                'Connections': [{
+                    'Status': 'ProcessState.OPEN',
+                    'local_address': IPv4Address(ip),
+                    'local_port': port     #To Do: change it to Attacked port
+                }],
+                'Process Type': 'ProcessType.FEMITTER'
+            }]
+        }
+        
+        obs.data.update(formatted_data)
         return obs
     
     # print(ssh_action_output)
@@ -109,9 +136,7 @@ def parse_exploit_action(ssh_action_output, mapper) -> Observation:
         attacked_host_name = mapper.cyborg_ip_to_host_map.get(attacked_ip)
         
         attacker_node = attacker_ip #mapper.cyborg_host_to_ip_map.get('User0')
-        
-        attack_start_ip= 21
-        
+                
         data[attacked_ip] = {
             "Processes": [{
                 "Connections": [{
