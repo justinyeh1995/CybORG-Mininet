@@ -34,22 +34,28 @@ class ResultsBundler(Entity):
             obs = parse_escalate_action(mininet_cli_str, mapper)
 
         elif cyborg_action == "Impact":
-            obs = Observation(False) # @To-Do
+            if target in self.mininet_adpator.priviledged_hosts:
+                obs = Observation(True) # @To-Do
+            else:
+                obs = Observation(False)
             
         elif cyborg_action.startswith("Decoy"):
             obs = parse_decoy_action(mininet_cli_str)
 
         elif cyborg_action == "Remove":
-            obs = Observation(True)
+            obs = Observation(True) # @To-Do
 
         elif cyborg_action == "Restore":
-            obs = Observation(True)
+            obs = Observation(True) # @To-Do
         
         elif cyborg_action == "Sleep":
             obs = Observation(True)
             
         elif cyborg_action == "Analyse":
             obs = Observation(False) # @To-Do
+            
+        elif cyborg_action == "Reset":
+            obs = Observation(True) # @To-Do
             
         else:
             obs = Observation(False)
