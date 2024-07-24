@@ -3,11 +3,12 @@ import random
 from typing import Dict
 from ipaddress import IPv4Address
 
-from CybORG.Mininet.mininet_adapter.utils.parser_util import  parse_nmap_network_scan, \
+from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import  parse_nmap_network_scan, \
                                                             parse_nmap_port_scan, \
                                                             parse_exploit_action, \
-                                                            parse_escalate_action, \
-                                                            parse_decoy_action, \
+                                                            parse_escalate_action \
+                                                            
+from CybORG.Mininet.mininet_adapter.utils.parse_blue_results_util import parse_decoy_action, \
                                                             parse_remove_action
 from CybORG.Shared import Observation
 from CybORG.Mininet.mininet_adapter.entity import Entity
