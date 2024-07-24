@@ -138,10 +138,10 @@ class BlueActionTranslator(ActionTranslator):
         print("Blue Remove")
         # @To-Do Not Implemented as of now
         host = cyborg_to_mininet_host_map['Defender']
-        action = f"{self.python_exe} {self.action_folder_path}/remove.py --hostname {self.hostname}"
+        action = f"{self.python_exe} {self.action_folder_path}/remove.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key[target]
-        return f"{host} {action} --conn_key {conn_key}"
+        return f"{host} {action} --hostname {self.hostname} --conn_key {conn_key}"
 
     def restore(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Restore")
@@ -159,10 +159,12 @@ class BlueActionTranslator(ActionTranslator):
     def deploy_decoy(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Decoy")
         host = cyborg_to_mininet_host_map['Defender']
-        action = f"{self.python_exe} {self.action_folder_path}/deploy_decoy_action.py --ip"
+        action = f"{self.python_exe} {self.action_folder_path}/deploy_decoy_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         port = self.decoy_service_name_to_port.get(action_type, 80)
-        return f"{host} {action} {target} --port {port}"
+        cyborg_hostname = self.mininet_adpator.mapper.cyborg_ip_to_host_map.get(target)
+        decoyname = action_type[5:]
+        return f"{host} {action} --ip {target} --port {port} --decoyname {decoyname} --cyborg_hostname {cyborg_hostname}"
     
     def analyse(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         return "sleep 1"
