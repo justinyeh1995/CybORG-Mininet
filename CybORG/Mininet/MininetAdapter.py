@@ -200,7 +200,7 @@ class MininetAdapter:
                     
                     logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(target)} is successful")
                     
-                    self.priviledged_hosts.append(self.mapper.mininet_host_to_ip_map.get(target))
+                    self.priviledged_hosts.append(target)
             
             # if mininet_obs.success: update  
             self.logger.info("===Obs===")
