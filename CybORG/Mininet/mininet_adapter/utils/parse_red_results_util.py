@@ -6,15 +6,6 @@ from ipaddress import IPv4Address, IPv4Network
 from CybORG.Shared import Observation
 
 
-def find_matches(pattern_str: str, raw_text: str) -> Iterator[re.Match]:
-    # Define a regex pattern to extract hostnames and IP addresses
-    pattern: Pattern = re.compile(pattern_str)
-    
-    # Find all matches in the decoded output
-    match: Iterator[re.Match] = pattern.finditer(raw_text)
-    
-    return match
-
 def enum_to_boolean(enum_value):
     if enum_value == 'TRUE':
         return True
