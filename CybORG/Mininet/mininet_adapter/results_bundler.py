@@ -9,7 +9,9 @@ from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import  parse_n
                                                             parse_escalate_action \
                                                             
 from CybORG.Mininet.mininet_adapter.utils.parse_blue_results_util import parse_decoy_action, \
-                                                            parse_remove_action
+                                                            parse_remove_action, \
+                                                            parse_reset_action
+                                                            
 from CybORG.Shared import Observation
 from CybORG.Mininet.mininet_adapter.entity import Entity
     
@@ -19,6 +21,18 @@ class ResultsBundler(Entity):
     last_red_observation: Observation = None
     
     def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation:
+        """_summary_
+
+        Args:
+            target (_type_): this is the hostname inside mininet
+            cyborg_action (_type_): _description_
+            isSuccess (bool): _description_
+            mininet_cli_str (_type_): _description_
+            mapper (_type_): _description_
+
+        Returns:
+            Observation: _description_
+        """
         if not isSuccess:
             return Observation(False)
         
@@ -56,7 +70,7 @@ class ResultsBundler(Entity):
             obs = Observation(False) # @To-Do
             
         elif cyborg_action == "Reset":
-            obs = Observation(True) # @To-Do
+            obs = parse_reset_action(mininet_cli_str)
             
         else:
             obs = Observation(False)
