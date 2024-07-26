@@ -77,6 +77,10 @@ def main ():
   # Clean tangling services
   topo.cleanupServices (net)
 
+  # Add Mock folders on each host
+  info ("Add Mock folders on each host\n")
+  topo.addMockFolderContents (net)
+
   # Add passwd on every host
   info ("Add passwd on every host\n")
   topo.setPassword (net)
@@ -119,6 +123,10 @@ def main ():
 
   info ("Stop SSH server on every host")
   topo.stopSSHServer (net)
+  
+  # Remove Mock folders on each host
+  info ("Remove Mock folders on each host\n")
+  topo.removeMockFolderContents (net)
 
   info ("Stop the net\n")
   net.stop ()  # this cleans up the network

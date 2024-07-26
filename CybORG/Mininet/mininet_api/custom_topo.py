@@ -321,6 +321,15 @@ class CustomTopology (Topo):
           net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ops10')
 
 
+  def addMockFolderContents(self, net):
+    '''Setup the mock folder contents for All hosts'''
+    for host in net.hosts:
+      info(f"Setup mock folder contents for {host.name}\n")
+      host.cmd(f"mkdir -p /tmp/{host.name}/ubuntu/")
+      for i in range(random.randint(5, 11)):
+        host.cmd(f"echo 'This is file {i} in {host.name}' > /tmp/{host.name}/ubuntu/file{i}.txt")
+
+
   def updateClientConfigFile(self, net):
     '''rewrite server_urls'''
     lan3h1_ip = net['lan3h1'].IP()
@@ -425,6 +434,13 @@ class CustomTopology (Topo):
           output = net[host].waitOutput()
           info(f"Output of kill command on {host}: {output}\n")
 
+
+  def removeMockFolderContents(self, net):
+      '''Remove the mock folder contents for All hosts'''
+      for host in net.hosts:
+        info(f"Remove mock folder contents for {host.name}\n")
+        host.cmd(f"rm -rf /tmp/{host.name}")
+        
 
   def add_usr_local_dir(self, net):
     """
