@@ -25,11 +25,16 @@ class ActionTranslator(Entity):
     def translate(self, action):
         raise NotImplementedError
     
-    @classmethod
-    def get_reset_action_string(cls, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        action = f"{cls.python_exe} {cls.action_folder_path}/reset.py"
+    # @classmethod
+    # def get_reset_action_string(cls, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+    #     action = f"{cls.python_exe} {cls.action_folder_path}/reset.py"
+    #     # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
+    #     return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
+    def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        action = f"{self.python_exe} {self.action_folder_path}/reset.py"
         # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
         return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
+
 
 
 class RedActionTranslator(ActionTranslator):
