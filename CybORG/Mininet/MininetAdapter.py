@@ -46,7 +46,7 @@ class MininetAdapter:
         
         self.reward_calculator: RewardCalculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
-        self.md5: Dict = {}
+        self.md5: Dict[str, dict] = {}
         self.connection_key: Dict = {}
         self.used_ports: Dict = {}
         self.exploited_hosts: List = []
@@ -119,21 +119,34 @@ class MininetAdapter:
         print(expect_text)
         
         logging.info ("===Perfoem ResetAction to retrieve initial md5 checksums===")
-        try:
-            for host in self.mapper.mininet_host_to_ip_map.keys():
-                reset_action_string = ActionTranslator.get_reset_action_string(host, \
-                                            self.mapper.cyborg_to_mininet_host_map, \
-                                            self.mapper.mininet_host_to_ip_map)
-                
+        for host in self.mapper.mininet_host_to_ip_map.keys():
+            if host.startswith("r"):
+                continue
+            # reset_action_string = ActionTranslator.get_reset_action_string(host, \
+            #                             self.mapper.cyborg_to_mininet_host_map, \
+            #                             self.mapper.mininet_host_to_ip_map)
+            reset_action_string = self.red_action_translator.get_reset_action_string(host, \
+                                        self.mapper.cyborg_to_mininet_host_map, \
+                                        self.mapper.mininet_host_to_ip_map)
+            try:
                 expect_text = self.command_interface.send_command(reset_action_string)
                 logging.debug (expect_text)
-                
-                cyborg_host = self.mapper.mininet_to_cyborg_host_map.get(host, host)
+            
+            except Exception as e:
+                traceback.print_exc()
+                raise e
+            
+            cyborg_host = self.mapper.mininet_to_cyborg_host_map.get(host, host)
+            
+            try:
                 self.md5[cyborg_host] = self.results_bundler.bundle(f"{host}", "Reset", True, expect_text, self.mapper) \
                                                             .data["MD5"]
-        except Exception as e:
-            traceback.print_exc()
-            raise e
+            except Exception as e:
+                traceback.print_exc()
+                raise e
+            
+        logging.debug (f"Initial MD5 checksums are: {self.md5}")
+    
         
         logging.ingo("===Resetting Mininet Environment Completed===")
 
