@@ -80,3 +80,19 @@ def transform_decoy(data):
     elif decoyname=='harakasmpt': 
         formatted_data[host]['Processes'][0]['Service Name']='haraka'
     return formatted_data
+
+
+def parse_reset_action(reset_action_output: str) -> Observation:
+    '''
+    md5 chksum are: {'/tmp/lan1h1/ubuntu/file6.txt': '2ed1da9e5db09fa95f42eacf0f203c88', '/tmp/lan1h1/ubuntu/file0.txt': '55bb703ba889096db15b539a1141c109', '/tmp/lan1h1/ubuntu/file5.txt': '36a9d8ed8066b9094ff73ac221d585fb', '/tmp/lan1h1/ubuntu/file1.txt': 'f4bdbfe06a7dbf5aaaa71ddd625f9881', '/tmp/lan1h1/ubuntu/file4.txt': '60f46204641696f89c34ca6c3a665131', '/tmp/lan1h1/ubuntu/file2.txt': '0ede6689285a69a30ec1e5131b3f721a', '/tmp/lan1h1/ubuntu/file3.txt': '0556da718ead47d7e4e178d80f0ff1cf'}
+    turn this string into a dictionary
+    '''
+    test = "md5 chksum are: {'/tmp/lan1h1/ubuntu/file6.txt': '2ed1da9e5db09fa95f42eacf0f203c88', '/tmp/lan1h1/ubuntu/file0.txt': '55bb703ba889096db15b539a1141c109', '/tmp/lan1h1/ubuntu/file5.txt': '36a9d8ed8066b9094ff73ac221d585fb', '/tmp/lan1h1/ubuntu/file1.txt': 'f4bdbfe06a7dbf5aaaa71ddd625f9881', '/tmp/lan1h1/ubuntu/file4.txt': '60f46204641696f89c34ca6c3a665131', '/tmp/lan1h1/ubuntu/file2.txt': '0ede6689285a69a30ec1e5131b3f721a', '/tmp/lan1h1/ubuntu/file3.txt': '0556da718ead47d7e4e178d80f0ff1cf'}"
+    pattern = r"md5 chksum are: ({.*})"
+    match = re.search(pattern, reset_action_output)
+    if match:
+        md5_dict: Dict = eval(match.group(1))
+        return Observation(True, md5_dict)
+    else:
+        return Observation(False)
+    
