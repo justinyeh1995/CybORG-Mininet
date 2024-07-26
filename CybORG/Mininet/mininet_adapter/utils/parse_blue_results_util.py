@@ -92,7 +92,9 @@ def parse_reset_action(reset_action_output: str) -> Observation:
     match = re.search(pattern, reset_action_output)
     if match:
         md5_dict: Dict = eval(match.group(1))
-        return Observation(True, md5_dict)
+        obs = Observation(True)
+        obs.data.update({"MD5": md5_dict})
+        return obs
     else:
         return Observation(False)
     
