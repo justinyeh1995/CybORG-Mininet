@@ -17,7 +17,7 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     TopologyAssetManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
-                                    RedActionTranslator, BlueActionTranslator, \
+                                    RedActionTranslator, BlueActionTranslator, ActionTranslator, \
                                     ResultsBundler, \
                                     RewardCalculator
 
@@ -46,6 +46,7 @@ class MininetAdapter:
         
         self.reward_calculator: RewardCalculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
+        self.md5: Dict = {}
         self.connection_key: Dict = {}
         self.used_ports: Dict = {}
         self.exploited_hosts: List = []
@@ -116,6 +117,25 @@ class MininetAdapter:
         print("===Ping Test===")
         expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
         print(expect_text)
+        
+        logging.info ("===Perfoem ResetAction to retrieve initial md5 checksums===")
+        try:
+            for host in self.mapper.mininet_host_to_ip_map.keys():
+                reset_action_string = ActionTranslator.get_reset_action_string(host, \
+                                            self.mapper.cyborg_to_mininet_host_map, \
+                                            self.mapper.mininet_host_to_ip_map)
+                
+                expect_text = self.command_interface.send_command(reset_action_string)
+                logging.debug (expect_text)
+                
+                cyborg_host = self.mapper.mininet_to_cyborg_host_map.get(host, host)
+                self.md5[cyborg_host] = self.results_bundler.bundle(f"{host}", "Reset", True, expect_text, self.mapper) \
+                                                            .data["MD5"]
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+        
+        logging.ingo("===Resetting Mininet Environment Completed===")
 
     
     def step(self, action_string: str, agent_type: str) -> Observation:
