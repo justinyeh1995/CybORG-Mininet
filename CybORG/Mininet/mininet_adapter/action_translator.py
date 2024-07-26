@@ -24,6 +24,12 @@ class ActionTranslator(Entity):
 
     def translate(self, action):
         raise NotImplementedError
+    
+    @classmethod
+    def get_reset_action_string(cls, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+        action = f"{cls.python_exe} {cls.action_folder_path}/reset.py"
+        # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
+        return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
 
 
 class RedActionTranslator(ActionTranslator):
@@ -64,10 +70,9 @@ class RedActionTranslator(ActionTranslator):
     def exploit_remote_service(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Exploit Network Services")
         host = cyborg_to_mininet_host_map['User0']
-        ## @To-Do Rewirte 
-        action = f"{self.python_exe} {self.action_folder_path}/ssh_action.py --ip"
+        action = f"{self.python_exe} {self.action_folder_path}/ssh_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        return f'{host} timeout 60 {action} {target}'
+        return f'{host} timeout 60 {action} --ip {target}'
     
     def exploit_remote_service_v2(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Exploit Network Services")
@@ -81,20 +86,19 @@ class RedActionTranslator(ActionTranslator):
         json_str = json.dumps(additional_data)
         base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         
-        action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py --hostname {hostname} --remote_hostname"
+        action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
-        return f'{host} timeout 60 {action} {target} --additional_data {base64_data}'
+        return f'{host} timeout 60 {action} --hostname {hostname} --remote_hostname {target} --additional_data {base64_data}'
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
         host = cyborg_to_mininet_host_map['User0']
-        action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py --hostname {self.hostname} --remote"
+        action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        
         conn_key = self.mininet_adpator.connection_key[target]
         
-        return f'{host} {action} {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
+        return f'{host} {action} --hostname {self.hostname} --remote {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
     
     def impact(self, target_host):
         pass
