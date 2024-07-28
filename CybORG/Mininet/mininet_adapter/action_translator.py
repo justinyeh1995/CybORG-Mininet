@@ -32,9 +32,9 @@ class ActionTranslator(Entity):
     #     return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
     def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         action = f"{self.python_exe} {self.action_folder_path}/reset.py"
+        hostname = socket.gethostname()
         # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
-        return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
-
+        return f"{cyborg_to_mininet_host_map['User0']} {action} --mininet_hostname {target_host} --hostname {hostname}" 
 
 
 class RedActionTranslator(ActionTranslator):
