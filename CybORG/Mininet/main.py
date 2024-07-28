@@ -25,8 +25,6 @@ from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
 from CybORG.Mininet.CustomFactory import CybORGFactory, AgentFactory
 from CybORG.Mininet.CustomEnvironment import SimulatedEnvironment, EmulatedEnvironment
 from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
-from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
-from CybORG.Mininet.MininetAdapter import MininetAdapter
 
 # from CybORG.GameVisualizer.DBManager import DBManager
 
@@ -71,16 +69,6 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
     cyborg_factory = CybORGFactory()
 
     print(f'using CybORG v{cyborg_version}, {scenario}\n')
-    
-    # generate a enhanced network object for cyborg v2 
-    # wrapped cyborg
-
-    # Single  
-    # game manager initialization
-    # game_state_manager = GameStateCollector(environment=environment)
-    
-    # mininet adapter initialization
-    # mininet_adapter = MininetAdapter()
     
     try:
         for num_steps in [max_step]:
