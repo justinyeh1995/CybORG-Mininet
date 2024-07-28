@@ -78,10 +78,8 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
                 wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
 
                 if environment == "emu":
-                    # env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager, mininet_adapter)
                     env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, environment)
                 elif environment == "sim":
-                    # env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
                     env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, environment)
 
                 else:
