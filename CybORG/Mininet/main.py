@@ -7,6 +7,7 @@ import argparse
 from pprint import pprint
 
 import logging
+import traceback
 from rich.logging import RichHandler
 
 from typing import List, Dict, Union
@@ -26,6 +27,8 @@ from CybORG.Mininet.CustomEnvironment import SimulatedEnvironment, EmulatedEnvir
 from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
 from CybORG.Mininet.MininetAdapter import MininetAdapter
+
+# from CybORG.GameVisualizer.DBManager import DBManager
 
 random.seed(0)
 
@@ -74,35 +77,52 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
 
     # Single  
     # game manager initialization
-    game_state_manager = GameStateCollector(environment=environment)
+    # game_state_manager = GameStateCollector(environment=environment)
     
     # mininet adapter initialization
-    mininet_adapter = MininetAdapter()
+    # mininet_adapter = MininetAdapter()
     
-    for num_steps in [max_step]:
-        for red_agent in [B_lineAgent]:
+    try:
+        for num_steps in [max_step]:
+            for red_agent in [B_lineAgent]:
 
-            cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent, file_name=scenario)
-            wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
+                cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent, file_name=scenario)
+                wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
 
-            if environment == "emu":
-                env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager, mininet_adapter)
-            elif environment == "sim":
-                env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
-            else:
-                raise ValueError(f"Invalid environment: {environment}")
+                if environment == "emu":
+                    # env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager, mininet_adapter)
+                    env = EmulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, environment)
+                elif environment == "sim":
+                    # env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, game_state_manager)
+                    env = SimulatedEnvironment(wrapped_cyborg, red_agent, agent, num_steps, max_episode, environment)
 
-            total_reward, actions_list = env.run()
-            
-            mean_val = mean(total_reward)
-            stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
-            print(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
-            with open(file_name, 'a+') as data:
-                data.write(f'steps: {num_steps}, adversary: {env.red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
-                for act, sum_rew in zip(actions_list, total_reward):
-                    data.write(f'actions: {act}, total reward: {sum_rew}\n')
+                else:
+                    raise ValueError(f"Invalid environment: {environment}")
+
+                total_reward, actions_list = env.run()
+                
+                write_to_file(file_name, num_steps, total_reward, actions_list)
+        
+        return env.game_state_manager.get_game_state()
     
-    return env.game_state_manager.get_game_state()
+    except KeyboardInterrupt:
+        print("Operation was interrupted by the user")
+    except Exception as e:
+        traceback.print_exc()
+        print(f"An error occurred: {e}")
+
+
+def write_to_file(file_name: str, num_steps: int, total_reward: List[Union[float,int]], actions_list: List[str]) -> None:
+    mean_val = mean(total_reward)
+    stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
+    print(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
+    try:
+        with open(file_name, 'a+') as data:
+            data.write(f'steps: {num_steps}, adversary: {env.red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
+            for act, sum_rew in zip(actions_list, total_reward):
+                data.write(f'actions: {act}, total reward: {sum_rew}\n')
+    except IOError:
+        print(f"An error occurred while writing to file {file_name}")
 
 
 def parseCmdLineArgs ():
@@ -154,5 +174,18 @@ if __name__ == "__main__":
             logger.error ("Visualization went wrong...")
             raise e
         
+        # try:
+        #     logger.info ("Store the game state into DB")
+        #     db = DBStorage ()
+        #     status = db.store_game_state (game_castle_gym_agent_state)
+        #     if status:
+        #         logger.info ("DB storage successful")
+        #     else:
+        #         logger.error ("DB storage failed")
+        # except Exception as e:
+        #     logger.error ("DB storage went wrong...")
+        #     raise e
+        
     except KeyboardInterrupt:
+        logger.error ("Keyboard Interrupt")
         pass
