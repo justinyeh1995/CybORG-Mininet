@@ -167,6 +167,10 @@ if __name__ == "__main__":
         logger = getLogger ()
         logger.info(f"Time for {max_episode} Episodes and {max_step} Steps: %d sec", time.time()-start)
         
+        if not game_castle_gym_agent_state:
+            logger.error ("Game state is empty")
+            raise Exception ("Game state is empty")
+        
         try:
             nv = NetworkVisualizer(game_castle_gym_agent_state)
             nv.plot(save=False)
