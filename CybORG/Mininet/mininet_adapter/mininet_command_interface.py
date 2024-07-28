@@ -19,6 +19,7 @@ class MininetCommandInterface(Entity):
             self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
             self.mininet_process.timeout = 300
             self.mininet_process.expect("mininet>")
+            logging.info ("The topology is up")
             return self.mininet_process.before.decode()
         except Exception as e:
             logging.error (f"Failed to start Mininet: {e}")
@@ -37,6 +38,9 @@ class MininetCommandInterface(Entity):
     
     def stop_mininet(self) -> None:
         if self.mininet_process and self.mininet_process.isalive():
+            self.mininet_process.sendintr() # send Ctrl+C
+            self.mininet_process.expect('mininet>')
+            logging.info ("Interrupted the ongoing command if any.")
             self.mininet_process.sendline('exit')
             self.mininet_process.expect(pexpect.EOF)
             logging.info ("Terminated the ongoing Mininet topology.")
@@ -45,14 +49,18 @@ class MininetCommandInterface(Entity):
     def clean(self) -> None:
         # First, ensure that the existing Mininet subprocess is terminated
         try:
+            cleanup_process = None
+            
             # First, check if a Mininet process is running and terminate it
             self.stop_mininet()
             
+            logging.info ("Do sudo mn -c")
             # Now, run the Mininet cleanup command
             cleanup_process = pexpect.spawn("sudo mn -c")
             cleanup_process.timeout = 60
             cleanup_process.expect(pexpect.EOF)  # Wait for the end of the process
             logging.info ("Mininet cleaned up successfully.")
+        
         except Exception as e:
             logging.error (f"Error cleaning up Mininet: {e}")
 

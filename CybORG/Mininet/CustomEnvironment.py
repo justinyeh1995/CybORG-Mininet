@@ -29,7 +29,7 @@ class CybORGEnvironment(ABC):
         self.true_table_cyborg = cyborg.env.env.env.env.env
         self.unwrapped_cyborg = cyborg.env.env.env.env.env.env
         
-        self.game_state_manager =  GameStateCollector(environment=environment)
+        self.game_state_manager = GameStateCollector(environment=environment)
         # Set up game_state_manager
         self.game_state_manager.set_environment(cyborg=self.unwrapped_cyborg,
                                             red_agent_name=self.red_agent_name,
