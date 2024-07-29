@@ -61,8 +61,10 @@ class MininetAdapter:
         config.read('config.ini')
 
         self.topology_manager = YamlTopologyManager()
-        self.command_interface = MininetCommandInterface()
         self.mapper = CybORGMininetMapper()
+        
+        self.command_interface = MininetCommandInterface(config=config)
+        
         self.blue_action_translator = BlueActionTranslator(path=self.path, 
                                                            config=config,
                                                            logger=self.logger)
@@ -76,6 +78,7 @@ class MininetAdapter:
         self.blue_action_translator.register(self)
         self.red_action_translator.register(self)
         self.results_bundler.register(self)
+        self.command_interface.register(self)
         
        
     def __enter__(self):
