@@ -87,7 +87,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
 
                 total_reward, actions_list = env.run()
                 
-                write_to_file(file_name, num_steps, total_reward, actions_list)
+                write_to_file(env, file_name, num_steps, total_reward, actions_list)
         
         return env.game_state_manager.get_game_state()
     
@@ -98,7 +98,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
         print(f"An error occurred: {e}")
 
 
-def write_to_file(file_name: str, num_steps: int, total_reward: List[Union[float,int]], actions_list: List[str]) -> None:
+def write_to_file(env: Union[SimulatedEnvironment, EmulatedEnvironment], file_name: str, num_steps: int, total_reward: List[Union[float,int]], actions_list: List[str]) -> None:
     mean_val = mean(total_reward)
     stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
     print(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
