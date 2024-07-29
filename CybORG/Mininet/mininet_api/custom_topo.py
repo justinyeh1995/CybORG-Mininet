@@ -354,15 +354,10 @@ class CustomTopology (Topo):
     # Path to the client config file
     client_config_path = f"/tmp/velociraptor/client.config.yaml"
     
-    self.update_config_file(client_config_path, r'https://(\S+)(:\d+)', 'https://' + velociraptor_server_ip + ':8000')
-    # # Read, modify, and write the YAML configuration
-    # with open(client_config_path, 'r') as file:
-    #     config = yaml.load(file)
+    self.update_config_file(client_config_path, 
+                            r'https://(\S+)(:\d+)', 
+                            'https://' + velociraptor_server_ip + ':8000')
     
-    # config['Client']['server_urls'] = [f"https://{velociraptor_server_ip}:8000/"]
-
-    # with open(client_config_path, 'w') as file:
-    #     yaml.dump(config, file, default_flow_style=False)
 
   def updateProgConfigFile(self, net):
       '''rewrite server_urls for prog_client.yaml'''
