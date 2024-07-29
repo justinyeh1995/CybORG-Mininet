@@ -34,7 +34,7 @@ class ActionTranslator(Entity):
         action = f"{self.python_exe} {self.action_folder_path}/reset.py"
         hostname = socket.gethostname()
         # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
-        return f"{cyborg_to_mininet_host_map['User0']} {action} --mininet_hostname {target_host} --hostname {hostname}" 
+        return f'{cyborg_to_mininet_host_map["User0"]} {action} --mininet_hostname "{target_host}" --hostname {hostname}' 
 
 
 class RedActionTranslator(ActionTranslator):
@@ -149,7 +149,7 @@ class BlueActionTranslator(ActionTranslator):
         host = cyborg_to_mininet_host_map['Defender']
         action = f"{self.python_exe} {self.action_folder_path}/remove.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        conn_key = self.mininet_adpator.connection_key[target]
+        conn_key = self.mininet_adpator.connection_key.get(target)
         return f"{host} {action} --hostname {self.hostname} --conn_key {conn_key}"
 
     def restore(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
@@ -176,4 +176,15 @@ class BlueActionTranslator(ActionTranslator):
         return f"{host} {action} --ip {target} --port {port} --decoyname {decoyname} --cyborg_hostname {cyborg_hostname}"
     
     def analyse(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        return "sleep 1"
+        host = cyborg_to_mininet_host_map['User0']
+        action  = f"{self.python_exe} {self.action_folder_path}/analyse.py"
+        
+        hostname = socket.gethostname()
+        # Serialize additional data
+        
+        target = self.mininet_adpator.mapper.mininet_to_cyborg_host_map.get(target_host)
+        additional_data = self.mininet_adpator.md5[target]
+        json_str = json.dumps(additional_data)
+        base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+        # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
+        return f'{host} {action} --mininet_hostname "{target_host}" --hostname {hostname} --additional_data {base64_data}' 
