@@ -6,11 +6,12 @@
 #
 #  Custom Topology creator based on YAML file 
 #
-# Run this program under "sudo" mode
+# Run this program under "sudo" mode ❗️ 
 #
 
 # Many of the packages that need to be imported. See
 # https://mininet.org/api/index.html
+import re
 import collections
 from mininet.topo import Topo
 from mininet.net import Mininet
@@ -60,6 +61,9 @@ class CustomTopology (Topo):
     self.router_dict = {}   # maintains the next interface num for that router
     self.routers = []
     self.lans = []
+    self.velociraptor_server_hostname: str = args.velociraptor_server_mininet_hostname
+    self.password: str = args.password #'1234'
+    self.path: str = str(Path(__file__).parent.parent.resolve())
     
     super ().__init__ (**_opts) # invoke parent class constructor
 
@@ -250,7 +254,7 @@ class CustomTopology (Topo):
         host = lan['name'] + host_name    
         username = net[host].cmd('whoami').strip()
         info (f"Set password for {username} on {host}\n")
-        password_change_command = f'echo "{username}:1234" | sudo chpasswd'
+        password_change_command = f'echo "{username}:{self.password}" | sudo chpasswd'
         net[host].cmd(password_change_command)
 
 
@@ -329,34 +333,61 @@ class CustomTopology (Topo):
       for i in range(random.randint(5, 11)):
         host.cmd(f"echo 'This is file {i} in {host.name}' > /tmp/{host.name}/ubuntu/file{i}.txt")
 
+  def update_config_file(self, file_path, pattern, substitution):
+      with open(file_path, 'r') as file:
+          content = file.read()
+      
+      # Use regex to replace localhost and port in api_connection_string
+      updated_content = re.sub(
+          pattern,
+          substitution,
+          content
+      )
+      
+      with open(file_path, 'w') as file:
+          file.write(updated_content)
 
   def updateClientConfigFile(self, net):
     '''rewrite server_urls'''
-    lan3h1_ip = net['lan3h1'].IP()
-    info(f"IP address of velociraptor server is {lan3h1_ip}\n")
+    velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
+    info(f"IP address of velociraptor server is {velociraptor_server_ip}:8000\n")
     # Path to the client config file
-    client_config_path = f"/etc/velociraptor/client.config.yaml"
+    client_config_path = f"/tmp/velociraptor/client.config.yaml"
     
-    # Read, modify, and write the YAML configuration
-    with open(client_config_path, 'r') as file:
-        config = yaml.load(file)
+    self.update_config_file(client_config_path, r'https://(\S+)(:\d+)', 'https://' + velociraptor_server_ip + ':8000')
+    # # Read, modify, and write the YAML configuration
+    # with open(client_config_path, 'r') as file:
+    #     config = yaml.load(file)
     
-    config['Client']['server_urls'] = [f"https://{lan3h1_ip}:8000/"]
+    # config['Client']['server_urls'] = [f"https://{velociraptor_server_ip}:8000/"]
 
-    with open(client_config_path, 'w') as file:
-        yaml.dump(config, file, default_flow_style=False)
+    # with open(client_config_path, 'w') as file:
+    #     yaml.dump(config, file, default_flow_style=False)
 
+  def updateProgConfigFile(self, net):
+      '''rewrite server_urls for prog_client.yaml'''
+      velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
+      info(f"IP address of velociraptor server API is {velociraptor_server_ip}:8001\n")
+      # Path to the client config file
+      prog_client_config_path = f"{self.path}/actions/prog_client.yaml"
+      
+      self.update_config_file(prog_client_config_path, 
+                         r'(\S+)(:\d+)', 
+                         velociraptor_server_ip + '8001')
+          
 
   def startVelociraptorServer(self, net):
     '''Start the Velociraptor server on the attacker host and the defender host'''
     pids = collections.defaultdict(list)
-    attacker_host = 'lan3h1' # User0
-    defender_host = 'lan1h4' # Defender
-    info(f"Start velociraptor server on {attacker_host} & {defender_host}\n")
-    for node in [attacker_host, defender_host]:
-      net[node].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
-      pid = net[node].cmd('echo $!')
-      pids[node].append(pid)
+    
+    info(f"Start velociraptor server on {self.velociraptor_server_hostname}\n")
+    
+    net[self.velociraptor_server_hostname].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
+    # net[self.velociraptor_server_hostname].cmd('sudo -u velociraptor velociraptor --config /tmp/velociraptor/server.config.backup.yaml frontend &')
+    
+    pid = net[self.velociraptor_server_hostname].cmd('echo $!')
+    pids[self.velociraptor_server_hostname].append(pid)
+    
     return pids
   
 
@@ -369,7 +400,7 @@ class CustomTopology (Topo):
         #   continue
         info(f"Start velociraptor client on {host}\n")
         # net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
-        net[host].cmd('velociraptor --config /etc/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
+        net[host].cmd('velociraptor --config /tmp/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
 
         # net[host].cmd('systemctl start velociraptor_server &')
         pid = net[host].cmd('echo $!')
@@ -409,16 +440,14 @@ class CustomTopology (Topo):
 
 
   def stopVelociraptorServer(self, net, pids):
-    attacker_host = 'lan3h1' # User0
-    defender_host = 'lan1h4' # Defender
-    for host in [attacker_host, defender_host]:
-        info(f"Stopping velociraptor server on {host}\n")
-        # net[host].cmd('systemctl stop velociraptor_server &')
-        for pid in pids[host]:
-          output = net[host].cmd(f"sudo kill -9 {pid}")
-          # Wait for the command to complete and retrieve the output
-          output = net[host].waitOutput()
-          info(f"Output of kill command on {host}: {output}\n")
+    host = self.velociraptor_server_hostname
+    info(f"Stopping velociraptor server on {host}\n")
+    # net[host].cmd('systemctl stop velociraptor_server &')
+    for pid in pids[host]:
+      output = net[host].cmd(f"sudo kill -9 {pid}")
+      # Wait for the command to complete and retrieve the output
+      output = net[host].waitOutput()
+      info(f"Output of kill command on {host}: {output}\n")
 
 
   def stopVelociraptorClients(self, net, pids):
