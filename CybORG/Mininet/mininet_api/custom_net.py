@@ -36,7 +36,8 @@ def parseCmdLineArgs ():
 
     # add optional arguments
     parser.add_argument ("-y", "--yaml", default="topo.yaml", help="Topology YAML file, default topo.yaml")
-
+    parser.add_argument ("-v", "--velociraptor_server_mininet_hostname", default="lan3h1", help="Velociraptor Server Hostname")
+    parser.add_argument ("-pswd", "--password", default="1234", help="Password for the user") 
     # parse the args
     args = parser.parse_args ()
 
@@ -95,6 +96,7 @@ def main ():
   info ("Rewrite client.config.yaml")
   topo.updateClientConfigFile (net)
   
+  # topo.updateProgConfigFile (net)
   # start velociraptor server
   pids_server = topo.startVelociraptorServer (net)
 
