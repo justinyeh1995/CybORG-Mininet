@@ -6,19 +6,29 @@ import logging
 from CybORG import CybORG, CYBORG_VERSION
 from CybORG.Mininet.mininet_adapter.entity import Entity
 
+from typing import Union
+
 class MininetCommandInterface(Entity):
-    def __init__(self):
+    def __init__(self, config):
         self.mininet_process = None
-        
+        self.config = config
+        self.velociraptor_server_mininet_hostname: Union[str, None] = None
     
     def start_mininet(self, topology_file: str) -> str:
         try:
             logging.info ("Starting Mininet network topology")
             path = str(inspect.getfile(CybORG))
             path = path[:-10] + f'/Mininet/mininet_api/custom_net.py' # To-Do: might need to be configurable in the config file
-            self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file}")
+            
+            velociraptor_server_cyborg_hostname = self.config["Velociraptor"]["SERVER_HOSTNAME"]
+            self.velociraptor_server_mininet_hostname = self.mininet_adpator.mapper.cyborg_to_mininet_host_map.get(velociraptor_server_cyborg_hostname, "lan3h1")
+            logging.info (f"Velociraptor Server Cyborg & Mininet Hostname: {velociraptor_server_cyborg_hostname} & {self.velociraptor_server_mininet_hostname}")
+            
+            self.mininet_process = pexpect.spawn(f"sudo python3 {path} -y {topology_file} -v {self.velociraptor_server_mininet_hostname} -pswd 1234")
+
             self.mininet_process.timeout = 300
             self.mininet_process.expect("mininet>")
+            
             logging.info ("The topology is up")
             return self.mininet_process.before.decode()
         except Exception as e:
