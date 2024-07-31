@@ -4,7 +4,7 @@ import inspect
 import base64
 
 from CybORG import CybORG
-from CybORG.Emulator.Actions.Velociraptor.Analyse import AnalyseAction
+from CybORG.Emulator.Actions.Velociraptor.AnalyseForMininet import AnalyseAction
 from CybORG.Emulator.Observations.Velociraptor import AnalyseObservation
 
 def parseCmdLineArgs ():
@@ -27,17 +27,6 @@ if __name__ == "__main__":
     path = str(inspect.getfile(CybORG))
     path = path[:-10]
     credentials_file = f"{path}/Mininet/actions/prog_client.yaml"  # @To-Do make it configurable
-        
-    # previous_verification_dict = {
-    #     "/home/ubuntu/Tomcat": "2e0c9cca79009b53b5a0288f5cba9ace",
-    #     "/home/ubuntu/adhoc.sh": "bccf1957d9b0767eb0021fe72a418855",
-    #     "/home/ubuntu/cmd.sh": "c67e0b30a5440c8c52bc607d9e239a17",
-    #     "/home/ubuntu/decoy_connections.log": "cafb0485971517dcec21dde8622235dc",
-    #     "/home/ubuntu/densityscout": "0fa707b2ff211cf488adfe4cc937bfbf",
-    #     "/home/ubuntu/make_ssh_connection.sh": "c1dd4e9a93ffae5bbcd775b73664b686",
-    #     "/home/ubuntu/start_velociraptor_client.sh": "e203ac462ebb0c3680fddacd3d109c21",
-    #     "/home/vagrant/velociraptor_client_0.7.1_amd64.deb": "02c50b30aeda38a0ca219a7d5f2dc011"
-    # } 
 
     hostname = parsed_args.hostname
     mininet_hostname = parsed_args.mininet_hostname
