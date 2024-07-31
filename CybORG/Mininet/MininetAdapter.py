@@ -15,7 +15,6 @@ from CybORG import CybORG
 from CybORG.Shared import Observation
 
 from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
-                                    TopologyAssetManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
                                     RedActionTranslator, BlueActionTranslator, ActionTranslator, \
@@ -254,6 +253,7 @@ class MininetAdapter:
                                 "we will use the previously stored observation.\n Skipping sending text to result bundler")
                     
                     mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(target)]
+                    # self.results_bundler.last_red_observation = mininet_obs
                 
                 else:
                     
@@ -289,6 +289,10 @@ class MininetAdapter:
                 self.logger.info("===Obs===")
                 self.logger.debug(mininet_obs.data)
 
+                # store the last observation
+                self.logger.info("===Record this obs as the last observation===")
+                self.results_bundler.update_last_observation(cyborg_action=cyborg_action, obs=mininet_obs)
+            
             except Exception as e:
                 # traceback.print_exc()
                 raise e
