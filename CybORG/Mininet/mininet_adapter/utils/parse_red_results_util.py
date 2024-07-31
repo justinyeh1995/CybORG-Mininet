@@ -16,7 +16,13 @@ def enum_to_boolean(enum_value):
         return None
     
 def parse_nmap_network_scan_v2(nmap_output, target, mapper) -> Observation:
-    root = ElementTree.fromstring(nmap_output)
+    print(nmap_output)
+    # Skip the first line if it's not XML
+    lines = nmap_output.split('\n')
+    xml_start = next(i for i, line in enumerate(lines) if line.strip().startswith('<?xml'))
+    xml_content = '\n'.join(lines[xml_start:])
+    
+    root = ElementTree.fromstring(xml_content)
     address_element_list = root.findall(".//host/address[@addrtype='ipv4']")
 
     ip_address_list = []
