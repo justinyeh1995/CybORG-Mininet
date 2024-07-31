@@ -17,13 +17,12 @@ def find_matches(pattern_str: str, raw_text: str) -> Iterator[re.Match]:
     
     return match
 
-def build_cyborg_to_mininet_name_map(cyborg) -> Dict:
+def build_cyborg_host_to_mininet_host_map(cyborg) -> Dict:
     cyborg_to_mininet_name_map = collections.defaultdict(str)
     
     for cnt, (lan_name, network) in enumerate(cyborg.environment_controller.subnet_cidr_map.items()):
             cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
             cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}'
-        
     return cyborg_to_mininet_name_map
 
 
