@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+import logging
 import random 
 from typing import Dict
 from ipaddress import IPv4Address
 
 from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import  parse_nmap_network_scan, \
                                                             parse_nmap_port_scan, \
+                                                            parse_nmap_network_scan_v2, \
                                                             parse_exploit_action, \
                                                             parse_escalate_action \
                                                             
@@ -37,7 +39,7 @@ class ResultsBundler(Entity):
             return Observation(False)
         
         if cyborg_action == "DiscoverRemoteSystems":
-            obs = parse_nmap_network_scan(mininet_cli_str, target, mapper)
+            obs = parse_nmap_network_scan_v2(mininet_cli_str, target, mapper)
             
         elif cyborg_action == "DiscoverNetworkServices":
             obs = parse_nmap_port_scan(mininet_cli_str, target, mapper)
@@ -74,14 +76,16 @@ class ResultsBundler(Entity):
             
         else:
             obs = Observation(False)
-        
+    
+        return obs
+    
+    
+    def update_last_observation(self, cyborg_action: str = "ExploitRemoteService", obs: Observation = Observation(False)) -> None:
         if cyborg_action in ['DiscoverRemoteSystems', 'DiscoverNetworkServices', \
                              'ExploitRemoteService', 'PrivilegeEscalate', 'Impact']:
             self.last_red_observation = obs
         else:
             self.last_blue_observation = obs
-        
-        return obs
     
     
     def modify_blue_observation_by_red(self, blue_outcome: Dict, \
@@ -110,32 +114,33 @@ class ResultsBundler(Entity):
                     
         elif last_red_action=='ExploitRemoteService':
             #print('%%%%'*100,'In modify of exploit',)
+            logging.info('In modify of exploit, the last red observation is:\n',red_outcome)
             red_data= red_outcome[last_red_target]
+            
             #print('red data in exploit is:',red_data)
             if red_outcome['success'].name == "TRUE":
                 red_to_blue=self.convert_red_exploit_dict(red_data)
+                attacked_hostname = self.mininet_adpator.mapper.cyborg_ip_to_host_map.get(last_red_target)
+                blue_outcome.update({attacked_hostname : red_to_blue})
                 
-            elif red_outcome['success'].name in ["FALSE", "UNKNOWN"]:
-            # Iterate over all the processes and their connections
-                red_to_blue = {'Processes': []}
-                for process in red_data['Processes']:
-                    for connection in process['Connections']:
-                        new_connection1 = {
-                            'local_port': connection['local_port'],
-                            'remote_port': connection['remote_port'],  # Assuming remote_port is a fixed value ???
-                            'local_address': connection['local_address'],
-                            'remote_address': connection['remote_address']} #??
+            # elif red_outcome['success'].name in ["FALSE", "UNKNOWN"]:
+            # # Iterate over all the processes and their connections
+            #     red_to_blue = {'Processes': []}
+            #     for process in red_data['Processes']:
+            #         for connection in process['Connections']:
+            #             new_connection1 = {
+            #                 'local_port': connection['local_port'],
+            #                 'remote_port': connection['remote_port'],  # Assuming remote_port is a fixed value ???
+            #                 'local_address': connection['local_address'],
+            #                 'remote_address': connection['remote_address']} #??
                         
-                        new_connection2 = {
-                            'local_port': connection['local_port'],
-                            'local_address': connection['local_address'],
-                            'remote_address': connection['remote_address']} #??
+            #             new_connection2 = {
+            #                 'local_port': connection['local_port'],
+            #                 'local_address': connection['local_address'],
+            #                 'remote_address': connection['remote_address']} #??
                         
-                        red_to_blue['Processes'].append({'Connections': [new_connection1]})
-                        red_to_blue['Processes'].append({'Connections': [new_connection2]})
-                        
-            attacked_hostname = self.mininet_adpator.mapper.cyborg_ip_to_host_map.get(last_red_target)
-            blue_outcome.update({attacked_hostname : red_to_blue})
+            #             red_to_blue['Processes'].append({'Connections': [new_connection1]})
+            #             red_to_blue['Processes'].append({'Connections': [new_connection2]})
         
         return blue_outcome
             
