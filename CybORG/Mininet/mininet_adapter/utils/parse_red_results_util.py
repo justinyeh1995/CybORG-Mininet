@@ -1,5 +1,6 @@
+import logging
 import re
-import traceback 
+from xml.etree import ElementTree
 from typing import List, Dict, Iterator, Pattern
 from ipaddress import IPv4Address, IPv4Network
 
@@ -13,19 +14,38 @@ def enum_to_boolean(enum_value):
         return False
     else:
         return None
+    
+def parse_nmap_network_scan_v2(nmap_output, target, mapper) -> Observation:
+    root = ElementTree.fromstring(nmap_output)
+    address_element_list = root.findall(".//host/address[@addrtype='ipv4']")
+
+    ip_address_list = []
+    for address_element in address_element_list:
+        ip_address_list.append(address_element.attrib.get("addr"))
+
+    if not ip_address_list:
+        return Observation(False)
+    obs = Observation(True)
+    for ip_addr in ip_address_list:
+        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
+        if "router" in hostid:
+            continue 
+        obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=target)
+    return obs
 
 def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     subnet = target
     mininet_ip_addresses = re.findall(r'Nmap scan report for (\d+\.\d+\.\d+\.\d+)', nmap_output)
-    cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
+    # cyborg_ip_addresses = [mapper.mininet_ip_to_cyborg_ip_map[ip] for ip in mininet_ip_addresses if ip in mapper.mininet_ip_to_cyborg_ip_map]
     
-    if not cyborg_ip_addresses:
+    if not mininet_ip_addresses:
         return Observation(False)
     
     obs = Observation()
     obs.set_success(True)
-    for ip_addr in cyborg_ip_addresses:
-        hostid = mapper.cyborg_ip_to_host_map[str(ip_addr)]
+    mininet_ip_addresses.sort()
+    for ip_addr in mininet_ip_addresses:
+        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
         if "router" in hostid:
             continue 
         obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
