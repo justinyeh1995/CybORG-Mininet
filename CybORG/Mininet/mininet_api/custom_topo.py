@@ -334,6 +334,11 @@ class CustomTopology (Topo):
         host.cmd(f"echo 'This is file {i} in {host.name}' > /tmp/{host.name}/ubuntu/file{i}.txt")
 
   def update_config_file(self, file_path, pattern, substitution):
+      if not Path(file_path).exists():
+        # Create the file if it does not exist
+        print(f"Folder path: {Path(file_path).parent} does not exist, creating it")
+        Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+          
       with open(file_path, 'r') as file:
           content = file.read()
       
@@ -352,7 +357,7 @@ class CustomTopology (Topo):
     velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
     info(f"IP address of velociraptor server is {velociraptor_server_ip}:8000\n")
     # Path to the client config file
-    client_config_path = f"/tmp/velociraptor/client.config.yaml"
+    client_config_path = f"/etc/velociraptor/client.config.yaml"
     
     self.update_config_file(client_config_path, 
                             r'https://(\S+)(:\d+)', 
