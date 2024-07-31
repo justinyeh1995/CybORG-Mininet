@@ -1,3 +1,4 @@
+import logging
 import pytest
 from unittest.mock import Mock, patch
 
@@ -90,7 +91,7 @@ def fake_mapper():
 def test_parse_nmap_network_scan_v2(discover_network_scan_output):
     mapper = fake_mapper()
     obs: Observation = parse_nmap_network_scan_v2(discover_network_scan_output, '10.0.37.224/28', mapper)
-    print(obs.data)
+    logging.debug(obs.data)
 
     assert obs.success.name == "TRUE", "Success should be 'TRUE' if the scan was successful"
         
