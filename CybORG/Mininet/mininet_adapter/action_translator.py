@@ -25,11 +25,6 @@ class ActionTranslator(Entity):
     def translate(self, action):
         raise NotImplementedError
     
-    # @classmethod
-    # def get_reset_action_string(cls, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-    #     action = f"{cls.python_exe} {cls.action_folder_path}/reset.py"
-    #     # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
-    #     return f"{cyborg_to_mininet_host_map['User0']} {action} --hostname {target_host}" 
     def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         action = f"{self.python_exe} {self.action_folder_path}/reset.py"
         hostname = socket.gethostname()
@@ -43,7 +38,7 @@ class RedActionTranslator(ActionTranslator):
         self.action_map = {
             "DiscoverRemoteSystems": self.discover_remote_systems,
             "DiscoverNetworkServices": self.discover_network_services,
-            "ExploitRemoteService": self.exploit_remote_service_v2,
+            "ExploitRemoteService": self.exploit_remote_service,
             "PrivilegeEscalate": self.privilege_escalate
         }
 
@@ -61,7 +56,7 @@ class RedActionTranslator(ActionTranslator):
     def discover_remote_systems(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Discover Remote Systems")
         host = cyborg_to_mininet_host_map['User0']
-        action = "nmap -sn"
+        action = "nmap -oX - -sn"
         target = target_host
         return f'{host} timeout 60 {action} {target}'
 
@@ -72,14 +67,8 @@ class RedActionTranslator(ActionTranslator):
         target = target_host
         return f'{host} timeout 60 {action} {target}'
 
-    def exploit_remote_service(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        print("Red Exploit Network Services")
-        host = cyborg_to_mininet_host_map['User0']
-        action = f"{self.python_exe} {self.action_folder_path}/ssh_action.py"
-        target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
-        return f'{host} timeout 60 {action} --ip {target}'
     
-    def exploit_remote_service_v2(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
+    def exploit_remote_service(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Exploit Network Services")
         host = cyborg_to_mininet_host_map['User0']
         hostname = socket.gethostname()
@@ -94,7 +83,7 @@ class RedActionTranslator(ActionTranslator):
         action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
-        return f'{host} timeout 60 {action} --hostname {hostname} --remote_hostname {target} --additional_data {base64_data}'
+        return f'{host} timeout 300 {action} --hostname {hostname} --remote_hostname {target} --additional_data {base64_data}'
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
