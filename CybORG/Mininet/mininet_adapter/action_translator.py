@@ -5,12 +5,6 @@ import base64
 
 from CybORG.Mininet.mininet_adapter.entity import Entity
 
-from CybORG.Emulator.Actions.Velociraptor.DiscoverNetworkServicesAction import DiscoverNetworkServicesAction
-from CybORG.Emulator.Actions.Velociraptor.DiscoverRemoteSystemsAction import DiscoverRemoteSystemsAction
-from CybORG.Emulator.Actions.SshAction import SshAction
-from CybORG.Emulator.Actions.DeployDecoyAction import DeployDecoy
-
-from pprint import pprint
 
 class ActionTranslator(Entity):
     def __init__(self, path: str, config, logger):
@@ -21,6 +15,7 @@ class ActionTranslator(Entity):
         self.hostname = socket.gethostname()
         self.python_exe = config["PYTHON"]["FILE_PATH"]
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
+        self.velociraptor_server_mininet_hostname = None
 
     def translate(self, action):
         raise NotImplementedError
@@ -135,7 +130,7 @@ class BlueActionTranslator(ActionTranslator):
     def remove(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Remove")
         # @To-Do Not Implemented as of now
-        host = cyborg_to_mininet_host_map['Defender']
+        host = cyborg_to_mininet_host_map['User0']
         action = f"{self.python_exe} {self.action_folder_path}/remove.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key.get(target)
@@ -156,7 +151,7 @@ class BlueActionTranslator(ActionTranslator):
 
     def deploy_decoy(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Decoy")
-        host = cyborg_to_mininet_host_map['Defender']
+        host = cyborg_to_mininet_host_map['User0']
         action = f"{self.python_exe} {self.action_folder_path}/deploy_decoy_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         port = self.decoy_service_name_to_port.get(action_type, 80)
@@ -172,7 +167,7 @@ class BlueActionTranslator(ActionTranslator):
         # Serialize additional data
         
         target = self.mininet_adpator.mapper.mininet_to_cyborg_host_map.get(target_host)
-        additional_data = self.mininet_adpator.md5[target]
+        additional_data = self.mininet_adpator.md5.get(target, {})
         json_str = json.dumps(additional_data)
         base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
