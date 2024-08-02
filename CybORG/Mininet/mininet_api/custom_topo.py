@@ -240,7 +240,7 @@ class CustomTopology (Topo):
 
   def cleanupServices(self, net):
     """Clean up services and temp files and sockets and daemon processes"""
-    host = 'lan3h1' # User0
+    host = self.velociraptor_server_hostname # mininet hostname of User0
     net[host].cmd("pkill -f 'sudo -u velociraptor'")
     net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet' | awk '{{print $2}}' | xargs -r sudo kill")
     net[host].cmd(f"ps aux | grep '[S]SHConnectionServer.py' | awk '{{print $2}}' | xargs sudo kill -9") # clean the socket
@@ -250,8 +250,7 @@ class CustomTopology (Topo):
   
   def setPassword(self, net):
     for lan in self.topo_dict['lans']:
-      for host_name, host_info in lan['hosts_info'].items():
-        host = lan['name'] + host_name    
+      for host in lan['hosts_name_map']:
         username = net[host].cmd('whoami').strip()
         info (f"Set password for {username} on {host}\n")
         password_change_command = f'echo "{username}:{self.password}" | sudo chpasswd'
@@ -260,8 +259,7 @@ class CustomTopology (Topo):
 
   def startSSHServer(self, net):
     for lan in self.topo_dict['lans']:
-      for host_name, host_info in lan['hosts_info'].items():
-        host = lan['name'] + host_name
+      for host in lan['hosts_name_map']:
         temp_config_file = f'/tmp/sshd_config_mininet_{host}'
         info(f"Create and configure a minimal sshd_config on {host}\n")
         # Start with a basic configuration enabling only password authentication
@@ -287,8 +285,7 @@ class CustomTopology (Topo):
     # A very Ad-hoc way to setup the known_hosts file, trying to map what castle-vm is doing
     ssh_known_hosts_map = {}
     for lan in self.topo_dict['lans']:
-      for host_name, cyborg_name in lan['hosts_name_map'].items():
-        host = lan['name'] + host_name
+      for host, cyborg_name in lan['hosts_name_map'].items():
         ip = net[host].IP()
         if cyborg_name == 'User3' or cyborg_name == 'User4':
           ssh_known_hosts_map[ip] = '/tmp/.ssh/known_hosts_ent10'
@@ -307,19 +304,16 @@ class CustomTopology (Topo):
       json.dump(ssh_known_hosts_map, f)
     
     for lan in self.topo_dict['lans']:
-      for host_name, cyborg_name in lan['hosts_name_map'].items():
+      for host, cyborg_name in lan['hosts_name_map'].items():
         if cyborg_name == 'Enterprise0':
-          host = lan['name'] + host_name
           ip = net[host].IP()
           info(f"Setup SSH known_hosts file for User3, User5\n")
           net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ent10')
         elif cyborg_name == 'Enterprise1':
-          host = lan['name'] + host_name
           ip = net[host].IP()
           info(f"Setup SSH known_hosts file for User1, User2, Defender\n")
           net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ent11')
         elif cyborg_name == 'Op_Server0':
-          host = lan['name'] + host_name
           ip = net[host].IP()
           info(f"Setup SSH known_hosts file for Enterprise2\n")
           net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ops10')
@@ -394,8 +388,7 @@ class CustomTopology (Topo):
   def startVelociraptorClients(self, net):
     pids = collections.defaultdict(list)
     for lan in self.topo_dict['lans']:
-      for host_name, _ in lan['hosts_info'].items():
-        host = lan['name'] + host_name
+      for host, _ in lan['hosts_name_map'].items():
         # if host == 'lan3h1':
         #   continue
         info(f"Start velociraptor client on {host}\n")
@@ -431,8 +424,7 @@ class CustomTopology (Topo):
 
   def stopSSHServer(self, net):
     for lan in self.topo_dict['lans']:
-      for host_name, _ in lan['hosts_info'].items():
-        host = lan['name'] + host_name
+      for host, _ in lan['hosts_name_map'].items():
         info(f"Stopping ssh server on {host}\n")
         # Retrieve the PID of the SSH daemonKill the SSH daemon process
         net[host].cmd(f"ps aux | grep sshd | grep -v grep | grep '/tmp/sshd_config_mininet_{host}' | awk '{{print $2}}' | xargs -r sudo kill")
@@ -452,8 +444,7 @@ class CustomTopology (Topo):
 
   def stopVelociraptorClients(self, net, pids):
     for lan in self.topo_dict['lans']:
-      for host_name, _ in lan['hosts_info'].items():
-        host = lan['name'] + host_name
+      for host, _ in lan['hosts_name_map'].items():
         info(f"Stopping velociraptor client on {host}\n")
         # net[host].cmd('systemctl stop velociraptor_server &')
 
@@ -479,12 +470,10 @@ class CustomTopology (Topo):
     if path.exists():
       print (f"{path} exists\n")
       return 
-    for lan in self.topo_dict['lans']:
-      for host_name, _ in lan['hosts_info'].items():
-        host = lan['name'] + host_name
-        net[host].cmd (f"sudo mkdir /usr/local/run/")
-        net[host].cmd (f"sudo mkdir /usr/local/scripts/python/")
-        return 
+    for host in net.hosts:
+      net[host].cmd (f"sudo mkdir /usr/local/run/")
+      net[host].cmd (f"sudo mkdir /usr/local/scripts/python/")
+      return 
 
   ##########################################
   # The overridden build method
