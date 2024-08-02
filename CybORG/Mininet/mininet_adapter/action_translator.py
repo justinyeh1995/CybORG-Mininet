@@ -75,10 +75,12 @@ class RedActionTranslator(ActionTranslator):
         json_str = json.dumps(additional_data)
         base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         
-        action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py"
+        # action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py"
+        action = f"{self.action_folder_path}/exploit.sh"
+
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
-        return f'{host} timeout 300 {action} --hostname {hostname} --remote_hostname {target} --additional_data {base64_data}'
+        return f'{host} timeout 120 {action} -m {target} -data {base64_data}'
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
