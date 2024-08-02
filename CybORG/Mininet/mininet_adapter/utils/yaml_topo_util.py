@@ -15,15 +15,20 @@ def get_routers_info(cyborg, cyborg_to_mininet_name_map) -> List:
              'ip': str(ip)} for name, ip in cyborg.get_ip_map().items() if name.endswith('_router')]
 
 
-def get_lans_info(cyborg, cyborg_to_mininet_name_map) -> List:
+def get_lans_info(cyborg, cyborg_to_mininet_name_map, cyborg_to_mininet_host_map) -> List:
+    import re
+    def extract(s):
+        match = re.search(r'(h\d+)$', s)
+        return match.group(1) if match else "??" # To-Do: better error handling
+    
     lans_info = []
     counter = 0
     # Create LANs based on the networks
     for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items():
         hosts = [name for name, ip in cyborg.get_ip_map().items() if ip in network and not name.endswith('_router')]
         
-        hosts_info = { f'h{i+1}': str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
-        hosts_name_map = { f'h{i+1}': name for i, name in enumerate(hosts)}
+        hosts_info = { extract(cyborg_to_mininet_host_map[name]): str(cyborg.get_ip_map()[name]) for i, name in enumerate(hosts)}
+        hosts_name_map = { cyborg_to_mininet_host_map[name]: name for i, name in enumerate(hosts)}
         # Calculate the usable IP range
         usable_ips = list(network.hosts())
 

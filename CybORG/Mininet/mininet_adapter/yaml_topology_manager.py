@@ -12,7 +12,7 @@ class YamlTopologyManager(Entity):
         self.topology_data = topology_data or {'topo': {'routers': [], 'lans': [], 'links': [], 'routes': [], 'nats': []}}
         
 
-    def generate_topology_data(self, cyborg, cyborg_to_mininet_name_map) -> None:
+    def generate_topology_data(self, cyborg, cyborg_to_mininet_name_map, cyborg_to_mininet_host_map) -> None:
         """ 
         Write the topo into a yaml file
         """
@@ -21,7 +21,7 @@ class YamlTopologyManager(Entity):
             self.topology_data['topo']['routers'] = get_routers_info(cyborg, cyborg_to_mininet_name_map)
     
             # Structure the 'LANs' information
-            self.topology_data['topo']['lans'] = get_lans_info(cyborg, cyborg_to_mininet_name_map)
+            self.topology_data['topo']['lans'] = get_lans_info(cyborg, cyborg_to_mininet_name_map, cyborg_to_mininet_host_map)
     
             # Structure the 'Links' information
             self.topology_data['topo']['links'] = get_links_info(cyborg, cyborg_to_mininet_name_map)
