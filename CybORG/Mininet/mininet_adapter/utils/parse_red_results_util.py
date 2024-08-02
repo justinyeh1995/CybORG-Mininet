@@ -16,7 +16,6 @@ def enum_to_boolean(enum_value):
         return None
     
 def parse_nmap_network_scan_v2(nmap_output, target, mapper) -> Observation:
-    print(nmap_output)
     # Skip the first line if it's not XML
     lines = nmap_output.split('\n')
     xml_start = next(i for i, line in enumerate(lines) if line.strip().startswith('<?xml'))
@@ -32,6 +31,7 @@ def parse_nmap_network_scan_v2(nmap_output, target, mapper) -> Observation:
     if not ip_address_list:
         return Observation(False)
     obs = Observation(True)
+    ip_address_list.sort()
     for ip_addr in ip_address_list:
         hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
         if "router" in hostid:
@@ -52,7 +52,7 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     mininet_ip_addresses.sort()
     for ip_addr in mininet_ip_addresses:
         hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
-        if "router" in hostid:
+        if "router" in hostid or not hostid:
             continue 
         obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
     return obs
@@ -60,7 +60,7 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
 def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     res = {'success': True}
     mininet_host = target
-    ip = mapper.mininet_host_to_cyborg_ip_map[mininet_host]
+    ip = mapper.mininet_host_to_ip_map.get(mininet_host, target)
 
     # Regular expression to match the port information
     port_info_regex = re.compile(r'(\d+)/(\w+)\s+open\s+(\w+)\s+(.+)')
@@ -82,7 +82,11 @@ def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
     obs = Observation()
     obs.set_success(True)
     for proc in processes:
-        hostid = mapper.cyborg_ip_to_host_map[str(ip)]
+        hostid = mapper.cyborg_ip_to_host_map.get(str(ip),"")
+        if not hostid:
+            logging.warning(f"Host ID not found for IP: {ip}")
+            logging.debug(f"Mapper: \n{mapper.cyborg_ip_to_host_map}")
+            continue
         obs.add_process(hostid=hostid, local_port=proc["port"], local_address=ip)
         
     return obs
