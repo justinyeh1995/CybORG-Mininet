@@ -53,9 +53,14 @@ class CybORGMininetMapper(BaseModel, Entity):
         for cnt, (lan_name, network) in enumerate(self.cidr_map.items()):
             self.cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
             self.cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}'
-            for num, ip in enumerate(self.cyborg_subnet_to_ip_list.get(str(network), [])):
+            num = 1
+            for ip in self.cyborg_subnet_to_ip_list.get(str(network), []):
                 cyborg_host = self.cyborg_ip_to_host_map.get(ip, "?")
-                mininet_host = f'r{cnt+1}' if cyborg_host.endswith("_router") else f'lan{cnt+1}h{num+1}'
+                if cyborg_host.endswith("_router"):
+                    mininet_host = f'r{cnt+1}'
+                else:
+                    mininet_host = f'lan{cnt+1}h{num}'
+                    num+=1
                 if mininet_host in self.mininet_to_cyborg_host_map:
                     continue
                 self.cyborg_to_mininet_host_map[cyborg_host] = mininet_host
@@ -66,20 +71,19 @@ class CybORGMininetMapper(BaseModel, Entity):
         self.mininet_host_to_ip_map = {self.cyborg_to_mininet_host_map.get(host): ip for host, ip in self.cyborg_host_to_ip_map.items()}
         self.mininet_ip_to_host_map = {ip: host for host, ip in self.mininet_host_to_ip_map.items()}
         
-        # from pprint import pprint
+        from pprint import pprint
         import logging
-        # import pdb
-        # #print all dicts
-        # pprint(self.cyborg_host_to_ip_map)
+        import pdb
+        #print all dicts
+        pprint(self.cyborg_host_to_ip_map)
         # pprint(self.cyborg_ip_to_subnet)
         # pprint(self.cyborg_subnet_to_ip_list)
         # pprint(self.cyborg_to_mininet_name_map)
-        # pprint(self.cyborg_to_mininet_host_map)
-        # pprint(self.mininet_host_to_ip_map)
+        pprint(self.cyborg_to_mininet_host_map)
+        pprint(self.mininet_host_to_ip_map)
         # pprint(self.mininet_ip_to_host_map)
-        # pprint(self.mininet_host_to_ip_map)
         logging.info("CybORGMininetMapper initialized successfully.")
-        # pdb.set_trace()
+        pdb.set_trace()
 
     def __str__(self):
         return (f"CybORGMininetMapper:\n"
