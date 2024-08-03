@@ -80,13 +80,13 @@ class RedActionTranslator(ActionTranslator):
 
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
-        return f'{host} timeout 120 {action} -m {target} -data {base64_data}'
+        return f'{host} timeout 120 bash {action} -m {target} -data {base64_data}'
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
         host = cyborg_to_mininet_host_map['User0']
         # action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/privilege_action.py"
-        action = f"{self.action_folder_path}/PrivilegeEscalateAction/privilege.sh"
+        action = f"bash {self.action_folder_path}/PrivilegeEscalateAction/privilege.sh"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key[target]
         
