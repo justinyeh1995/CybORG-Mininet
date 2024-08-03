@@ -21,7 +21,7 @@ class ActionTranslator(Entity):
         raise NotImplementedError
     
     def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        action = f"{self.python_exe} {self.action_folder_path}/reset.py"
+        action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/reset.py"
         hostname = socket.gethostname()
         # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
         return f'{cyborg_to_mininet_host_map["User0"]} {action} --mininet_hostname "{target_host}" --hostname {hostname}' 
@@ -75,8 +75,8 @@ class RedActionTranslator(ActionTranslator):
         json_str = json.dumps(additional_data)
         base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
         
-        # action = f"{self.python_exe} {self.action_folder_path}/exploit_action.py"
-        action = f"{self.action_folder_path}/exploit.sh"
+        # action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/exploit_action.py"
+        action = f"{self.action_folder_path}/ExploitAction/exploit.sh"
 
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
@@ -85,11 +85,12 @@ class RedActionTranslator(ActionTranslator):
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
         host = cyborg_to_mininet_host_map['User0']
-        action = f"{self.python_exe} {self.action_folder_path}/privilege_action.py"
+        # action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/privilege_action.py"
+        action = f"{self.action_folder_path}/PrivilegeEscalateAction/privilege.sh"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key[target]
         
-        return f'{host} {action} --hostname {self.hostname} --remote {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
+        return f'{host} {action} -m {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
     
     def impact(self, target_host):
         pass
@@ -133,7 +134,7 @@ class BlueActionTranslator(ActionTranslator):
         print("Blue Remove")
         # @To-Do Not Implemented as of now
         host = cyborg_to_mininet_host_map['User0']
-        action = f"{self.python_exe} {self.action_folder_path}/remove.py"
+        action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/remove.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key.get(target)
         return f"{host} {action} --hostname {self.hostname} --conn_key {conn_key}"
@@ -154,7 +155,7 @@ class BlueActionTranslator(ActionTranslator):
     def deploy_decoy(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Decoy")
         host = cyborg_to_mininet_host_map['User0']
-        action = f"{self.python_exe} {self.action_folder_path}/deploy_decoy_action.py"
+        action = f"{self.python_exe} {self.action_folder_path}/DecoyAction/deploy_decoy_action.py"
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         port = self.decoy_service_name_to_port.get(action_type, 80)
         cyborg_hostname = self.mininet_adpator.mapper.cyborg_ip_to_host_map.get(target)
@@ -163,7 +164,7 @@ class BlueActionTranslator(ActionTranslator):
     
     def analyse(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         host = cyborg_to_mininet_host_map['User0']
-        action  = f"{self.python_exe} {self.action_folder_path}/analyse.py"
+        action  = f"{self.python_exe} {self.action_folder_path}/Velociraptor/analyse.py"
         
         hostname = socket.gethostname()
         # Serialize additional data
