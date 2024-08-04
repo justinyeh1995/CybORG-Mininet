@@ -21,10 +21,9 @@ class ActionTranslator(Entity):
         raise NotImplementedError
     
     def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/reset.py"
-        hostname = socket.gethostname()
-        # @To-Do lan1h4 velociraptor server is not correctly setup and is expected cause the config file specify the ip already
-        return f'{cyborg_to_mininet_host_map["User0"]} {action} --mininet_hostname "{target_host}" --hostname {hostname}' 
+        # action = f"{self.python_exe} {self.action_folder_path}/Velociraptor/reset.py"
+        action = f"bash {self.action_folder_path}/ResetAction/reset.sh"
+        return f'{cyborg_to_mininet_host_map["Defender"]} {action} --mininet_hostname "{target_host}" ' 
 
 
 class RedActionTranslator(ActionTranslator):
