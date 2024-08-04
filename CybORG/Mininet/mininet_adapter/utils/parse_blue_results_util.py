@@ -97,6 +97,19 @@ def parse_reset_action(reset_action_output: str) -> Observation:
         return obs
     else:
         return Observation(False)
+
+def parse_reset_action_v2(reset_action_output: str) -> Observation:
+    example_text = "{'/tmp/lan1h2/ubuntu/file4.txt': '05b28d68132082ee549f5a415eb6c8de','/tmp/lan1h2/ubuntu/file1.txt': 'b3a07c8b2fcc98559993b7575168e4ea','/tmp/lan1h2/ubuntu/file5.txt': 'c944cf3f2d850bbc93ba28e63245e0dd','/tmp/lan1h2/ubuntu/file0.txt': '2ab0c5d77ee9d3f45ab9876c539e20dc','/tmp/lan1h2/ubuntu/file2.txt': '296f42303bbfe60fa6b1b77c0daa5370','/tmp/lan1h2/ubuntu/file3.txt': '6096517e3f230cc9850a748c4cbcc4d9'}"
+    
+    pattern = r"({.*})"
+    match = re.search(pattern, reset_action_output)
+    if match:
+        md5_dict: Dict = eval(match.group(1))
+        obs = Observation(True)
+        obs.data.update({"MD5": md5_dict})
+        return obs
+    else:
+        return Observation(False)
     
     
 def parse_analyse_action(analyse_action_output: str) -> Observation:
