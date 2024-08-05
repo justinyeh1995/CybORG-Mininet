@@ -124,3 +124,16 @@ def parse_analyse_action(analyse_action_output: str) -> Observation:
     obs = Observation(success_status)    
     
     return obs
+
+def parse_remove_action(remove_action_string: str) -> Observation:
+    pattern = re.compile(r'TRUE|FALSE')
+
+    # Use re.search to find a match
+    match = pattern.search(remove_action_string)
+    
+    # Extract the 'TRUE' or 'FALSE' part if found
+    success_status = enum_to_boolean(match.group()) if match else None
+    
+    obs = Observation(success_status)
+    
+    return obs
