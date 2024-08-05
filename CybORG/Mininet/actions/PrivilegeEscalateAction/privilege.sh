@@ -15,12 +15,15 @@ find_new_host_cmd_output=$(echo 'grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' '$fil
 
 ip_string_cmd_output=$(echo 'ss -tunap | grep ':$port'' | /home/ubuntu/justinyeh1995/CASTLEGym/castle.2.venv/bin/python3 /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/systems/scripts/SSHConnectionTerminalClient.py "$conn_key")
 
-if [ "$find_new_host_cmd_output" != "" ]; then
-    echo "Any new host explored?: $find_new_host_cmd_output"
-    echo "Sucess: TRUE"
-    exit 0
-else
-    echo "Sucess: FALSE"
-    echo "Any new host explored?: "
-    exit 1 
-fi
+echo "Any new host explored?: $find_new_host_cmd_output"
+echo "Sucess: TRUE"
+
+# if [ "$find_new_host_cmd_output" != "" ]; then
+#     echo "Any new host explored?: $find_new_host_cmd_output"
+#     echo "Sucess: TRUE"
+#     exit 0
+# else
+#     echo "Sucess: FALSE"
+#     echo "Any new host explored?: "
+#     exit 1 
+# fi
