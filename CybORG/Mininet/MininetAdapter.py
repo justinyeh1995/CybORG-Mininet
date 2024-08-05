@@ -112,21 +112,22 @@ class MininetAdapter:
     def reset(self):
         try:
             self.logger.info("===Resetting Mininet Environment===")
+            
             self.clean()
 
             self.mapper.init_mapping(self.cyborg)
-
-            # Create YAML topology file
-            file_path = './systems/tmp/network_topology.yaml'
-            # This involves updating topology data and mappings
             
             try:
-                self.topology_manager.generate_topology_data(self.cyborg, self.mapper.cyborg_to_mininet_name_map)
+                self.topology_manager.generate_topology_data(self.cyborg, 
+                                                             self.mapper.cyborg_to_mininet_name_map, 
+                                                             self.mapper.cyborg_to_mininet_host_map)
 
             except Exception as e:
                 traceback.format_exc()
                 raise e
 
+            # Create YAML topology file
+            file_path = './systems/tmp/network_topology.yaml'
             self.topology_manager.save_topology(file_path)
             
             # Start Mininet with the topology
@@ -135,12 +136,9 @@ class MininetAdapter:
             
             except Exception as e:
                 logging.error ("Error in starting Mininet")
-                # self.clean()
                 traceback.format_exc()
                 raise e
             # pprint(expect_text)
-
-            self.mapper.update_mapping(expect_text, self.topology_manager.topology_data)
 
             ##########################
             # Test if DNS is working #
@@ -150,8 +148,8 @@ class MininetAdapter:
             expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
             print(expect_text)
             
-            while not self.is_service_responsive():
-                logging.info ("Waiting for Velociraptor server to become responsive...")
+            # while not self.is_service_responsive():
+            #     logging.info ("Waiting for Velociraptor server to become responsive...")
             
             logging.info ("===Perform ResetAction to retrieve initial md5 checksums===")
             # Add tqdm progess bar
@@ -180,7 +178,6 @@ class MininetAdapter:
                         self.md5[cyborg_host] = mininet_obs.data["MD5"]
                     else:
                         logging.error (f"Failed to retrieve initial MD5 checksums for {cyborg_host}")
-                        # self.clean()
                         raise ValueError(f"Failed to retrieve initial MD5 checksums for {cyborg_host}")
                     
                 except Exception as e:
@@ -194,7 +191,6 @@ class MininetAdapter:
         
         except KeyboardInterrupt:
             logging.error ("Keyboard Interrupt in Reset")
-            # self.clean()
             raise KeyboardInterrupt
 
     
@@ -221,7 +217,6 @@ class MininetAdapter:
                                                                         self.mapper.cyborg_to_mininet_host_map,
                                                                         self.mapper.mininet_host_to_ip_map)
             except Exception as e:
-                # traceback.print_exc()
                 raise e
 
             try:
@@ -345,7 +340,7 @@ class MininetAdapter:
         logging.info(f"Testing if Velociraptor server is responsive, will retry for up to {max_retries * retry_interval} seconds due to warm-up time")
         
         for attempt in range(max_retries):
-            cmd = 'lan3h1 wget -t 1 -T 1 -O - http://127.0.0.1:8001 2>&1'
+            cmd = 'lan3h1 wget -t 1 -T 1 -O - http://127.0.0.1:8001 2>&1' # @To-Do make it configurable
             expect_text = self.command_interface.send_command(cmd)
             
             if "connected" in expect_text:
