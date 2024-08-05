@@ -62,7 +62,7 @@ class ResultsBundler(Entity):
             obs = parse_decoy_action(mininet_cli_str)
 
         elif cyborg_action == "Remove":
-            obs = Observation(True) # @To-Do
+            obs = parse_remove_action(mininet_cli_str) # @To-Do
 
         elif cyborg_action == "Restore":
             obs = Observation(True) # @To-Do
