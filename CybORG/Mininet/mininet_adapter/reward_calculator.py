@@ -33,7 +33,7 @@ class RewardCalculator(Entity):
     def get_host(self, host_ip:str, mapper: CybORGMininetMapper):
         return mapper.cyborg_ip_to_host_map.get(host_ip, host_ip) 
 
-    def privilegedrewardcalculator(self,current_state:dict, mapper):
+    def privilegedrewardcalculator(self,current_state:dict):
         root_sessions=0; system_sessions=0
         for host, info in current_state.items():
 
@@ -62,8 +62,8 @@ class RewardCalculator(Entity):
         self.old_total = total
         return round(reward, REWARD_MAX_DECIMAL_PLACES)
 
-    def reward(self,observation, mapper):
-        reward= self.privilegedrewardcalculator(observation, mapper)
+    def reward(self,observation):
+        reward= self.privilegedrewardcalculator(observation)
         return [-1*reward,reward]   #[Blue reward, red rewards]
 
 
