@@ -18,7 +18,7 @@ from CybORG import CybORG, CYBORG_VERSION
 from CybORG.Shared import Observation
 
 from CybORG.Agents import B_lineAgent, BlueReactRemoveAgent, \
-    RedMeanderAgent, SleepAgent
+    RedMeanderAgent, SleepAgent, KeyboardAgent
 from CybORG.Agents import BaseAgent
 
 from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
@@ -73,7 +73,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
     
     try:
         for num_steps in [max_step]:
-            for red_agent in [B_lineAgent]:
+            for red_agent in [B_lineAgent]: # [RedMeanderAgent, SleepAgent, KeyboardAgent]:
 
                 cyborg_dicts = cyborg_factory.create(type=cyborg_type, red_agent=red_agent, file_name=scenario)
                 wrapped_cyborg, cyborg, red_agent = cyborg_dicts["wrapped"], cyborg_dicts["unwrapped"], cyborg_dicts['Red']  
