@@ -41,20 +41,18 @@ class YamlTopologyManager(Entity):
         except Exception as e:
             logging.error ("An error occurred while creating the topology:")
             logging.exception (e)
-            traceback.print_exc() 
-
+            raise e
     
     def save_topology(self, file_path: str) -> None:
         try:     
             with open(file_path, 'w') as file:
                 yaml.dump(self.topology_data, file, default_flow_style=False, sort_keys=False)
     
-            print("YAML file 'network_topology.yaml' created.")
+            logging.info("YAML file 'network_topology.yaml' created.")
                  
         except Exception as e:
-            print("An error occurred while creating the YAML file:")
-            print(e)
-            traceback.print_exc()    
+            logging.exception("An error occurred while creating the YAML file:")
+            raise e
 
 
     def get_topology(self) -> Dict:
