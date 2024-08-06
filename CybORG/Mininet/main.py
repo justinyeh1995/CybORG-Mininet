@@ -1,5 +1,6 @@
 import subprocess
 import inspect
+import sys
 import time
 from statistics import mean, stdev
 import random
@@ -101,14 +102,14 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
 def write_to_file(env: Union[SimulatedEnvironment, EmulatedEnvironment], file_name: str, num_steps: int, total_reward: List[Union[float,int]], actions_list: List[str]) -> None:
     mean_val = mean(total_reward)
     stdev_val = 0 if len(total_reward) == 1 else stdev(total_reward)
-    print(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
+    logging.info(f'Average reward for red agent {env.red_agent_name} and steps {num_steps} is: {mean_val}, standard deviation {stdev_val}')
     try:
         with open(file_name, 'a+') as data:
             data.write(f'steps: {num_steps}, adversary: {env.red_agent_name}, mean: {mean_val}, standard deviation {stdev_val}\n\n')
             for act, sum_rew in zip(actions_list, total_reward):
                 data.write(f'actions: {act}, total reward: {sum_rew}\n')
     except IOError:
-        print(f"An error occurred while writing to file {file_name}")
+        logging.error(f"An error occurred while writing to file {file_name}")
 
 
 def parseCmdLineArgs ():
@@ -154,8 +155,8 @@ if __name__ == "__main__":
         logger.info(f"Time for {max_episode} Episodes and {max_step} Steps: %d sec", time.time()-start)
         
         if not game_castle_gym_agent_state:
-            logger.error ("Game state is empty")
-            raise Exception ("Game state is empty")
+            logger.warning ("Game state is empty, Nothing to visualize. exiting...")
+            sys.exit(0)
         
         try:
             nv = NetworkVisualizer(game_castle_gym_agent_state)
