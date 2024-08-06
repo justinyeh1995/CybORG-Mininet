@@ -19,6 +19,7 @@ from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     CybORGMininetMapper, \
                                     RedActionTranslator, BlueActionTranslator, ActionTranslator, \
                                     ResultsBundler, \
+                                    NetworkStateManager, \
                                     RewardCalculator
 from tqdm import tqdm
 
@@ -72,6 +73,8 @@ class MininetAdapter:
                                                          logger=self.logger)
         self.results_bundler = ResultsBundler()
         
+        self.network_state_manager = NetworkStateManager()
+        
         self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
 
         self.blue_action_translator.register(self)
@@ -106,7 +109,7 @@ class MininetAdapter:
         # Update target host if it's an IP address to get the hostname
         target_host = self.mapper.cyborg_ip_to_host_map.get(target_host, target_host)
                 
-        return self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type 
+        return target_host, self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type 
 
     
     def reset(self):
@@ -202,18 +205,18 @@ class MininetAdapter:
         # @To-Do: bad nested try catch, refactor this code
         try:
             self.logger.info(f"---> in MininetAdapter {agent_type} step")
-            target, cyborg_action = self.parse_action_string(action_string)
+            cyborg_hostname, mininet_hostname, cyborg_action = self.parse_action_string(action_string)
             isSuccess = True # Always True man..
 
             try:
                 if agent_type == "Blue":
                     mininet_command = self.blue_action_translator.translate(cyborg_action, 
-                                                                        target, 
+                                                                        mininet_hostname, 
                                                                         self.mapper.cyborg_to_mininet_host_map,
                                                                         self.mapper.mininet_host_to_ip_map)  
                 elif agent_type == "Red":
                     mininet_command = self.red_action_translator.translate(cyborg_action, 
-                                                                        target,
+                                                                        mininet_hostname,
                                                                         self.mapper.cyborg_to_mininet_host_map,
                                                                         self.mapper.mininet_host_to_ip_map)
             except Exception as e:
@@ -222,9 +225,9 @@ class MininetAdapter:
             try:
                 # @To-Do is there a better design or this is the best way to handle resources like self.exploited_hosts
                 if cyborg_action == "ExploitRemoteService" and \
-                    self.mapper.mininet_host_to_ip_map[target] in self.exploited_hosts:  # this event happens
+                    self.mapper.mininet_host_to_ip_map[mininet_hostname] in self.exploited_hosts:  # this event happens
                     
-                    logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(target)},\n" + 
+                    logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)},\n" + 
                                 f"Exploited hosts are: {self.exploited_hosts}")
                     
                     mininet_cli_text = "We have already exploited this host. Skipping sending command to Mininet!"
@@ -242,22 +245,22 @@ class MininetAdapter:
 
             try:    
                 if cyborg_action == "ExploitRemoteService" and \
-                    self.mapper.mininet_host_to_ip_map.get(target) in self.exploited_hosts:  # this event happens
+                    self.mapper.mininet_host_to_ip_map.get(mininet_hostname) in self.exploited_hosts:  # this event happens
                     
-                    logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(target)} is already exploited,\n" + 
+                    logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is already exploited,\n" + 
                                 "we will use the previously stored observation.\n Skipping sending text to result bundler")
                     
-                    mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(target)]
+                    mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(mininet_hostname)]
                     # self.results_bundler.last_red_observation = mininet_obs
                 
                 else:
                     
-                    mininet_obs = self.results_bundler.bundle(target, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
+                    mininet_obs = self.results_bundler.bundle(mininet_hostname, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
                     
                     # post processing to manage the states of the cluster
                     if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
                         
-                        logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(target)} \
+                        logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} \
                                         has gotten exploited,\n" + 
                                     "the adapter will store this observation for future use")
                         
@@ -276,9 +279,9 @@ class MininetAdapter:
                     
                     if cyborg_action == "PrivilegeEscalate" and mininet_obs.success.name == "TRUE":
                         
-                        logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(target)} is successful")
+                        logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is successful")
                         
-                        self.priviledged_hosts.append(target)
+                        self.priviledged_hosts.append(mininet_hostname)
                 
                 # if mininet_obs.success: update  
                 self.logger.info("===Obs===")
@@ -309,7 +312,9 @@ class MininetAdapter:
                 raise e
 
             try:
-                reward = self.reward_calculator.reward(mininet_obs.data, self.mapper)
+                self.network_state_manager.update_network_state(cyborg_action, cyborg_hostname, mininet_obs, "root")
+                reward = self.reward_calculator.reward(self.network_state_manager.get_network_state()) # @To-Do should pass in a global network state instead
+                # reward = self.reward_calculator.reward(mininet_obs.data, self.mapper) # @To-Do should pass in a global network state instead
 
                 self.logger.info("===Rewards===")
                 self.logger.debug(reward)
