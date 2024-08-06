@@ -31,12 +31,19 @@ def parse_nmap_network_scan_v2(nmap_output, target, mapper) -> Observation:
     if not ip_address_list:
         return Observation(False)
     obs = Observation(True)
-    ip_address_list.sort()
+
+    ip_address_list.sort(key=lambda x: (mapper.mininet_ip_to_host_map.get(str(x), ""), x)) # Sort by mininet host name cause that is the order we want
+
     for ip_addr in ip_address_list:
-        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
-        if "router" in hostid:
+        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "nat")
+        if hostid == "nat":
+            logging.debug (f"Ignore Nat node {ip_addr}")
+            continue
+        if "_router" in hostid:
+            logging.debug (f"Ignore router node {ip_addr}")
             continue 
-        obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=target)
+        obs.add_interface_info(hostid=str(ip_addr), ip_address=ip_addr, subnet=target)
+        
     return obs
 
 def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
@@ -50,11 +57,25 @@ def parse_nmap_network_scan(nmap_output, target, mapper) -> Observation:
     obs = Observation()
     obs.set_success(True)
     mininet_ip_addresses.sort()
+    data = {}
     for ip_addr in mininet_ip_addresses:
-        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "")
-        if "router" in hostid or not hostid:
+        hostid = mapper.cyborg_ip_to_host_map.get(str(ip_addr), "nat")
+        if hostid == "nat":
+            logging.debug (f"Ignore Nat node {ip_addr}")
+            continue
+        if "_router" in hostid:
+            logging.debug (f"Ignore router node {ip_addr}")
             continue 
         obs.add_interface_info(hostid=hostid, ip_address=ip_addr, subnet=subnet)
+        data[str(ip_addr)] = {
+            "Interface": [{
+                "IP Address": IPv4Address(ip_addr),
+                "Subnet": subnet
+            }]
+        }
+        
+    obs.data.update(data)
+    logging.debug(f"Adding interface info for {hostid} with IP: {ip_addr}")
     return obs
     
 def parse_nmap_port_scan(nmap_output, target, mapper) -> List:
