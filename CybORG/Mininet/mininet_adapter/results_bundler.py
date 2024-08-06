@@ -71,7 +71,7 @@ class ResultsBundler(Entity):
             obs = Observation(True)
             
         elif cyborg_action == "Analyse":
-            obs = Observation(False) # @To-Do
+            obs = Observation(True) # @To-Do
             
         elif cyborg_action == "Reset":
             obs = parse_reset_action_v2(mininet_cli_str)
