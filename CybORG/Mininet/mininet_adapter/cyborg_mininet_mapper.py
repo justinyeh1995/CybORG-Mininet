@@ -17,7 +17,7 @@ class CybORGMininetMapper(BaseModel, Entity):
     cyborg_host_to_ip_map: Dict[str, str] = Field(default_factory=lambda: collections.defaultdict(str))
     usable_ip_to_subnet: Dict[str, List[IPv4Address]] = Field(default_factory=lambda: collections.defaultdict(list))
     cyborg_ip_to_subnet: Dict[str, str] = Field(default_factory=lambda: collections.defaultdict(str))
-    cyborg_subnet_to_ip_list: Dict[str, Set[str]] = Field(default_factory=lambda: collections.defaultdict(set))
+    cyborg_subnet_to_ip_list: Dict[str, List[str]] = Field(default_factory=lambda: collections.defaultdict(list))
     
     # Inner Mininet lookup
     mininet_host_to_ip_map: Dict[str, str] = Field(default_factory=lambda: collections.defaultdict(str))
@@ -48,7 +48,7 @@ class CybORGMininetMapper(BaseModel, Entity):
             for ip in self.cyborg_ip_to_host_map:
                 if IPv4Address(ip) in usable_ips:
                     self.cyborg_ip_to_subnet[ip] = network
-                    self.cyborg_subnet_to_ip_list[network].add(ip)
+                    self.cyborg_subnet_to_ip_list[network].append(ip)
               
         for cnt, (lan_name, network) in enumerate(self.cidr_map.items()):
             self.cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
@@ -79,8 +79,8 @@ class CybORGMininetMapper(BaseModel, Entity):
         # pprint(self.cyborg_ip_to_subnet)
         # pprint(self.cyborg_subnet_to_ip_list)
         # pprint(self.cyborg_to_mininet_name_map)
-        pprint(self.cyborg_to_mininet_host_map)
-        pprint(self.mininet_host_to_ip_map)
+        # pprint(self.cyborg_to_mininet_host_map)
+        # pprint(self.mininet_host_to_ip_map)
         # pprint(self.mininet_ip_to_host_map)
         logging.info("CybORGMininetMapper initialized successfully.")
         # pdb.set_trace()
