@@ -1,3 +1,4 @@
+import logging
 import traceback
 import numpy as np
 from abc import ABC, abstractmethod
@@ -10,7 +11,7 @@ from CybORG.Shared import Observation
 from CybORG.GameVisualizer.GameStateCollector import GameStateCollector
 from CybORG.Mininet.MininetAdapter import MininetAdapter
 
-class CybORGEnvironment(ABC):
+class CybORGEnvironment:
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, environment):
         self.cyborg = cyborg
         self.red_agent = red_agent
@@ -45,9 +46,6 @@ class SimulatedEnvironment(CybORGEnvironment):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode, environment)
 
     def run(self):
-        blue_observation = self.cyborg.reset()
-        blue_action_space = self.cyborg.get_action_space('Blue')
-
         actions_list = []
         total_reward = []
 
@@ -82,9 +80,6 @@ class SimulatedEnvironment(CybORGEnvironment):
             total_reward.append(sum(r))
             actions_list.append(a)
 
-            blue_observation = self.cyborg.reset()
-            blue_action_space = self.cyborg.get_action_space('Blue')
-
         return total_reward, actions_list
 
 class EmulatedEnvironment(CybORGEnvironment):
@@ -102,15 +97,15 @@ class EmulatedEnvironment(CybORGEnvironment):
         
         with MininetAdapter() as mininet_adapter:
             # Set up mininet_adapter
-            self.mininet_adapter = mininet_adapter
-            self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
+            # self.mininet_adapter = mininet_adapter
+            # self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
 
             for i in range(self.max_episode):
                 r = []
                 a = []
 
-                blue_observation = self.linked_diagram_cyborg.reset() # @To-Do; Follow wrapper branch and use the obs from assets/blue_init_observation.json
-                blue_action_space = self.challenge_wrapper.get_action_space('Blue')
+                blue_observation = self.cyborg.reset() # @To-Do; Follow wrapper branch and use the obs from assets/blue_init_observation.json 
+                blue_action_space = self.cyborg.get_action_space('Blue')
                 red_observation = self.true_table_cyborg.get_observation('Red')
                 red_action_space = self.true_table_cyborg.get_action_space('Red')
 
@@ -122,26 +117,26 @@ class EmulatedEnvironment(CybORGEnvironment):
                 try:
                     self.game_state_manager.reset()
                 except Exception as e:
-                    # traceback.print_exc()
                     raise e
                 
                 try:
-                    mininet_adapter.reset()
+                    self.mininet_adapter = mininet_adapter
+                    self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
+                    self.mininet_adapter.reset()
                 except Exception as e:
-                    # traceback.print_exc()
                     raise e
                 
                 for j in range(self.num_steps):
                     red_observation = mininet_red_observation.data if isinstance(mininet_red_observation, Observation) else mininet_red_observation
+                    red_action_space = self.true_table_cyborg.get_action_space('Red')
                     red_action = self.red_agent.get_action(red_observation, red_action_space)
                     print("--> In main loop: Red action using mininet_observation")
                     print(red_action)
                     
                     try:
-                        mininet_red_observation, red_reward = mininet_adapter.step(str(red_action), agent_type='Red')
+                        mininet_red_observation, red_reward = self.mininet_adapter.step(str(red_action), agent_type='Red')
 
                     except Exception as e:
-                        # traceback.print_exc()
                         raise e
 
                     blue_observation = mininet_blue_observation
@@ -152,10 +147,11 @@ class EmulatedEnvironment(CybORGEnvironment):
                     blue_action = self.blue_agent.get_action(blue_observation, blue_action_space)
                     # blue_possible_actions = self.openai_gym_cyborg.possible_actions[blue_action]
                     blue_possible_actions = self.openai_gym_cyborg.get_attr('possible_actions')[blue_action]
-                    print("--> In main loop: Blue action using mininet_observation")
-                    print(blue_possible_actions)
+                    
+                    logging.info("--> In main loop: Blue action using mininet_observation")
+                    logging.info(blue_possible_actions)
 
-                    mininet_blue_observation, blue_reward = mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
+                    mininet_blue_observation, blue_reward = self.mininet_adapter.step(str(blue_possible_actions), agent_type='Blue')
 
                     actions = {"Red": str(red_action), "Blue": str(blue_possible_actions)}
                     observations = {"Red": mininet_red_observation.data, "Blue": mininet_blue_observation.data}
@@ -163,16 +159,15 @@ class EmulatedEnvironment(CybORGEnvironment):
 
                     state_snapshot = self.game_state_manager.create_state_snapshot(actions, observations, rewards)
                     self.game_state_manager.store_state(state_snapshot, i, j)
+                    
                     r.append(rewards['Blue'])
                     a.append((actions['Blue'], actions['Red']))
 
-                    print(f"===Episode {i+1}, Round {j + 1} is over===")
+                    logging.info(f"===Episode {i+1}, Round {j + 1} is over===")
 
                 self.blue_agent.end_episode()
                 self.red_agent.end_episode()
                 total_reward.append(sum(r))
                 actions_list.append(a)
-
-            # mininet_adapter.clean()
 
         return total_reward, actions_list
