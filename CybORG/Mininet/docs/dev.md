@@ -13,6 +13,11 @@ The python script path is hard coded to the virtual env folder path, I will need
     - starting sshd
     - starting velociraptor client & server
     - configuring Host DNS rules
+    - make sure dir /usr/local/run/ exists, /tmp/ exists,
+
+Table 
+```mermaid
+``` 
 
 `mininet_adapter` contains the middleware that binds Mininet API and CybORG API.
 
