@@ -1,7 +1,7 @@
 from pprint import pprint
 import time
 import traceback 
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import configparser # for configuration parsing
 import inspect
 import random
@@ -9,6 +9,7 @@ import random
 import logging
 from logging import RootLogger
 from rich.logging import RichHandler
+from tqdm import tqdm
 
 from CybORG import CybORG
 
@@ -17,11 +18,10 @@ from CybORG.Shared import Observation
 from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
-                                    RedActionTranslator, BlueActionTranslator, ActionTranslator, \
+                                    RedActionTranslator, BlueActionTranslator, \
                                     ResultsBundler, \
                                     NetworkStateManager, \
                                     RewardCalculator
-from tqdm import tqdm
 
 class MininetAdapter:
     """_summary_
@@ -58,7 +58,7 @@ class MininetAdapter:
         self.path = str(inspect.getfile(CybORG))[:-10]
         
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        config.read('config.cfg')
 
         self.topology_manager = YamlTopologyManager()
         self.mapper = CybORGMininetMapper()
@@ -99,102 +99,108 @@ class MininetAdapter:
         return False
         
 
-    def parse_action_string(self, action_string):
-        print("--> in MininetAdapter parse_action_string")
-        print(action_string)
+    def parse_action_string(self, action_string: str) -> Tuple[str, str, str]:
+        """_summary_
+
+        Args:
+            action_string (str): The natural language action string from CybORG
+
+        Returns:
+            tuple: A tuple containing the targeted cyborg hostname, mininet hostname, and the action type
+        """
+        logging.info("--> in MininetAdapter parse_action_string")
+        logging.debug (action_string)
         action_str_split = action_string.split(" ")
         action_type = action_str_split[0]
         n = len(action_str_split)
         target_host = action_str_split[-1] if n > 1 else ""
-        # Update target host if it's an IP address to get the hostname
         target_host = self.mapper.cyborg_ip_to_host_map.get(target_host, target_host)
                 
-        return target_host, self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), action_type 
+        return (target_host, 
+                self.mapper.cyborg_to_mininet_host_map.get(target_host, target_host), 
+                action_type) 
 
     
     def reset(self):
+        self.logger.info("===Resetting Mininet Environment===")
+        
         try:
-            self.logger.info("===Resetting Mininet Environment===")
-            
             self.clean()
+        except Exception as e:
+            logging.error ("Error in cleaning Mininet")
+            raise e
 
+        try:
             self.mapper.init_mapping(self.cyborg)
-            
-            try:
-                self.topology_manager.generate_topology_data(self.cyborg, 
-                                                             self.mapper.cyborg_to_mininet_name_map, 
-                                                             self.mapper.cyborg_to_mininet_host_map)
+        except Exception as e:
+            logging.error ("Error in mapping CybORG namespace and Mininet namespace")
+            raise
+        
+        try:
+            self.topology_manager.generate_topology_data(self.cyborg, 
+                            self.mapper.cyborg_to_mininet_name_map, 
+                            self.mapper.cyborg_to_mininet_host_map)
+        except Exception as e:
+            logging.error ("Error in generating topology data")
+            raise e
 
-            except Exception as e:
-                traceback.format_exc()
-                raise e
-
-            # Create YAML topology file
-            file_path = './systems/tmp/network_topology.yaml'
+        # Create YAML topology file
+        file_path = './systems/tmp/network_topology.yaml'
+        
+        try:
             self.topology_manager.save_topology(file_path)
-            
-            # Start Mininet with the topology
-            try:
-                expect_text = self.command_interface.start_mininet(file_path)
-            
-            except Exception as e:
-                logging.error ("Error in starting Mininet")
-                traceback.format_exc()
-                raise e
-            # pprint(expect_text)
+        except Exception as e:
+            logging.error ("Error in saving topology file")
+            raise e
+        
+        # Start Mininet with the topology
+        try:
+            expect_text = self.command_interface.start_mininet(file_path)
+        except Exception as e:
+            logging.error ("Error in starting Mininet")
+            raise e
 
-            ##########################
-            # Test if DNS is working #
-            ##########################
-
-            print("===Ping Test===")
+        try:
+            print("===DNS Test===")
             expect_text = self.command_interface.send_command('lan1h1 ping -c 1 google.com')
             print(expect_text)
-            
-            # while not self.is_service_responsive():
-            #     logging.info ("Waiting for Velociraptor server to become responsive...")
-            
-            logging.info ("===Perform ResetAction to retrieve initial md5 checksums===")
-            # Add tqdm progess bar
-            for host in tqdm(self.mapper.mininet_host_to_ip_map.keys(), desc="Processing hosts"):
-                if host.startswith("r"):
-                    continue
+        except Exception as e:
+            raise e
                 
-                reset_action_string = self.red_action_translator.get_reset_action_string(host, \
-                                            self.mapper.cyborg_to_mininet_host_map, \
-                                            self.mapper.mininet_host_to_ip_map)
-                # logging.debug (f"Reset Action String: {reset_action_string}")
-                
-                try:
-                    expect_text = self.command_interface.send_command(reset_action_string)
-                    # logging.debug (expect_text)
-                
-                except Exception as e:
-                    traceback.print_exc()
-                    raise e
-                
-                cyborg_host = self.mapper.mininet_to_cyborg_host_map.get(host, host)
-                
-                try:
-                    mininet_obs = self.results_bundler.bundle(f"{host}", "Reset", True, expect_text, self.mapper)
-                    if mininet_obs.success.name == "TRUE":
-                        self.md5[cyborg_host] = mininet_obs.data["MD5"]
-                    else:
-                        logging.error (f"Failed to retrieve initial MD5 checksums for {cyborg_host}")
-                        raise ValueError(f"Failed to retrieve initial MD5 checksums for {cyborg_host}")
-                    
-                except Exception as e:
-                    traceback.print_exc()
-                    raise e
-                
-            logging.debug (f"Initial MD5 checksums are: {self.md5}")
+        # while not self.is_service_responsive():
+        #     logging.info ("Waiting for Velociraptor server to become responsive...")
         
+        logging.info ("===Perform ResetAction to retrieve initial md5 checksums===")
+        # Add tqdm progess bar
+        for host in tqdm(self.mapper.mininet_host_to_ip_map.keys(), desc="Processing hosts"):
+            if host.startswith("r"):
+                continue
             
-            logging.info("===Resetting Mininet Environment Completed===")
-        
-        except KeyboardInterrupt:
-            logging.error ("Keyboard Interrupt in Reset")
-            raise KeyboardInterrupt
+            reset_action_string = self.red_action_translator.get_reset_action_string(host, \
+                                        self.mapper.cyborg_to_mininet_host_map, \
+                                        self.mapper.mininet_host_to_ip_map)
+            
+            try:
+                expect_text = self.command_interface.send_command(reset_action_string)            
+            except Exception as e:
+                logging.error ("Error in reset command")
+                raise e
+            
+            cyborg_host = self.mapper.mininet_to_cyborg_host_map.get(host, host)
+            
+            try:
+                mininet_obs = self.results_bundler.bundle(f"{host}", "Reset", expect_text, self.mapper)
+                if mininet_obs.success.name == "TRUE":
+                    self.md5[cyborg_host] = mininet_obs.data["MD5"]
+                else:
+                    logging.error (f"Failed to retrieve initial MD5 checksums for {cyborg_host}")
+                    raise ValueError(f"Failed to retrieve initial MD5 checksums for {cyborg_host}")        
+            except Exception as e:
+                raise e
+            
+        logging.debug (f"Initial MD5 checksums are: {self.md5}")
+        logging.info("===Resetting Mininet Environment Completed===")
+
 
     
     def step(self, action_string: str, agent_type: str) -> Observation:
@@ -202,135 +208,123 @@ class MininetAdapter:
            Translate CybORG action to Mininet command and send it
            Retrieve the results and create observations
         '''
-        # @To-Do: bad nested try catch, refactor this code
+        self.logger.info(f"---> in MininetAdapter {agent_type} step")
+        cyborg_hostname, mininet_hostname, cyborg_action = self.parse_action_string(action_string)
+
         try:
-            self.logger.info(f"---> in MininetAdapter {agent_type} step")
-            cyborg_hostname, mininet_hostname, cyborg_action = self.parse_action_string(action_string)
-            isSuccess = True # Always True man..
+            if agent_type == "Blue":
+                mininet_command = self.blue_action_translator.translate(cyborg_action, 
+                                                                    mininet_hostname, 
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)  
+            elif agent_type == "Red":
+                mininet_command = self.red_action_translator.translate(cyborg_action, 
+                                                                    mininet_hostname,
+                                                                    self.mapper.cyborg_to_mininet_host_map,
+                                                                    self.mapper.mininet_host_to_ip_map)
+        except Exception as e:
+            raise e
 
-            try:
-                if agent_type == "Blue":
-                    mininet_command = self.blue_action_translator.translate(cyborg_action, 
-                                                                        mininet_hostname, 
-                                                                        self.mapper.cyborg_to_mininet_host_map,
-                                                                        self.mapper.mininet_host_to_ip_map)  
-                elif agent_type == "Red":
-                    mininet_command = self.red_action_translator.translate(cyborg_action, 
-                                                                        mininet_hostname,
-                                                                        self.mapper.cyborg_to_mininet_host_map,
-                                                                        self.mapper.mininet_host_to_ip_map)
-            except Exception as e:
-                raise e
-
-            try:
-                # @To-Do is there a better design or this is the best way to handle resources like self.exploited_hosts
-                if cyborg_action == "ExploitRemoteService" and \
-                    self.mapper.mininet_host_to_ip_map[mininet_hostname] in self.exploited_hosts:  # this event happens
-                    
-                    logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)},\n" + 
-                                f"Exploited hosts are: {self.exploited_hosts}")
-                    
-                    mininet_cli_text = "We have already exploited this host. Skipping sending command to Mininet!"
+        try:
+            # @To-Do is there a better design or this is the best way to handle resources like self.exploited_hosts
+            if cyborg_action == "ExploitRemoteService" and \
+                self.mapper.mininet_host_to_ip_map[mininet_hostname] in self.exploited_hosts:  # this event happens
                 
-                else:
+                logging.debug (f" Target is: {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)},\n" + 
+                            f"Exploited hosts are: {self.exploited_hosts}")
                 
-                    mininet_cli_text = self.command_interface.send_command(mininet_command)
-                
-                self.logger.info("===Mininet-Cli-Text====")
-                self.logger.debug(mininet_cli_text)
+                mininet_cli_text = "We have already exploited this host. Skipping sending command to Mininet!"
             
-            except Exception as e:
-                # traceback.print_exc()
-                raise e
-
-            try:    
-                if cyborg_action == "ExploitRemoteService" and \
-                    self.mapper.mininet_host_to_ip_map.get(mininet_hostname) in self.exploited_hosts:  # this event happens
-                    
-                    logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is already exploited,\n" + 
-                                "we will use the previously stored observation.\n Skipping sending text to result bundler")
-                    
-                    mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(mininet_hostname)]
-                    # self.results_bundler.last_red_observation = mininet_obs
-                
-                else:
-                    
-                    mininet_obs = self.results_bundler.bundle(mininet_hostname, cyborg_action, isSuccess, mininet_cli_text, self.mapper)
-                    
-                    # post processing to manage the states of the cluster
-                    if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
-                        
-                        logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} \
-                                        has gotten exploited,\n" + 
-                                    "the adapter will store this observation for future use")
-                        
-                        # Deserializing the additional data
-                        additional_data = mininet_obs.data["Additional Info"]
-                        remote_ip = additional_data["Attacked IP"]
-                        client_port = additional_data["Attacker Port"]
-                        connection_key = additional_data["Connection Key"]
-                        
-                        if client_port in self.available_ports:
-                            self.available_ports.remove(client_port)
-                        
-                        self.old_exploit_outcome.update({remote_ip: mininet_obs})
-                        self.exploited_hosts.append(remote_ip)
-                        self.connection_key.update({remote_ip:connection_key})
-                    
-                    if cyborg_action == "PrivilegeEscalate" and mininet_obs.success.name == "TRUE":
-                        
-                        logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is successful")
-                        
-                        self.priviledged_hosts.append(mininet_hostname)
-                
-                # if mininet_obs.success: update  
-                self.logger.info("===Obs===")
-                self.logger.debug(mininet_obs.data)
-
-                # store the last observation
-                self.logger.info("===Record this obs as the last observation===")
-                self.results_bundler.update_last_observation(cyborg_action=cyborg_action, obs=mininet_obs)
+            else:
             
-            except Exception as e:
-                # traceback.print_exc()
-                raise e
-
-            try:
-                if agent_type == "Blue" and \
-                    self.red_action_translator.last_action in ['ExploitRemoteService', 'DiscoverNetworkServices']:
-                    
-                    logging.info ("Modify Blue Observation given Previous Red Observation")
-                    
-                    mininet_obs.data = self.results_bundler.modify_blue_observation_by_red(mininet_obs.data, \
-                                                                                    self.results_bundler.last_red_observation.data, \
-                                                                                    self.red_action_translator.last_action, \
-                                                                                    self.red_action_translator.last_target)
-                    self.results_bundler.last_blue_observation = mininet_obs
-                    
-            except Exception as e:
-                # traceback.print_exc()
-                raise e
-
-            try:
-                self.network_state_manager.update_network_state(cyborg_action, cyborg_hostname, mininet_obs, "root")
-                reward = self.reward_calculator.reward(self.network_state_manager.get_network_state()) # @To-Do should pass in a global network state instead
-                # reward = self.reward_calculator.reward(mininet_obs.data, self.mapper) # @To-Do should pass in a global network state instead
-
-                self.logger.info("===Rewards===")
-                self.logger.debug(reward)
-
-            except Exception as e:
-                # traceback.print_exc()
-                raise e
-
-            print("*********")
-
-            return mininet_obs, reward
+                mininet_cli_text = self.command_interface.send_command(mininet_command)
+            
+            self.logger.info("===Mininet-Cli-Text====")
+            self.logger.debug(mininet_cli_text)
         
-        except KeyboardInterrupt:
-            logging.error ("Keyboard Interrupt in Step, raise to main")
-            # self.clean()
-            raise KeyboardInterrupt
+        except Exception as e:
+            raise e
+
+        try:    
+            if cyborg_action == "ExploitRemoteService" and \
+                self.mapper.mininet_host_to_ip_map.get(mininet_hostname) in self.exploited_hosts:  # this event happens
+                
+                logging.debug (f" Since {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is already exploited,\n" + 
+                            "we will use the previously stored observation.\n Skipping sending text to result bundler")
+                
+                mininet_obs = self.old_exploit_outcome[self.mapper.mininet_host_to_ip_map.get(mininet_hostname)]
+            
+            else:
+                
+                mininet_obs = self.results_bundler.bundle(mininet_hostname, cyborg_action, mininet_cli_text, self.mapper)
+                
+                # post processing to manage the states of the cluster
+                if cyborg_action == "ExploitRemoteService" and mininet_obs.success.name == "TRUE":
+                    
+                    logging.debug (f" This is the first time {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} \
+                                    has gotten exploited,\n" + 
+                                "the adapter will store this observation for future use")
+                    
+                    # Deserializing the additional data
+                    additional_data = mininet_obs.data["Additional Info"]
+                    remote_ip = additional_data["Attacked IP"]
+                    client_port = additional_data["Attacker Port"]
+                    connection_key = additional_data["Connection Key"]
+                    
+                    if client_port in self.available_ports:
+                        self.available_ports.remove(client_port)
+                    
+                    self.old_exploit_outcome.update({remote_ip: mininet_obs})
+                    self.exploited_hosts.append(remote_ip)
+                    self.connection_key.update({remote_ip:connection_key})
+                
+                if cyborg_action == "PrivilegeEscalate" and mininet_obs.success.name == "TRUE":
+                    
+                    logging.info (f"Privilege Escalation on {self.mapper.mininet_host_to_ip_map.get(mininet_hostname)} is successful")
+                    
+                    self.priviledged_hosts.append(mininet_hostname)
+            
+            # if mininet_obs.success: update  
+            self.logger.info("===Obs===")
+            self.logger.debug(mininet_obs.data)
+
+            # store the last observation
+            self.logger.info("===Record this obs as the last observation===")
+            self.results_bundler.update_last_observation(cyborg_action=cyborg_action, obs=mininet_obs)
+        
+        except Exception as e:
+            raise e
+
+        try:
+            if agent_type == "Blue" and \
+                self.red_action_translator.last_action in ['ExploitRemoteService', 'DiscoverNetworkServices']:
+                
+                logging.info ("Modify Blue Observation given Previous Red Observation")
+                
+                mininet_obs.data = self.results_bundler.modify_blue_observation_by_red(mininet_obs.data, \
+                                                                                self.results_bundler.last_red_observation.data, \
+                                                                                self.red_action_translator.last_action, \
+                                                                                self.red_action_translator.last_target)
+                self.results_bundler.last_blue_observation = mininet_obs
+                
+        except Exception as e:
+            raise e
+
+        try:
+            self.network_state_manager.update_network_state(cyborg_action, 
+                                                            cyborg_hostname, 
+                                                            mininet_obs, "root")
+            reward = self.reward_calculator.reward(self.network_state_manager.get_network_state())
+            
+            self.logger.info("===Rewards===")
+            self.logger.debug(reward)
+
+        except Exception as e:
+            raise e
+
+        logging.info("*********")
+
+        return mininet_obs, reward
 
 
     def is_service_responsive(self, max_retries=300, retry_interval=1):
@@ -361,8 +355,3 @@ class MininetAdapter:
     
     def clean(self):
         self.command_interface.clean()
-        
-
-if __name__ == "__main__":
-    print("Hello Mininet Adapter!")
-
