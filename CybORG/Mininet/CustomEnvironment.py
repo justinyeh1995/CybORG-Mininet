@@ -97,8 +97,8 @@ class EmulatedEnvironment(CybORGEnvironment):
         
         with MininetAdapter() as mininet_adapter:
             # Set up mininet_adapter
-            # self.mininet_adapter = mininet_adapter
-            # self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
+            self.mininet_adapter = mininet_adapter
+            self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg) # @Note: since we are passing an object refence, the effect of self.cyborg.reset() will reflect in mininet_adapter
 
             for i in range(self.max_episode):
                 r = []
@@ -120,8 +120,6 @@ class EmulatedEnvironment(CybORGEnvironment):
                     raise e
                 
                 try:
-                    self.mininet_adapter = mininet_adapter
-                    self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg)
                     self.mininet_adapter.reset()
                 except Exception as e:
                     raise e
