@@ -24,21 +24,18 @@ class ResultsBundler(Entity):
     last_blue_observation: Observation = None
     last_red_observation: Observation = None
     
-    def bundle(self, target, cyborg_action, isSuccess, mininet_cli_str, mapper) -> Observation:
+    def bundle(self, target, cyborg_action, mininet_cli_str, mapper) -> Observation:
         """_summary_
 
         Args:
             target (_type_): this is the hostname inside mininet
             cyborg_action (_type_): _description_
-            isSuccess (bool): _description_
             mininet_cli_str (_type_): _description_
             mapper (_type_): _description_
 
         Returns:
             Observation: _description_
         """
-        if not isSuccess:
-            return Observation(False)
         
         if cyborg_action == "DiscoverRemoteSystems":
             obs = parse_nmap_network_scan_v2(mininet_cli_str, target, mapper)
@@ -71,7 +68,7 @@ class ResultsBundler(Entity):
             obs = Observation(True)
             
         elif cyborg_action == "Analyse":
-            obs = Observation(True) # @To-Do
+            obs = parse_analyse_action(mininet_cli_str)
             
         elif cyborg_action == "Reset":
             obs = parse_reset_action_v2(mininet_cli_str)
@@ -124,25 +121,6 @@ class ResultsBundler(Entity):
                 red_to_blue=self.convert_red_exploit_dict(red_data)
                 attacked_hostname = self.mininet_adpator.mapper.cyborg_ip_to_host_map.get(last_red_target)
                 blue_outcome.update({attacked_hostname : red_to_blue})
-                
-            # elif red_outcome['success'].name in ["FALSE", "UNKNOWN"]:
-            # # Iterate over all the processes and their connections
-            #     red_to_blue = {'Processes': []}
-            #     for process in red_data['Processes']:
-            #         for connection in process['Connections']:
-            #             new_connection1 = {
-            #                 'local_port': connection['local_port'],
-            #                 'remote_port': connection['remote_port'],  # Assuming remote_port is a fixed value ???
-            #                 'local_address': connection['local_address'],
-            #                 'remote_address': connection['remote_address']} #??
-                        
-            #             new_connection2 = {
-            #                 'local_port': connection['local_port'],
-            #                 'local_address': connection['local_address'],
-            #                 'remote_address': connection['remote_address']} #??
-                        
-            #             red_to_blue['Processes'].append({'Connections': [new_connection1]})
-            #             red_to_blue['Processes'].append({'Connections': [new_connection2]})
         
         return blue_outcome
             

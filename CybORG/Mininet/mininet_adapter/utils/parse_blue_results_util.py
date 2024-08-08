@@ -5,6 +5,8 @@ from typing import List, Dict, Iterator, Pattern
 from ipaddress import IPv4Address, IPv4Network
 
 from CybORG.Shared import Observation
+from CybORG.Emulator.Observations.Velociraptor.AnalyseObservation import AnalyseObservation
+
 from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import enum_to_boolean
 
 def parse_remove_action(remove_action_string: str) -> Observation:
@@ -113,16 +115,25 @@ def parse_reset_action_v2(reset_action_output: str) -> Observation:
     
     
 def parse_analyse_action(analyse_action_output: str) -> Observation:
-    pattern = re.compile(r'TRUE|FALSE')
-
+    
     # Use re.search to find a match
-    match_bool = pattern.search(analyse_action_output)
+    # match_dict_string = re.search(r"Previous MD5SUM: (\{[^}]+\})\s+Current MD5SUM: (\{[^}]+\})\s+Densityscout: (\{[^}]+\})", analyse_action_output)
+    match_previous_md5sum = re.search(r"Previous MD5SUM: (\{[^}]+\})", analyse_action_output)
+    match_current_md5sum = re.search(r"Current MD5SUM: (\{[^}]+\})", analyse_action_output)
+    match_densityscout = re.search(r"Densityscout: (\{[^}]+\})", analyse_action_output)
     
-    # Extract the 'TRUE' or 'FALSE' part if found
-    success_status = enum_to_boolean(match_bool.group()) if match_bool else None
+    # import pdb; pdb.set_trace()
+    # Extract the dictionary string if found
+    if match_previous_md5sum and match_current_md5sum and match_densityscout:
+        previous_verification_dict = eval(match_previous_md5sum.group(1)) 
+        current_verification_dict = eval(match_current_md5sum.group(1)) 
+        density_scout_dict = {file_name: float(density_str) for file_name, density_str in eval(match_densityscout.group(1)).items()}
+        
     
-    obs = Observation(success_status)    
-    
+        obs = AnalyseObservation(current_verification_dict, previous_verification_dict, density_scout_dict)
+    else:
+        obs = Observation(False)
+        
     return obs
 
 def parse_remove_action(remove_action_string: str) -> Observation:
