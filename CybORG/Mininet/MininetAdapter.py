@@ -1,3 +1,4 @@
+from pathlib import Path
 from pprint import pprint
 import time
 import traceback 
@@ -15,7 +16,7 @@ from CybORG import CybORG
 
 from CybORG.Shared import Observation
 
-from CybORG.Mininet.mininet_adapter import YamlTopologyManager, \
+from CybORG.Mininet.AdapterComponents import YamlTopologyManager, \
                                     MininetCommandInterface, \
                                     CybORGMininetMapper, \
                                     RedActionTranslator, BlueActionTranslator, \
@@ -57,25 +58,25 @@ class MininetAdapter:
         
         self.path = str(inspect.getfile(CybORG))[:-10]
         
-        config = configparser.ConfigParser()
-        config.read('config.cfg')
+        self.config = configparser.ConfigParser()
+        self.config.read('config.cfg')
 
         self.topology_manager = YamlTopologyManager()
         self.mapper = CybORGMininetMapper()
         
-        self.command_interface = MininetCommandInterface(config=config)
+        self.command_interface = MininetCommandInterface(config=self.config)
         
         self.blue_action_translator = BlueActionTranslator(path=self.path, 
-                                                           config=config,
+                                                           config=self.config,
                                                            logger=self.logger)
         self.red_action_translator = RedActionTranslator(path=self.path,
-                                                         config=config,
+                                                         config=self.config,
                                                          logger=self.logger)
         self.results_bundler = ResultsBundler()
         
         self.network_state_manager = NetworkStateManager()
         
-        self.reward_calculator = RewardCalculator(self.path + config["SCENARIO"]["FILE_PATH"])
+        self.reward_calculator = RewardCalculator(self.path + self.config["SCENARIO"]["FILE_PATH"])
 
         self.blue_action_translator.register(self)
         self.red_action_translator.register(self)
@@ -145,7 +146,10 @@ class MininetAdapter:
             raise e
 
         # Create YAML topology file
-        file_path = './systems/tmp/network_topology.yaml'
+        system_folder_path = Path(self.path + self.config["Mininet"]["SYS_FOLDER_PATH"])
+        logging.debug (f"System folder path is: {system_folder_path}")
+        # import pdb; pdb.set_trace()
+        file_path = f'{system_folder_path}/tmp/network_topology.yaml'
         
         try:
             self.topology_manager.save_topology(file_path)
