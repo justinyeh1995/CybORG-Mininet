@@ -104,7 +104,7 @@ class RedActionTranslator(ActionTranslator):
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         conn_key = self.mininet_adpator.connection_key[target]
         
-        return f'{host} {action} -m {target} --conn_key {conn_key}' # This might take a while to run so we take out the timeout as a temporary solution
+        return f'{host} {action} -m {target} --conn_key {conn_key} --python-path \'{self.python_exe_filepath}\' --action-folder \'{self.action_folder_path}\' --sys-script \'{self.sys_script}\'' # This might take a while to run so we take out the timeout as a temporary solution
     
     def impact(self, target_host):
         print("Red Impact")
