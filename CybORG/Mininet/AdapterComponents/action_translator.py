@@ -153,7 +153,7 @@ class BlueActionTranslator(ActionTranslator):
             return "sleep 1"
 
     def remove(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
-        print("Blue Remove")
+        print(f"Blue Remove {target_host}")
         # @To-Do Not Implemented as of now
         host = cyborg_to_mininet_host_map['Defender']
         # action = f"{self.python_exe_filepath} {self.action_folder_path}/Velociraptor/remove.py"
@@ -163,7 +163,7 @@ class BlueActionTranslator(ActionTranslator):
         conn_key = self.mininet_adpator.connection_key.get(target)
         
         # return f"{host} {action} --hostname {self.hostname} --conn_key {conn_key}"
-        return f"{host} {action} -n {conn_key}"
+        return f'{host} {action} -n {conn_key} --python-path \'{self.python_exe_filepath}\' --sys-script \'{self.sys_script}\''
 
     def restore(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Blue Restore")
