@@ -3,8 +3,8 @@ import traceback
 from typing import Dict, List
 import logging
 
-from CybORG.Mininet.mininet_adapter.entity import Entity
-from CybORG.Mininet.mininet_adapter.utils.yaml_topo_util import get_routers_info, get_lans_info, get_links_info, get_nats_info, \
+from CybORG.Mininet.AdapterComponents.entity import Entity
+from CybORG.Mininet.AdapterComponents.utils.yaml_topo_util import get_routers_info, get_lans_info, get_links_info, get_nats_info, \
                                                 generate_routing_rules
 
 class YamlTopologyManager(Entity):

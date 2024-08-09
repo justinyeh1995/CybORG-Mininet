@@ -1,7 +1,7 @@
 import logging
 from typing import Dict
 from pydantic import BaseModel, Field
-# from CybORG.Mininet.mininet_adapter.entity import Entity
+# from CybORG.Mininet.AdapterComponents.entity import Entity
 
 class NetworkStateManager(BaseModel):
     

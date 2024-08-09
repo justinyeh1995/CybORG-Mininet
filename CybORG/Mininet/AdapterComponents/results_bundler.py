@@ -4,20 +4,20 @@ import random
 from typing import Dict
 from ipaddress import IPv4Address
 
-from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import  parse_nmap_network_scan, \
+from CybORG.Mininet.AdapterComponents.utils.parse_red_results_util import  parse_nmap_network_scan, \
                                                             parse_nmap_port_scan, \
                                                             parse_nmap_network_scan_v2, \
                                                             parse_exploit_action, \
                                                             parse_escalate_action \
                                                             
-from CybORG.Mininet.mininet_adapter.utils.parse_blue_results_util import parse_decoy_action, \
+from CybORG.Mininet.AdapterComponents.utils.parse_blue_results_util import parse_decoy_action, \
                                                             parse_remove_action, \
                                                             parse_reset_action, \
                                                             parse_reset_action_v2, \
                                                             parse_analyse_action
                                                             
 from CybORG.Shared import Observation
-from CybORG.Mininet.mininet_adapter.entity import Entity
+from CybORG.Mininet.AdapterComponents.entity import Entity
     
 @dataclass
 class ResultsBundler(Entity):
@@ -79,7 +79,8 @@ class ResultsBundler(Entity):
         return obs
     
     
-    def update_last_observation(self, cyborg_action: str = "ExploitRemoteService", obs: Observation = Observation(False)) -> None:
+    def update_last_observation(self, cyborg_action: str = "ExploitRemoteService", 
+                                obs: Observation = Observation(False)) -> None:
         if cyborg_action in ['DiscoverRemoteSystems', 'DiscoverNetworkServices', \
                              'ExploitRemoteService', 'PrivilegeEscalate', 'Impact']:
             self.last_red_observation = obs

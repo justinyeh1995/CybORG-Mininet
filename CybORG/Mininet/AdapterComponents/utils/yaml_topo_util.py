@@ -1,7 +1,7 @@
 from typing import List
 import ipaddress
 from ipaddress import IPv4Network
-from CybORG.Mininet.mininet_api import custom_utils as cu
+from CybORG.Mininet.MininetAPI import custom_utils as cu
 
 ################
 # yaml builder #
@@ -66,7 +66,11 @@ def get_router2router_links(cyborg) -> List:
     """
     Filter only for router-to-router links
     """
-    edge_view = cyborg.environment_controller.state.link_diagram.edges
+    try:
+        edge_view = cyborg.environment_controller.state.link_diagram.edges
+    except AttributeError:
+        raise AttributeError("Link diagram not found in the environment controller state, the state is not properly initialized")
+    
     routers = {node for edge in edge_view for node in edge if node.endswith('_router')}
 
     return [edge for edge in cyborg.environment_controller.state.link_diagram.edges if all(node in routers for node in edge)]

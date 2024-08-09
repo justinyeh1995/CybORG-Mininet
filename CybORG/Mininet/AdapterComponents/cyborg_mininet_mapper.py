@@ -1,12 +1,11 @@
-from CybORG.Mininet.mininet_adapter.entity import Entity
+from CybORG.Mininet.AdapterComponents.entity import Entity
 
-from CybORG.Mininet.mininet_adapter.utils.mapper_util import build_cyborg_host_to_mininet_host_map, parse_mininet_ip, \
+from CybORG.Mininet.AdapterComponents.utils.mapper_util import build_cyborg_host_to_mininet_host_map, parse_mininet_ip, \
                             build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map
 from pydantic import BaseModel, Field
 from typing import Dict, List, Set
 from ipaddress import IPv4Address, IPv4Network
 import collections
-from collections import defaultdict
 import json
 
 class CybORGMininetMapper(BaseModel, Entity):

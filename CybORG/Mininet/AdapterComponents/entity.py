@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-# from CybORG.Mininet import MininetAdapter #This can cause circular import, but it is fine as of now
+# from CybORG.Mininet import AdapterComponents #This can cause circular import, but it is fine as of now
 
 @dataclass
 class Entity:

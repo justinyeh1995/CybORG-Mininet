@@ -1,8 +1,8 @@
 import yaml
 import inspect
 from CybORG import CybORG, CYBORG_VERSION
-from CybORG.Mininet.mininet_adapter import CybORGMininetMapper
-from CybORG.Mininet.mininet_adapter.entity import Entity
+from CybORG.Mininet.AdapterComponents import CybORGMininetMapper
+from CybORG.Mininet.AdapterComponents.entity import Entity
 
 WIN_REWARD = 0
 LOSE_REWARD = 0

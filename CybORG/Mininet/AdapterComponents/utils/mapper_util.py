@@ -2,7 +2,7 @@ import re
 import collections
 from pprint import pprint
 from typing import Iterator, Pattern, Dict
-from CybORG.Mininet.mininet_api import custom_utils as cu
+from CybORG.Mininet.MininetAPI import custom_utils as cu
 
 ###########################
 # CybORG-2-Mininet Mapper #

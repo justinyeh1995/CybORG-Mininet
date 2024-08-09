@@ -7,7 +7,7 @@ from ipaddress import IPv4Address, IPv4Network
 from CybORG.Shared import Observation
 from CybORG.Emulator.Observations.Velociraptor.AnalyseObservation import AnalyseObservation
 
-from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import enum_to_boolean
+from CybORG.Mininet.AdapterComponents.utils.parse_red_results_util import enum_to_boolean
 
 def parse_remove_action(remove_action_string: str) -> Observation:
     pattern = re.compile(r'TRUE|FALSE')

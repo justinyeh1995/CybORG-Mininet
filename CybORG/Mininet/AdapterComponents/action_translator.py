@@ -3,7 +3,7 @@ import socket
 import json
 import base64
 
-from CybORG.Mininet.mininet_adapter.entity import Entity
+from CybORG.Mininet.AdapterComponents.entity import Entity
 
 
 class ActionTranslator(Entity):
@@ -23,6 +23,7 @@ class ActionTranslator(Entity):
         self.hostname = socket.gethostname()
         self.python_exe_filepath = config["PYTHON"]["FILE_PATH"]
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
+        self.sys_script = self.path + config["ACTION"]["SYS_SCRIPT_PATH"]
         self.velociraptor_server_mininet_hostname = None
 
     def translate(self, action):
@@ -31,7 +32,7 @@ class ActionTranslator(Entity):
     def get_reset_action_string(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         # action = f"{self.python_exe_filepath} {self.action_folder_path}/Velociraptor/reset.py"
         action = f"bash {self.action_folder_path}/ResetAction/reset.sh"
-        return f'{cyborg_to_mininet_host_map["Defender"]} {action} --mininet_hostname "{target_host}" ' 
+        return f'{cyborg_to_mininet_host_map["Defender"]} {action} --mininet_hostname "{target_host}" --python-path \'{self.python_exe_filepath}\' --action-folder \'{self.action_folder_path}\'' 
 
 
 class RedActionTranslator(ActionTranslator):
@@ -93,7 +94,7 @@ class RedActionTranslator(ActionTranslator):
 
         target = mininet_host_to_ip_map.get(target_host, cyborg_to_mininet_host_map['User0'])
         
-        return f'{host} bash {action} -m {target} -data {base64_data}'
+        return f'{host} bash {action} -m {target} -data {base64_data} --python-path \'{self.python_exe_filepath}\' --action-folder \'{self.action_folder_path}\' --sys-script \'{self.sys_script}\''
 
     def privilege_escalate(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Privilege Escalate")
