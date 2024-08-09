@@ -1,8 +1,33 @@
 #!/bin/bash
 
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --python-path)
+            PYTHON_PATH="$2"
+            shift 2
+            ;;
+        --action-folder)
+            ACTION_FOLDER="$2"
+            shift 2
+            ;;
+        *)
+            # Keep other arguments to pass to the Python script
+            EXTRA_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Check if required arguments are provided
+if [[ -z "$PYTHON_PATH" ]] || [[ -z "$ACTION_FOLDER" ]]; then
+    echo "Usage: $0 --python-path <path> --action-folder <path>"
+    exit 1
+fi
+
 # Read input from Python script
 echo "Starting script..."
-output="$(/home/ubuntu/justinyeh1995/CASTLEGym/castle.2.venv/bin/python3  /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/ResetAction/reset_setup.py "$@")"
+output="$($PYTHON_PATH $ACTION_FOLDER/ResetAction/reset_setup.py "${EXTRA_ARGS[@]}")"
 IFS=',' read -r mininet_tmp_dir <<< "$output"
 
 echo "Mininet Hostname tmp dir: $mininet_tmp_dir"
