@@ -10,8 +10,7 @@ import signal
 import socket
 import sys
 
-from .ShellRelayer import ShellRelayer
-# from CybORG.Mininet.Systems.Scripts.ShellRelayer import ShellRelayer
+from CybORG.Mininet.Systems.Scripts.ShellRelayer import ShellRelayer
 
 
 class SSHConnectionServer:
