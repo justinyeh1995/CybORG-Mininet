@@ -122,6 +122,7 @@ class EmulatedEnvironment(CybORGEnvironment):
                 try:
                     self.mininet_adapter.reset()
                 except Exception as e:
+                    logging.error(f"Error starting MininetAdapter: {e}")
                     raise e
                 
                 for j in range(self.num_steps):
