@@ -1,5 +1,5 @@
 from CybORG import CybORG
 from CybORG.Mininet.CustomFactory import CybORGFactory, AgentFactory
-from CybORG.Mininet.mininet_adapter import CybORGMininetMapper
+from CybORG.Mininet.AdapterComponents import CybORGMininetMapper
 
 # Create a CybORG instance

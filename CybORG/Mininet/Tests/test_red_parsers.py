@@ -6,7 +6,7 @@ from typing import Dict
 
 from CybORG.Shared import Observation
 
-from CybORG.Mininet.mininet_adapter.utils.parse_red_results_util import parse_nmap_network_scan_v2, \
+from CybORG.Mininet.AdapterComponents.utils.parse_red_results_util import parse_nmap_network_scan_v2, \
     parse_nmap_port_scan, parse_nmap_network_scan_v2, parse_exploit_action, parse_escalate_action
 
 @pytest.fixture

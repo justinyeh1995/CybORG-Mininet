@@ -2,7 +2,7 @@ import pytest
 import inspect
 
 from unittest.mock import Mock, patch
-from CybORG.Mininet.mininet_adapter.results_bundler import parse_exploit_action
+from CybORG.Mininet.AdapterComponents.results_bundler import parse_exploit_action
 
 @pytest.fixture
 def complex_exploit_output():

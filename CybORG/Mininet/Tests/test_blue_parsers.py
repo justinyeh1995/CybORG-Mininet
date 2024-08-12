@@ -7,7 +7,7 @@ from typing import Dict
 
 from CybORG.Shared import Observation
 
-from CybORG.Mininet.mininet_adapter.utils.parse_blue_results_util import parse_decoy_action, \
+from CybORG.Mininet.AdapterComponents.utils.parse_blue_results_util import parse_decoy_action, \
     parse_remove_action, parse_reset_action, parse_reset_action_v2, parse_analyse_action
     
 @pytest.fixture
