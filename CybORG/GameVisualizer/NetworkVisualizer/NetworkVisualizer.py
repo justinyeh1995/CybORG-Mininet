@@ -117,9 +117,9 @@ class NetworkVisualizer:
         fig.layout.sliders = sliders
 
         # Adjust the layout to accommodate the new controls
-        fig.update_layout(
-            height=900,  # Increase the height to accommodate all controls
-        )
+        # fig.update_layout(
+        #     height=900,  # Increase the height to accommodate all controls
+        # )
         
     def _save_figure(self, fig, red_agent, step):
         image_folder = f"images/{red_agent}"

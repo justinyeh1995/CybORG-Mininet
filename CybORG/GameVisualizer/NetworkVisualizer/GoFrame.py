@@ -167,7 +167,7 @@ class Frame:
         # for idx, action_info in enumerate(action_info):
         observations = dict(
             xref='paper', yref='paper',
-            x=1.25, y= 0.2 - vertical_padding,  # Adjust these positions as needed
+            x=0.00, y= 0.05 - vertical_padding,  # Adjust these positions as needed
             text=f"""
                 <br>🎯{self.agent} Action: {action_info['action']}
                 <br>👀Observations: 
@@ -180,7 +180,7 @@ class Frame:
             visible=True,  
             align="left",  # Ensure text is aligned for both agents
             font=dict(
-                size=9,
+                size=8,
                 family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
                 ),
             bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
@@ -204,28 +204,31 @@ class Frame:
             margin=dict(b=15,l=0,r=200,t=80),
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            width=1000,
+            # width=1000,
             annotations=[observations],  # Include the annotations by default, shown initially
             updatemenus=[
                 dict(
+                    type = "buttons",
+                    direction = "down",
                     buttons=[
                         dict(label="Show Observations",
                             method="relayout",
-                            args=[{"annotations[0].visible": True}]), 
+                            args=[{"annotations[0].visible": True}],
+                            ),
                         dict(label="Hide Observations",
                             method="relayout",
-                            args=[{"annotations[0].visible": False}]),  # This should hide all annotations
+                            args=[{"annotations[0].visible": False}]
+                            ),  # This should hide all annotations
                     ],
-                    direction="down",
                     # pad={"r": 20, "t": 20},
                     showactive=True,
-                    x=0.5,
-                    # xanchor="left",
-                    y=1.2,
-                    # yanchor="top",
+                    # x=0.5,
+                    # xanchor="auto",
+                    y=0.3,
+                    # yanchor="auto",
                     bordercolor="#c7c7c7",
                     borderwidth=2,
-                    # bgcolor="#ff7f0e",
+                    # bgcolor="lightgrey",
                 )
             ]
         )
