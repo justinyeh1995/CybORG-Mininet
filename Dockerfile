@@ -24,12 +24,6 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# # Install Mininet
-# RUN git clone https://github.com/mininet/mininet.git && \
-#     cd mininet && \
-#     util/install.sh -fnv && \
-#     rm -rf /mininet/.git
-
 # Set working directory
 WORKDIR /cage
 
@@ -38,10 +32,8 @@ COPY . /cage
 
 ENV PYTHON_EXE_FILEPATH="python3"
 
-WORKDIR /cage/CybORG
-
 # Install packages
-RUN python3 -m pip install -e .
+RUN pip3 install -e .
 
 WORKDIR /cage/CybORG/CybORG/Mininet
 # Run evaluation script
