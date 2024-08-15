@@ -1,23 +1,19 @@
 import networkx as nx 
 import plotly.graph_objects as go
-
-def format_dict_for_display(data, indent=0):
-    # Helper function to add indentation
-    def add_indent(s, num_spaces):
-        return " " * num_spaces + s
+from pprint import pformat
+import html
     
-    if isinstance(data, dict):
-        formatted_lines = []
-        for key, value in data.items():
-            if key != 'success':
-                formatted_value = format_dict_for_display(value, indent + 4)  # Increase indent for nested dicts
-                formatted_lines.append(add_indent(f"{key}: {formatted_value}", indent))
-        return "<br>"+"<br>".join(formatted_lines)
-    elif isinstance(data, list):
-        formatted_list = [format_dict_for_display(item) for item in data]  # Apply formatting to each list item
-        return "<br>".join([add_indent(item, indent) for item in formatted_list])
-    else:
-        return add_indent(str(data), indent)
+def format_dict_for_display(dictObj, indent=0):
+    doc_string = ""
+    doc_string += '  ' * indent + '\n'
+    for k, v in dictObj.items():
+        if isinstance(v, dict):
+            doc_string += '  ' * indent + str(k) + ':' + '\n'
+            doc_string += format_dict_for_display(v, indent+1)
+        else:
+            doc_string += ' ' * indent + str(k) + ': ' + str(v) + '\n'
+    doc_string += '  ' * indent + '\n'
+    return doc_string
 
 def convert_reward_format(rewards, ordered=False):
     """
@@ -96,8 +92,6 @@ class Frame:
         action_info =  self.state['action_info']
         host_map =  self.state['host_map']
         obs =  self.state['obs']
-        # reward = convert_reward_format(state['reward'])
-        # accumulate_reward = convert_reward_format(state['accumulate_reward'])
         reward =  self.state['reward']
         accumulate_reward =  self.state['accumulate_reward']
         
@@ -163,29 +157,22 @@ class Frame:
         )        
 
         # Create annotations for agent actions, initially invisible
-        vertical_padding = 0.05
-        # for idx, action_info in enumerate(action_info):
-        observations = dict(
-            xref='paper', yref='paper',
-            x=0.00, y= 0.05 - vertical_padding,  # Adjust these positions as needed
-            text=f"""
+        detailed_info = dict(
+          text=f"""
+                <br>Mode: <b>{mode}</b>
+                <br>Total Number of Steps: {self.num_steps}
+                <br>Red Agent Name: {self.red_agent_name}
+                <br>Episode: {self.episode+1}
+                <br>Display <b>{self.agent}</b> Agent
+                <br><b>Step {self.step+1}</b>'
                 <br>🎯{self.agent} Action: {action_info['action']}
-                <br>👀Observations: 
+                <br>👀Observations: {obs}
                 <br>✅Success: {action_info['success']}
-                <br>{format_dict_for_display(obs)}
                 <br>💰Reward: {reward}
                 <br>💳Accumulated Rewards: {accumulate_reward}
                 """,
             showarrow=False,
-            visible=True,  
-            align="left",  # Ensure text is aligned for both agents
-            font=dict(
-                size=8,
-                family="Arial, sans-serif"  # Arial font, fallback to default sans-serif
-                ),
-            bgcolor="rgba(255,255,255,0.9)",  # Semi-transparent white background
-            bordercolor="black",  # Black border color
-            borderwidth=2  # Border width
+            visible=False,  
         )
 
         # Create layout: Main Structure
@@ -193,50 +180,22 @@ class Frame:
             title=f'<br>Mode: <b>{mode}</b>\
                     <br>Total Number of Steps: {self.num_steps}\
                     <br>Red Agent Name: {self.red_agent_name}\
-                    <br>Episode: {self.episode+1}\
-                    <br>Display <b>{self.agent}</b> Agent\
-                    <br><b>Step {self.step+1}</b>',
-            title_x=0.00,
-            title_y=1.00,
-            titlefont_size=10,
+                    <br>Episode: {self.episode+1}',
+            title_x=0.0,
+            title_y=1.0,
+            # titlefont_size=10,
             showlegend=False,
             hovermode='closest',
-            margin=dict(b=15,l=0,r=200,t=80),
+            # margin=dict(b=15,l=0,r=200,t=80),
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            # width=1000,
-            annotations=[observations],  # Include the annotations by default, shown initially
-            updatemenus=[
-                dict(
-                    type = "buttons",
-                    direction = "down",
-                    buttons=[
-                        dict(label="Show Observations",
-                            method="relayout",
-                            args=[{"annotations[0].visible": True}],
-                            ),
-                        dict(label="Hide Observations",
-                            method="relayout",
-                            args=[{"annotations[0].visible": False}]
-                            ),  # This should hide all annotations
-                    ],
-                    # pad={"r": 20, "t": 20},
-                    showactive=True,
-                    # x=0.5,
-                    # xanchor="auto",
-                    y=0.3,
-                    # yanchor="auto",
-                    bordercolor="#c7c7c7",
-                    borderwidth=2,
-                    # bgcolor="lightgrey",
-                )
-            ]
+            annotations=[detailed_info],  # Include the annotations by default, shown initially
         )
 
         frame = go.Frame(        
             data=[edge_trace, node_trace],
             layout=layout,
-            name=f"frame_{self.num_steps}_{self.red_agent_name}_{self.episode}_{self.step}_{self.agent}"
+            name=f"Total: {self.num_steps} {self.red_agent_name} Ep: {self.episode} Step: {self.step} {self.agent}"
         )
         
         return frame
