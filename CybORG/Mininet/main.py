@@ -25,7 +25,7 @@ from CybORG.Agents.Wrappers.ChallengeWrapper import ChallengeWrapper
 from CybORG.Agents.Wrappers.LinkDiagramWrapper import LinkDiagramWrapper
 from CybORG.Mininet.CustomFactory import CybORGFactory, AgentFactory
 from CybORG.Mininet.CustomEnvironment import SimulatedEnvironment, EmulatedEnvironment
-from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer
+from CybORG.GameVisualizer.NetworkVisualizer import NetworkVisualizer, DashNetworkVisualizer
 
 # from CybORG.GameVisualizer.DBManager import DBManager
 
@@ -159,11 +159,18 @@ if __name__ == "__main__":
             sys.exit(0)
         
         try:
-            nv = NetworkVisualizer(game_castle_gym_agent_state)
-            nv.plot(save=False)
+            nv = DashNetworkVisualizer(game_castle_gym_agent_state)
+            nv.run()
         except Exception as e:
-            logger.error ("Visualization went wrong...")
+            logger.error ("Dash Visualization went wrong...")
             raise e
+        
+        # try:
+        #     nv = NetworkVisualizer(game_castle_gym_agent_state)
+        #     nv.plot(save=False)
+        # except Exception as e:
+        #     logger.error ("Visualization went wrong...")
+        #     raise e
         
         # try:
         #     logger.info ("Store the game state into DB")

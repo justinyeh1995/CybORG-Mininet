@@ -2,6 +2,7 @@ import traceback
 import socket
 import json
 import base64
+import os
 
 from CybORG.Mininet.AdapterComponents.entity import Entity
 
@@ -21,7 +22,8 @@ class ActionTranslator(Entity):
         self.last_action: str = None
         self.last_target: str = None
         self.hostname = socket.gethostname()
-        self.python_exe_filepath = config["PYTHON"]["FILE_PATH"]
+        print(config)
+        self.python_exe_filepath = os.environ.get("PYTHON_EXE_FILEPATH") or config["PYTHON"]["FILE_PATH"] 
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
         self.sys_script = self.path + config["ACTION"]["SYS_SCRIPT_PATH"]
         self.velociraptor_server_mininet_hostname = None

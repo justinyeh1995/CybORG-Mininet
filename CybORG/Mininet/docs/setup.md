@@ -1,4 +1,4 @@
-## Setting Up Environment
+# Setting Up Environment
 
 ### DNS
 
@@ -35,7 +35,9 @@ add /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/systems/precompil
 
 Will the user like it? or should i dockerize it. so that it will affect the system less.
 
-### Velociraptor
+---
+
+### (Optional) Velociraptor
 
 1. Install Velociraptor:
 

@@ -1,5 +1,9 @@
+# Realistic and Lightweight Cyber Agent Training Environment using Network Emulation in Mininet
+
 ## Presentation slides for DESTION 2024 on May 13th, 2024
+
 [Google Slides](https://docs.google.com/presentation/d/1f2pZ5q3p6cZK4m2dvq1Tvgj8ODyTyWGp3OVP4xXuaOw/edit?usp=sharing)
+[Paper Link](https://www.computer.org/csdl/proceedings-article/destion/2024/759400a028/1Y42Ek9NEsg)
 
 ## Catalog
 
@@ -7,19 +11,20 @@
 2. dev.md
 
 ## Demo
-```
+
+```bash
 git clone https://github.com/CASTLEGym/CybORG.git
 cd CybORG
-git checkout mininet
+git checkout mininet-cyborg2
 pip install -e .
 cd CybORG/Mininet
 ```
 
 ## Configuration
 
-Modify the value based on your system configuration in `config.ini`
+Modify the value based on your system configuration in `config.cfg`
 
-```ini
+```cfg
 [SCENARIO]
 FILE_PATH=/Simulator/Scenarios/scenario_files/<YOUR SCENARIO FILE>
 
@@ -27,10 +32,8 @@ FILE_PATH=/Simulator/Scenarios/scenario_files/<YOUR SCENARIO FILE>
 FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
 
 [ACTION]
-FOLDER_PATH=/Mininet/actions
+FOLDER_PATH=/Mininet/Actions
 
-[DECOY]
-FOLDER_PATH=/Emulator/Velociraptor/Executables/Decoy
 ```
 
 ## Run the experiment

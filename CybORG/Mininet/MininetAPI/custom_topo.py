@@ -318,7 +318,6 @@ class CustomTopology (Topo):
           info(f"Setup SSH known_hosts file for Enterprise2\n")
           net[host].cmd(f'echo "{ip}" > /tmp/.ssh/known_hosts_ops10')
 
-
   def addMockFolderContents(self, net):
     '''Setup the mock folder contents for All hosts'''
     for host in net.hosts:
@@ -346,16 +345,28 @@ class CustomTopology (Topo):
       with open(file_path, 'w') as file:
           file.write(updated_content)
 
-  def updateClientConfigFile(self, net):
-    '''rewrite server_urls'''
+  def generate_client_config_file(self, net):
     velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
-    info(f"IP address of velociraptor server is {velociraptor_server_ip}:8000\n")
-    # Path to the client config file
-    client_config_path = f"/etc/velociraptor/client.config.yaml"
+    for host in net.hosts:
+      # Generate the client config file on each host
+      if host.name.startswith('lan'):
+          host.cmd(f'./velociraptor --config /etc/velociraptor/server.config.yaml config client > /etc/velociraptor/client_{host.name}.config.yaml')
+          self.update_config_file(
+              f'/etc/velociraptor/client_{host.name}.config.yaml',
+              r'https://(\S+)(:\d+)',
+              'https://' + velociraptor_server_ip + ':8000'
+          )
+
+  # def updateClientConfigFile(self, net):
+  #   '''rewrite server_urls'''
+  #   velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
+  #   info(f"IP address of velociraptor server is {velociraptor_server_ip}:8000\n")
+  #   # Path to the client config file
+  #   client_config_path = f"/etc/velociraptor/client.config.yaml"
     
-    self.update_config_file(client_config_path, 
-                            r'https://(\S+)(:\d+)', 
-                            'https://' + velociraptor_server_ip + ':8000')
+  #   self.update_config_file(client_config_path, 
+  #                           r'https://(\S+)(:\d+)', 
+  #                           'https://' + velociraptor_server_ip + ':8000')
     
 
   def updateProgConfigFile(self, net):
@@ -363,7 +374,7 @@ class CustomTopology (Topo):
       velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
       info(f"IP address of velociraptor server API is {velociraptor_server_ip}:8001\n")
       # Path to the client config file
-      prog_client_config_path = f"{self.path}/actions/prog_client.yaml"
+      prog_client_config_path = f"{self.path}/Actions/Velociraptor/prog_client.yaml"
       
       self.update_config_file(prog_client_config_path, 
                          r'(\S+)(:\d+)', 
@@ -377,7 +388,6 @@ class CustomTopology (Topo):
     info(f"Start velociraptor server on {self.velociraptor_server_hostname}\n")
     
     net[self.velociraptor_server_hostname].cmd('sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml frontend &')
-    # net[self.velociraptor_server_hostname].cmd('sudo -u velociraptor velociraptor --config /tmp/velociraptor/server.config.backup.yaml frontend &')
     
     pid = net[self.velociraptor_server_hostname].cmd('echo $!')
     pids[self.velociraptor_server_hostname].append(pid)
@@ -386,18 +396,47 @@ class CustomTopology (Topo):
   
 
   def startVelociraptorClients(self, net):
+    velociraptor_server_ip = net[self.velociraptor_server_hostname].IP()
+    # for host in net.hosts:
+    #   # Generate the client config file on each host
+    #   if host.name.startswith('lan'):
+    #       host.cmd(f'./velociraptor --config /etc/velociraptor/server.config.yaml config client > tmp/velociraptor/client_{host.name}.config.yaml')
+    #       self.update_config_file(
+    #           f'tmp/velociraptor/client_{host.name}.config.yaml',
+    #           r'https://(\S+)(:\d+)',
+    #           'https://' + velociraptor_server_ip + ':8000'
+    #       )
+    #       host.cmd(f'velociraptor --config /tmp/velociraptor/client_{host.name}.config.yaml client -v > /dev/null 2>&1 &')
+    
     pids = collections.defaultdict(list)
-    for lan in self.topo_dict['lans']:
-      for host, _ in lan['hosts_name_map'].items():
-        # if host == 'lan3h1':
-        #   continue
-        info(f"Start velociraptor client on {host}\n")
-        # net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
-        net[host].cmd('velociraptor --config /tmp/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
+    for host in net.hosts:
+      info(f"Start velociraptor client on {host.name}\n")
+      # Generate the client config file on each host
+      if host.name.startswith('lan'):
+          host.cmd(f'sudo -u velociraptor velociraptor --config /etc/velociraptor/server.config.yaml config client > /etc/velociraptor/client_{host.name}.config.yaml')
+          self.update_config_file(
+              f'/etc/velociraptor/client_{host.name}.config.yaml',
+              r'https://(\S+)(:\d+)',
+              'https://' + velociraptor_server_ip + ':8000'
+          )
+          self.update_config_file(
+              f'/etc/velociraptor/client_{host.name}.config.yaml',
+              r'(writeback_linux:\s+/etc/velociraptor)\.writeback\.yaml',
+              r'\1.{}.writeback.yaml'.format(host.name)
+          )
+          host.cmd(f'velociraptor --config /etc/velociraptor/client_{host.name}.config.yaml client -v > /dev/null 2>&1 &')
+          pid = host.cmd('echo $!')
+          pids[host.name].append(pid)
+    # for lan in self.topo_dict['lans']:
+    #   for host, _ in lan['hosts_name_map'].items():
+    #     # if host == 'lan3h1':
+    #     #   continue
+    #     info(f"Start velociraptor client on {host}\n")
+    #     # net[host].cmd('velociraptor --config /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/actions/client.config.yaml client -v > /dev/null 2>&1 &')
+    #     net[host].cmd('velociraptor --config /etc/velociraptor/client.config.yaml client -v > /dev/null 2>&1 &')
 
-        # net[host].cmd('systemctl start velociraptor_server &')
-        pid = net[host].cmd('echo $!')
-        pids[host].append(pid)
+    #     pid = net[host].cmd('echo $!')
+    #     pids[host].append(pid)
     return pids
 
 
@@ -473,7 +512,16 @@ class CustomTopology (Topo):
     for host in net.hosts:
       net[host].cmd (f"sudo mkdir /usr/local/run/")
       net[host].cmd (f"sudo mkdir /usr/local/scripts/python/")
-      return 
+      return
+    
+  def config_densityscout(self, net):
+    """
+    Add the densityscout to host machine at /usr/local/bin/
+    and change the permission to be executable
+    """
+    defender_host = 'lan1h3'
+    net[defender_host].cmd(f"cp ./Systems/Precompiled/densityscout /usr/local/bin/")
+    net[defender_host].cmd(f"chmod +x /usr/local/bin/densityscout")
 
   ##########################################
   # The overridden build method
