@@ -23,3 +23,5 @@ pexpect
 tqdm
 rich
 psutil
+dash
+pydantic
