@@ -59,7 +59,7 @@ class MininetAdapter:
         self.path = str(inspect.getfile(CybORG))[:-10]
         
         self.config = configparser.ConfigParser()
-        self.config.read('config.cfg')
+        self.config.read(self.path+'/Mininet/config.cfg')
 
         self.topology_manager = YamlTopologyManager()
         self.mapper = CybORGMininetMapper()
