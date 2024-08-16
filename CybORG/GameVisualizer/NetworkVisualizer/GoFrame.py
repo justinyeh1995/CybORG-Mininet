@@ -177,11 +177,8 @@ class Frame:
 
         # Create layout: Main Structure
         layout = go.Layout(
-            title=f'<br>Mode: <b>{mode}</b>\
-                    <br>Total Number of Steps: {self.num_steps}\
-                    <br>Red Agent Name: {self.red_agent_name}\
-                    <br>Episode: {self.episode+1}',
-            title_x=0.0,
+            title=f'<br>Mode: <b>{mode}</b> || Red Agent Name: <b>{self.red_agent_name}</b> <br> Episode: <b>{self.episode+1}</b> || Total Number of Steps: <b>{self.num_steps}</b>',
+            title_x=0.5,
             title_y=1.0,
             # titlefont_size=10,
             showlegend=False,
@@ -195,7 +192,7 @@ class Frame:
         frame = go.Frame(        
             data=[edge_trace, node_trace],
             layout=layout,
-            name=f"Total: {self.num_steps} {self.red_agent_name} Ep: {self.episode} Step: {self.step} {self.agent}"
+            name=f"{self.red_agent_name} Ep: {self.episode+1} Step: {self.step+1} {self.agent}"
         )
         
         return frame
