@@ -33,8 +33,7 @@ COPY . /cage
 ENV PYTHON_EXE_FILEPATH="python3"
 
 # Install packages
-RUN pip3 install -e .
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-WORKDIR /cage/CybORG/CybORG/Mininet
 # Run evaluation script
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python3", "CybORG/Mininet/main.py"]
