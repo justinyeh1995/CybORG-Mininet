@@ -24,17 +24,6 @@ cd ..
 mininet/util/install.sh
 ```
 
-### System files setup
-
-```bash
-@To-Do
-add /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/systems/scripts/* to /usr/local/python/
-
-add /home/ubuntu/justinyeh1995/CASTLEGym/CybORG/CybORG/Mininet/systems/precompiled/densityscout to /usr/local/bin/
-```
-
-Will the user like it? or should i dockerize it. so that it will affect the system less.
-
 ---
 
 ### (Optional) Velociraptor
