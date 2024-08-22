@@ -7,7 +7,7 @@
 
 ## Catalog
 
-1. [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet/CybORG/Mininet/docs/setup.md)
+1. [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/docs/setup.md)
 2. dev.md
 
 ## Demo
