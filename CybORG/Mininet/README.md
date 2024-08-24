@@ -41,3 +41,8 @@ FOLDER_PATH=/Mininet/Actions
 ```bash
 python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes>
 ```
+
+## To-Do
+Following new implementations in `wrapper` branch, such as `Impact` Action implementation.
+
+## Extend the game to support more actions
