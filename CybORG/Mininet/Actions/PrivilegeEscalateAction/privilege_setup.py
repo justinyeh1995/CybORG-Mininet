@@ -4,11 +4,6 @@ import json
 from pathlib import Path
 from CybORG import CybORG
 
-from CybORG.Emulator.Actions.Velociraptor.SSHConnectionServerAction import SSHConnectionServerAction
-from CybORG.Emulator.Actions.Velociraptor.SSHConnectionImpactAction import SSHConnectionImpactAction
-from CybORG.Emulator.Actions.Velociraptor.PrivilegeEscalateActionForMininet import PrivilegeEscalateAction
-from CybORG.Emulator.Observations.Velociraptor.PrivilegeEscalateObservation import PrivilegeEscalateObservation
-
 def parseCmdLineArgs ():
     # parse the command line
     parser = argparse.ArgumentParser ()
