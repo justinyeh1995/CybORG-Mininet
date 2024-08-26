@@ -2,7 +2,15 @@
 
 ## High-Level Architectural Overview
 
-https://drive.google.com/file/d/1VZ-ZIUBdbR0TQSjXfNiUfRoqEBmi0Csw/view?usp=sharing
+![CASTLEGym-Mininet drawio (1)](https://github.com/user-attachments/assets/378151a0-f496-4873-b92d-d7fa2b60edd2)
+
+🟢  The green part except `Mininet API` resides in `Mininet/AdapterComponents`. They are the subcomponents that lives entirely in the object created by a class called `MininetAdapter` which is in `Mininet/MininetAdapter.py`. \
+`Mininet API` resides in `Mininet/MininetAPI`, and it deals with configuring and setting up a Mininet process. This module is originally developed by Dr. Gokhale's lab.
+  
+🟠 The orange part resides in a class called `CybORGFactory` in `Mininet/CustomFactory.py`.
+  
+🟣 The purple part resides in a class called `AgentFactory` in `Mininet/CustomFactory.py`. 
+
 
 A good way to understand how each component fits each other is to take a look at the integration test in `Tests/test_exploit_action.py`
 
@@ -97,7 +105,7 @@ Finally, write an integration test to test your idea!
 
 ## To-Do
 
-1. Sync with the new implementations in `wrapper` branch, such as the newly updated `Impact` Action implementation.
+1. Continue to monitor and sync with the new implementations in `wrapper` branch, such as the newly updated `Impact` Action implementation.
 
 2. Use Docker containers as hosts within Mininet. [Containernet](https://containernet.github.io/)
 
