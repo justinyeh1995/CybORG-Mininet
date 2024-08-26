@@ -1,12 +1,10 @@
-from CybORG.Mininet.AdapterComponents.entity import Entity
-
-from CybORG.Mininet.AdapterComponents.utils.mapper_util import build_cyborg_host_to_mininet_host_map, parse_mininet_ip, \
-                            build_mininet_host_to_cyborg_ip_map, build_cyborg_ip_to_mininet_host_map
-from pydantic import BaseModel, Field
-from typing import Dict, List, Set
-from ipaddress import IPv4Address, IPv4Network
 import collections
 import json
+import logging
+from CybORG.Mininet.AdapterComponents.entity import Entity
+from pydantic import BaseModel, Field
+from typing import Dict, List
+from ipaddress import IPv4Address, IPv4Network
 
 class CybORGMininetMapper(BaseModel, Entity):
     # Inner CybORG lookup
@@ -35,23 +33,24 @@ class CybORGMininetMapper(BaseModel, Entity):
         arbitrary_types_allowed = True
 
     def init_mapping(self, cyborg) -> None:
-        self.ip_map = cyborg.get_ip_map()
-        self.cidr_map = {lan_name: network for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items()}
+        self.ip_map = cyborg.get_ip_map() # CybORG native IP mapping
+        self.cidr_map = {lan_name: network for lan_name, network in cyborg.environment_controller.subnet_cidr_map.items()} # CybORG native CIDR mapping
 
-        self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()}
-        self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()}
+        self.cyborg_ip_to_host_map = {str(ip): host for host, ip in self.ip_map.items()} # A lookup table for IP to its CybORG host
+        self.cyborg_host_to_ip_map = {host: str(ip) for host, ip in self.ip_map.items()} # A lookup table for Cyborg host to its IP
 
-        self.usable_ip_to_subnet = {str(network): list(network.hosts()) for network in self.cidr_map.values()}
+        self.usable_ip_to_subnet = {str(network): list(network.hosts()) for network in self.cidr_map.values()} # An auxlilary lookup table for subnet to its usable IPs
         
         for network, usable_ips in self.usable_ip_to_subnet.items():
             for ip in self.cyborg_ip_to_host_map:
                 if IPv4Address(ip) in usable_ips:
-                    self.cyborg_ip_to_subnet[ip] = network
-                    self.cyborg_subnet_to_ip_list[network].append(ip)
+                    self.cyborg_ip_to_subnet[ip] = network # A lookup table for IP to its beloning subnet
+                    self.cyborg_subnet_to_ip_list[network].append(ip) # A lookup table for subnet to its IPs
               
+        
         for cnt, (lan_name, network) in enumerate(self.cidr_map.items()):
-            self.cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}'
-            self.cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}'
+            self.cyborg_to_mininet_name_map[lan_name] = f'lan{cnt+1}' # A lookup table for LAN name to Mininet name
+            self.cyborg_to_mininet_name_map[f'{lan_name}_router'] = f'r{cnt+1}' # A lookup table for LAN router name to Mininet name
             num = 1
             for ip in self.cyborg_subnet_to_ip_list.get(str(network), []):
                 cyborg_host = self.cyborg_ip_to_host_map.get(ip, "?")
@@ -62,19 +61,15 @@ class CybORGMininetMapper(BaseModel, Entity):
                     num+=1
                 if mininet_host in self.mininet_to_cyborg_host_map:
                     continue
-                self.cyborg_to_mininet_host_map[cyborg_host] = mininet_host
-                self.mininet_to_cyborg_host_map[mininet_host] = cyborg_host
-                
-                
-        # self.cyborg_to_mininet_host_map = build_cyborg_host_to_mininet_host_map(cyborg)
-        self.mininet_host_to_ip_map = {self.cyborg_to_mininet_host_map.get(host): ip for host, ip in self.cyborg_host_to_ip_map.items()}
-        self.mininet_ip_to_host_map = {ip: host for host, ip in self.mininet_host_to_ip_map.items()}
+                self.cyborg_to_mininet_host_map[cyborg_host] = mininet_host # A lookup table for CybORG host to Mininet host
+                self.mininet_to_cyborg_host_map[mininet_host] = cyborg_host # A lookup table for Mininet host to CybORG host
+                                
+        self.mininet_host_to_ip_map = {self.cyborg_to_mininet_host_map.get(host): ip for host, ip in self.cyborg_host_to_ip_map.items()} # A lookup table for Mininet host to its IP
+        self.mininet_ip_to_host_map = {ip: host for host, ip in self.mininet_host_to_ip_map.items()} # A lookup table for IP to its Mininet host
         
-        from pprint import pprint
-        import logging
-        import pdb
-        #print all dicts
-        pprint(self.cyborg_host_to_ip_map)
+        # from pprint import pprint
+        # import pdb
+        # pprint(self.cyborg_host_to_ip_map)
         # pprint(self.cyborg_ip_to_subnet)
         # pprint(self.cyborg_subnet_to_ip_list)
         # pprint(self.cyborg_to_mininet_name_map)
