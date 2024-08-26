@@ -165,25 +165,6 @@ if __name__ == "__main__":
             logger.error ("Dash Visualization went wrong...")
             raise e
         
-        # try:
-        #     nv = NetworkVisualizer(game_castle_gym_agent_state)
-        #     nv.plot(save=False)
-        # except Exception as e:
-        #     logger.error ("Visualization went wrong...")
-        #     raise e
-        
-        # try:
-        #     logger.info ("Store the game state into DB")
-        #     db = DBStorage ()
-        #     status = db.store_game_state (game_castle_gym_agent_state)
-        #     if status:
-        #         logger.info ("DB storage successful")
-        #     else:
-        #         logger.error ("DB storage failed")
-        # except Exception as e:
-        #     logger.error ("DB storage went wrong...")
-        #     raise e
-        
     except KeyboardInterrupt:
         logger.error ("Keyboard Interrupt")
         pass
