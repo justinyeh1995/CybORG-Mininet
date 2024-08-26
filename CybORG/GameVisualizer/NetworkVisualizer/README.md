@@ -11,6 +11,8 @@ nv = DashNetworkVisualizer(game_castle_gym_agent_state)
 nv.run()
 ```
 
+This will open an flask app that runs on port `8050`.
+
 ## (Updating) To-Do
 
 Real-time update after each step. \
