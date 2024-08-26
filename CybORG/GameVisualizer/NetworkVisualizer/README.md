@@ -11,7 +11,9 @@ nv = DashNetworkVisualizer(game_castle_gym_agent_state)
 nv.run()
 ```
 
-## To-Do
+## (Updating) To-Do
 
 Real-time update after each step. \
-An idea is used a pub/sub pattern where the `DashNetworkVisualizer` subscribes to the updates in `GameStateCollector`
+An idea is used a pub/sub pattern where the `DashNetworkVisualizer` subscribes to the updates in `GameStateCollector`. multithreading could help here as well.
+ 
+Uses websocket to support running a step at a time. Look into what keyboard agent wrapper does
