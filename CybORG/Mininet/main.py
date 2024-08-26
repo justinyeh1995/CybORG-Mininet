@@ -86,7 +86,7 @@ def main_v2(agent_type: str, cyborg_type: str, environment: str = "emu", max_ste
                 else:
                     raise ValueError(f"Invalid environment: {environment}")
 
-                total_reward, actions_list = env.run()
+                total_reward, actions_list = env.run(scenario=scenario)
                 
                 write_to_file(env, file_name, num_steps, total_reward, actions_list)
         

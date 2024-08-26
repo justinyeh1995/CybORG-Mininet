@@ -45,7 +45,7 @@ class SimulatedEnvironment(CybORGEnvironment):
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, environment):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode, environment)
 
-    def run(self):
+    def run(self, scenario: str) -> List:
         actions_list = []
         total_reward = []
 
@@ -80,7 +80,7 @@ class SimulatedEnvironment(CybORGEnvironment):
             total_reward.append(sum(r))
             actions_list.append(a)
 
-        return total_reward, actions_list
+        return [total_reward, actions_list]
 
 class EmulatedEnvironment(CybORGEnvironment):
     """_summary_
@@ -91,11 +91,11 @@ class EmulatedEnvironment(CybORGEnvironment):
     def __init__(self, cyborg, red_agent, blue_agent, num_steps, max_episode, environment):
         super().__init__(cyborg, red_agent, blue_agent, num_steps, max_episode, environment)
 
-    def run(self):
+    def run(self, scenario: str) -> List:
         actions_list = []
         total_reward = []
         
-        with MininetAdapter() as mininet_adapter:
+        with MininetAdapter(scenario) as mininet_adapter:
             # Set up mininet_adapter
             self.mininet_adapter = mininet_adapter
             self.mininet_adapter.set_environment(cyborg=self.unwrapped_cyborg) # @Note: since we are passing an object refence, the effect of self.cyborg.reset() will reflect in mininet_adapter
@@ -169,4 +169,4 @@ class EmulatedEnvironment(CybORGEnvironment):
                 total_reward.append(sum(r))
                 actions_list.append(a)
 
-        return total_reward, actions_list
+        return [total_reward, actions_list]

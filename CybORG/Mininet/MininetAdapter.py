@@ -28,7 +28,9 @@ class MininetAdapter:
     """_summary_
     Controls the lifecycle of the Mininet environment and the translation of CybORG actions to Mininet commands.
     """
-    def __init__(self):
+    def __init__(self, scenario: str = "Scenario2"):
+        self.path = str(inspect.getfile(CybORG))[:-10]
+        self.scenario_file_path =  self.path + f'/Shared/Scenarios/{scenario}.yaml'
         self.md5: Dict[str, dict] = {}
         self.connection_key: Dict = {}
         self.used_ports: Dict = {}
@@ -56,8 +58,6 @@ class MininetAdapter:
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
         
-        self.path = str(inspect.getfile(CybORG))[:-10]
-        
         self.config = configparser.ConfigParser()
         self.config.read(self.path+'/Mininet/config.cfg')
 
@@ -76,7 +76,7 @@ class MininetAdapter:
         
         self.network_state_manager = NetworkStateManager()
         
-        self.reward_calculator = RewardCalculator(self.path + self.config["SCENARIO"]["FILE_PATH"])
+        self.reward_calculator = RewardCalculator(self.scenario_file_path)
 
         self.blue_action_translator.register(self)
         self.red_action_translator.register(self)
