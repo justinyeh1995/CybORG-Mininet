@@ -59,7 +59,8 @@ python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number o
 ## To-Do
 
 Following new implementations in `wrapper` branch, such as `Impact` Action implementation.
+docker container as a host for Mininet.
 
-## Extend the game to support more actions
+## Supporting more actions
 
-docker container as a host for Mininet
+📗 Please follow this workflow to support a new action.
