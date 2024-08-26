@@ -5,6 +5,12 @@
 [Google Slides](https://docs.google.com/presentation/d/1f2pZ5q3p6cZK4m2dvq1Tvgj8ODyTyWGp3OVP4xXuaOw/edit?usp=sharing)
 [Paper Link](https://www.computer.org/csdl/proceedings-article/destion/2024/759400a028/1Y42Ek9NEsg)
 
+## High Level Architecture
+
+https://drive.google.com/file/d/1VZ-ZIUBdbR0TQSjXfNiUfRoqEBmi0Csw/view?usp=sharing
+
+A good way to understand how each component fits each other, please take a look the integration test at `Tests/test_exploit_action.py`
+
 ## Catalog
 
 1. [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/docs/setup.md)
@@ -30,7 +36,7 @@ cd CybORG/Mininet
 
 ## Configuration
 
-Modify the value based on your system configuration in `config.cfg`
+📌 Modify the value based on your system configuration in `config.cfg`
 
 ```cfg
 [SCENARIO]
