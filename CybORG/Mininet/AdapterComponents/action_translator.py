@@ -22,7 +22,6 @@ class ActionTranslator(Entity):
         self.last_action: str = None
         self.last_target: str = None
         self.hostname = socket.gethostname()
-        print(config)
         self.python_exe_filepath = os.environ.get("PYTHON_EXE_FILEPATH") or config["PYTHON"]["FILE_PATH"] 
         self.action_folder_path = self.path + config["ACTION"]["FOLDER_PATH"]
         self.sys_script = self.path + config["ACTION"]["SYS_SCRIPT_PATH"]
@@ -50,7 +49,8 @@ class RedActionTranslator(ActionTranslator):
             "DiscoverRemoteSystems": self.discover_remote_systems,
             "DiscoverNetworkServices": self.discover_network_services,
             "ExploitRemoteService": self.exploit_remote_service,
-            "PrivilegeEscalate": self.privilege_escalate
+            "PrivilegeEscalate": self.privilege_escalate,
+            "Impact": self.impact
         }
 
     def translate(self, action_type, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map) -> str:
