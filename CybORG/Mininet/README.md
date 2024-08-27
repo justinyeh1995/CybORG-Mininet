@@ -39,9 +39,6 @@ pip install -e .
 📌 Modify the value based on your system configuration in `config.cfg`
 
 ```cfg
-[SCENARIO]
-FILE_PATH=/Simulator/Scenarios/scenario_files/<YOUR SCENARIO FILE>
-
 [PYTHON]
 FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
 ```
@@ -50,7 +47,7 @@ FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
 
 ```bash
 cd CybORG/Mininet
-python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes>
+python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes> --scenario <your desired scenario file located in Shared/Scenarios>
 ```
 
 ## Supporting more actions
