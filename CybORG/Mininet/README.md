@@ -41,6 +41,9 @@ pip install -e .
 ```cfg
 [PYTHON]
 FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
+
+[SSH]
+PASSWORD=<your desired root user password>
 ```
 
 ## Run the experiment
@@ -105,6 +108,7 @@ Finally, write an integration test to test your idea!
 1. Continue to monitor and sync with the new implementations in `wrapper` branch, such as the newly updated `Impact` Action implementation.
 
 2. Use Docker containers as hosts within Mininet. [Containernet](https://containernet.github.io/)
+    > Benefits: It helps isolate the environment, especially as we will configure the root user's password 👀
 
 ## Presentation slides for DESTION 2024 on May 13th, 2024
 
