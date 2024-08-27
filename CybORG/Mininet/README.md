@@ -12,7 +12,7 @@
 🟣 The purple part resides in a class called `AgentFactory` in `Mininet/CustomFactory.py`. 
 
 
-A good way to understand how each component fits each other is to take a look at the integration test in `Tests/test_exploit_action.py`
+A good way to understand how each component fits each other is to take a look at the integration test in [`Mininet/Tests/test_exploit_action.py`](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/Tests/test_exploit_action.py)
 
 ## Installation
 
@@ -39,18 +39,18 @@ pip install -e .
 📌 Modify the value based on your system configuration in `config.cfg`
 
 ```cfg
-[SCENARIO]
-FILE_PATH=/Simulator/Scenarios/scenario_files/<YOUR SCENARIO FILE>
-
 [PYTHON]
 FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
+
+[SSH]
+PASSWORD=<your desired root user password>
 ```
 
 ## Run the experiment
 
 ```bash
 cd CybORG/Mininet
-python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes>
+python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes> --scenario <your desired scenario file located in Shared/Scenarios>
 ```
 
 ## Supporting more actions
@@ -108,6 +108,7 @@ Finally, write an integration test to test your idea!
 1. Continue to monitor and sync with the new implementations in `wrapper` branch, such as the newly updated `Impact` Action implementation.
 
 2. Use Docker containers as hosts within Mininet. [Containernet](https://containernet.github.io/)
+    > Benefits: It helps isolate the environment, especially as we will configure the root user's password 👀
 
 ## Presentation slides for DESTION 2024 on May 13th, 2024
 
