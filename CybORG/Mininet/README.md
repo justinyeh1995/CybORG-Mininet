@@ -12,7 +12,7 @@
 🟣 The purple part resides in a class called `AgentFactory` in `Mininet/CustomFactory.py`. 
 
 
-A good way to understand how each component fits each other is to take a look at the integration test in `Tests/test_exploit_action.py`
+A good way to understand how each component fits each other is to take a look at the integration test in [`Mininet/Tests/test_exploit_action.py`](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/Tests/test_exploit_action.py)
 
 ## Installation
 
