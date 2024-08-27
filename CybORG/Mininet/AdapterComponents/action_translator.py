@@ -108,7 +108,7 @@ class RedActionTranslator(ActionTranslator):
         
         return f'{host} {action} -m {target} --conn_key {conn_key} --python-path \'{self.python_exe_filepath}\' --action-folder \'{self.action_folder_path}\' --sys-script \'{self.sys_script}\'' # This might take a while to run so we take out the timeout as a temporary solution
     
-    def impact(self, target_host):
+    def impact(self, target_host, cyborg_to_mininet_host_map, mininet_host_to_ip_map):
         print("Red Impact")
         # @To-Do Not Implemented as of now
         return "bash sleep 1"
