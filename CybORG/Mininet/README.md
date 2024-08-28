@@ -14,6 +14,10 @@
 
 A good way to understand how each component fits each other is to take a look at the integration test in [`Mininet/Tests/test_exploit_action.py`](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/Tests/test_exploit_action.py)
 
+## System Requirements
+
+The current implementation only supports Ubuntu 20.04 and 22.04.
+
 ## Installation
 
 Take a look at [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/docs/setup.md)
