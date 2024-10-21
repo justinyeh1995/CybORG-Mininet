@@ -1,112 +1,121 @@
-# Copyright DST Group. Licensed under the MIT license.
+# Realistic and Lightweight Cyber Agent Training Environment using Network Emulation in Mininet
 
-# Cyber Operations Research Gym (CybORG)
+## High-Level Architectural Overview
 
-A cyber security research environment for training and development of security human and autonomous agents. Contains a common interface for both emulated, using cloud based virtual machines, and simulated network environments.
+![CASTLEGym-Mininet drawio (1)](https://github.com/user-attachments/assets/378151a0-f496-4873-b92d-d7fa2b60edd2)
+
+🟢  The green part except `Mininet API` resides in `Mininet/AdapterComponents`. They are the subcomponents that lives entirely in the object created by a class called `MininetAdapter` which is in `Mininet/MininetAdapter.py`. \
+`Mininet API` resides in `Mininet/MininetAPI`, and it deals with configuring and setting up a Mininet process. This module is originally developed by Dr. Gokhale's lab.
+  
+🟠 The orange part resides in a class called `CybORGFactory` in `Mininet/CustomFactory.py`.
+  
+🟣 The purple part resides in a class called `AgentFactory` in `Mininet/CustomFactory.py`. 
+
+
+A good way to understand how each component fits each other is to take a look at the integration test in [`Mininet/Tests/test_exploit_action.py`](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/Tests/test_exploit_action.py)
+
+## System Requirements
+
+The current implementation only supports Ubuntu 20.04 and 22.04.
 
 ## Installation
 
-Install CybORG locally using pip
+Take a look at [setup.md](https://github.com/CASTLEGym/CybORG/blob/mininet-cyborg2/CybORG/Mininet/docs/setup.md)
 
-```
-# from the cage-challenge-2/CybORG directory
+## Getting Started
+
+```bash
+# Create your virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Clone the repo
+git clone https://github.com/CASTLEGym/CybORG.git
+cd CybORG
+git checkout mininet-cyborg2
+
+# Install packages
 pip install -e .
 ```
 
+## Configuration
 
-## Creating the environment
-Create a CybORG environment with:
-```
-from CybORG import CybORG
-path = str(inspect.getfile(CybORG))
-path = path[:-10] + '/Shared/Scenarios/Scenario2.yaml'
-cyborg = CybORG(path, 'sim')
-```
+📌 Modify the value based on your system configuration in `config.cfg`
 
- 
+```cfg
+[PYTHON]
+FILE_PATH=<YOUR ABSOLUTE PYTHON EXECUTION FILE PATH>
 
-
-To create an environment where the red agent has preexisting knowledge of the network and attempts to beeline to the Operational Server use:
-
- 
-
-```
-red_agent = B_lineAgent
-cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
-```
-To create an environment where the red agent meanders through the network and attempts to take control of all hosts in the network use:
-
- 
-
-```
-red_agent = RedMeanderAgent
-cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
-```
-To create an environment where the red agent always takes the sleep action use:
-```
-red_agent = SleepAgent
-cyborg = CybORG(path, 'sim', agents={'Red': red_agent})
+[SSH]
+PASSWORD=<your desired root user password>
 ```
 
- 
+## Run the experiment
 
-## Wrappers
-
- 
-
-To alter the interface with CybORG, [wrappers](CybORG/Agents/Wrappers) are avaliable.
-
- 
-
-* [OpenAIGymWrapper](CybORG/Agents/Wrappers/OpenAIGymWrapper.py) - alters the interface to conform to the OpenAI Gym specification.
-* [FixedFlatWrapper](CybORG/Agents/Wrappers/FixedFlatWrapper.py) - converts the observation from a dictionary format into a fixed size 1-dimensional vector of floats
-* [EnumActionWrapper](CybORG/Agents/Wrappers/EnumActionWrapper.py) - converts the action space into a single integer
-* [IntListToActionWrapper](CybORG/Agents/Wrappers/IntListToAction.py) - converts the action classes and parameters into a list of integers
-* [ReduceActionSpaceWrapper](CybORG/Agents/Wrappers/ReduceActionSpaceWrapper.py) - removes parameters from the action space that are unused by any of the action classes
-* [BlueTableWrapper](CybORG/Agents/Wrappers/BlueTableWrapper.py) - aggregates information from observations and converts into a 1-dimensional vector of integers
-
- 
-
-
-## Evaluating agent performance
-
- 
-
-To evaluate an agent's performance please use the [evaluation script](CybORG/Evaluation/evaluation.py). 
-
- 
-
-
-The [wrap function](CybORG/Evaluation/evaluation.py#L22-L23) defines what wrappers will be used during evaluation.
-```
-def wrap(env):
-    return ChallengeWrapper(env=env, agent_name='Blue')
-```
-The agent under evaluation is defined [here](CybORG/Evaluation/evaluation.py#L42-L43). 
-To evaluate an agent, extend the [BaseAgent](CybORG/Agents/SimpleAgents/BaseAgent.py). 
-We have included the [BlueLoadAgent](CybORG/Agents/SimpleAgents/BlueLoadAgent.py) as an example of an agent that uses the stable_baselines3 library.
-```
-# Change this line to load your agent
-agent = BlueLoadAgent()
+```bash
+cd CybORG/Mininet
+python3 main.py --env <sim | emu> --max_step <step size> --max_episode <number of episodes> --scenario <your desired scenario file located in Shared/Scenarios>
 ```
 
-## Additional Readings
-For further guidance on the CybORG environment please refer to the [tutorial notebook series.](CybORG/Tutorial)
+## Supporting more actions
 
-## Citing this project
+📗 Please follow the workflow in `MininetAdapter.step()` to support a new action.
+
+Let's take `Impact` Action as an example,
+
+First, make sure you understand the action string spitted out from Agents. In this case, it could be `Impact Op_Server0`.
+`MininetAdapter.parse_action_string(action_string)` will parse this into `Op_Server0`, `IP ADDRESS OF Op_Server0`, `Impact`
+
+Then, you should update `BlueActionTranslator` class or `RedActionTranslator` class. The goal is to translate the action string (Here it would be `IP ADDRESS OF Op_Server0` and `Impact`) into a bash command that will be sent to `mininet cli`
+
+There are two things to look after when updating  `BlueActionTranslator` class or `RedActionTranslator` class in `action_translator.py`, 
+
+1. Implement the translation function
+```python3
+# One could decide its own method signature 
+def impact(self, target_host: str) -> str:
+  action_string = ""
+  # Translation happens here ...
+  return action_string
 ```
-@misc{cage_challenge_2,
-  Title = {Cyber Autonomy Gym for Experimentation Challenge 2},
-  Note = {Created by Maxwell Standen, David Bowman, Son Hoang, Toby Richer, Martin Lucas, Richard Van Tassel, Phillip Vu, Mitchell Kiely},
-  Publisher = {GitHub},
-  Howpublished = {\url{https://github.com/cage-challenge/cage-challenge-2}},
-  Year = {2022}
+2. Register your action translation function into the member field `action_map`
+```python3
+self.action_map = {
+  ...
+  "Impact": self.impact
 }
 ```
 
-## DSTG Development team 
+>But what exactly should be in the `impact` function?
 
-* **David Bowman** - david.bowman@dst.defence.gov.au
-* **Martin Lucas** - martin.lucas@dst.defence.gov.au
-* **Toby Richer** - toby.richer@dst.defence.gov.au
-* **Maxwell Standen** - max.standen@dst.defence.gov.au
+- I would recommend creating a new folder in `Mininet/Actions`, let's call it `Impact/`.
+  Write a bash script that runs inside the Mininet process. Be aware that this process runs as `root` user ❗️
+
+After doing so, think about what the observation should look like. Please take a look at `results_bundler.py` and its utility functions.  
+
+Remember to think about the side effects caused by this action, it could affect the member fields in `MininetAdapter` class such as 
+```python3
+self.md5: Dict[str, dict] = {}
+self.connection_key: Dict = {}
+self.used_ports: Dict = {}
+self.exploited_hosts: List = []
+self.priviledged_hosts: List = []
+self.old_exploit_outcome: Dict = {}
+self.network_state: Dict = {}
+self.available_ports: List = random.sample(range(4000, 5000 + 1), 50)
+```
+
+Finally, write an integration test to test your idea!
+
+## To-Do
+
+1. Continue to monitor and sync with the new implementations in `wrapper` branch, such as the newly updated `Impact` Action implementation.
+
+2. Use Docker containers as hosts within Mininet. [Containernet](https://containernet.github.io/)
+    > Benefits: It helps isolate the environment, especially as we will configure the root user's password 👀
+
+## Presentation slides for DESTION 2024 on May 13th, 2024
+
+[Google Slides](https://docs.google.com/presentation/d/1f2pZ5q3p6cZK4m2dvq1Tvgj8ODyTyWGp3OVP4xXuaOw/edit?usp=sharing) \
+[Paper Link](https://www.computer.org/csdl/proceedings-article/destion/2024/759400a028/1Y42Ek9NEsg)
+
