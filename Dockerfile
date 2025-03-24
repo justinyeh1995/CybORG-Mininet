@@ -45,5 +45,8 @@ RUN pip3 install -e .
 
 EXPOSE 8050
 
+# Configure config.cfg
+RUN sed -i 's#^FILE_PATH=.*#FILE_PATH='"$(which python3)"'#' /cage/CybORG/Mininet/config.cfg
+
 # Run evaluation script
-ENTRYPOINT ["python3", "CybORG/Mininet/main.py"]
+ENTRYPOINT ["/bin/bash"]
